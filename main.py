@@ -37,8 +37,149 @@ try:
 except ImportError:
     _RJSMIN_OK = False
 
+try:
+    import psycopg2
+    import psycopg2.extras
+    _PSYCOPG2_OK = True
+except ImportError:
+    _PSYCOPG2_OK = False
+
+try:
+    from passlib.context import CryptContext
+    from jose import JWTError, jwt
+    _AUTH_OK = True
+except ImportError:
+    _AUTH_OK = False
+
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
+
+# ─── Base de datos (Supabase PostgreSQL) ─────────────────────────────────────
+SUPABASE_DATABASE_URL = os.environ.get("SUPABASE_DATABASE_URL", "")
+JWT_SECRET = os.environ.get("JWT_SECRET", "textonflow-dev-secret-change-in-prod")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_HOURS = 24 * 7  # 7 días
+
+_db_conn = None
+_db_lock = threading.Lock()
+
+def get_db():
+    global _db_conn
+    with _db_lock:
+        if not _PSYCOPG2_OK or not SUPABASE_DATABASE_URL:
+            return None
+        try:
+            if _db_conn is None or _db_conn.closed:
+                _db_conn = psycopg2.connect(SUPABASE_DATABASE_URL, connect_timeout=10)
+                _db_conn.autocommit = True
+            else:
+                _db_conn.poll()
+        except Exception:
+            try:
+                _db_conn = psycopg2.connect(SUPABASE_DATABASE_URL, connect_timeout=10)
+                _db_conn.autocommit = True
+            except Exception as e:
+                logger.error(f"DB connection error: {e}")
+                return None
+        return _db_conn
+
+def init_db():
+    """Crea las tablas si no existen."""
+    conn = get_db()
+    if not conn:
+        logger.warning("⚠️  Sin conexión a BD — modo sin base de datos")
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    plan TEXT NOT NULL DEFAULT 'trial',
+                    gemini_api_key TEXT DEFAULT NULL,
+                    stripe_customer_id TEXT DEFAULT NULL,
+                    renders_used INTEGER NOT NULL DEFAULT 0,
+                    renders_limit INTEGER NOT NULL DEFAULT 20,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS subscriptions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    stripe_subscription_id TEXT UNIQUE,
+                    plan TEXT NOT NULL DEFAULT 'trial',
+                    status TEXT NOT NULL DEFAULT 'active',
+                    current_period_start TIMESTAMPTZ,
+                    current_period_end TIMESTAMPTZ,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS renders (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    endpoint TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'ok',
+                    ip TEXT,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_renders_user_id ON renders(user_id);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            """)
+        logger.info("✅ Base de datos inicializada correctamente")
+    except Exception as e:
+        logger.error(f"Error inicializando BD: {e}")
+
+# ─── Auth helpers ─────────────────────────────────────────────────────────────
+if _AUTH_OK:
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+else:
+    pwd_context = None
+
+def hash_password(password: str) -> str:
+    if pwd_context:
+        return pwd_context.hash(password)
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(plain: str, hashed: str) -> bool:
+    if pwd_context:
+        try:
+            return pwd_context.verify(plain, hashed)
+        except Exception:
+            pass
+    return hashlib.sha256(plain.encode()).hexdigest() == hashed
+
+def create_jwt(user_id: str, email: str, plan: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS)
+    payload = {"sub": user_id, "email": email, "plan": plan, "exp": expire}
+    if _AUTH_OK:
+        return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return base64.b64encode(json.dumps({**payload, "exp": expire.isoformat()}).encode()).decode()
+
+def decode_jwt(token: str) -> Optional[dict]:
+    try:
+        if _AUTH_OK:
+            return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        data = json.loads(base64.b64decode(token.encode()).decode())
+        return data
+    except Exception:
+        return None
+
+PLAN_LIMITS = {
+    "trial":   20,
+    "starter": 1000,
+    "agency":  10000,
+    "admin":   999999,
+}
 
 # ─── Job store para generación de imágenes asíncrona ─────────────────────────
 # Evita que Railway corte la conexión por timeout durante llamadas largas a Gemini
@@ -211,6 +352,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Inicializar base de datos ─────────────────────────────────────────────────
+init_db()
 
 # ── Almacenamiento persistente ────────────────────────────────────────────────
 # STORAGE_PATH puede apuntar a un Railway Volume (ej: /mnt/storage)
