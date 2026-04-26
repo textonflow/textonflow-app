@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+storage/
+static/temp/
+static/deploy.zip
+deploy.zip
+*.log
+.DS_Store

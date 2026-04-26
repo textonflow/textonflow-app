@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentación API — TextOnFlow</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d14;--surface:#13132a;--surface2:#1a1a2e;--border:#1e1e38;
+  --accent:#7c6eff;--accent2:#a5b4fc;--green:#22c55e;--orange:#f97316;
+  --red:#ef4444;--text:#d0d0e8;--text2:#8888aa;--text3:#555577;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.top-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.top-bar img{height:22px;width:auto;opacity:.9}
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.back-btn,.schema-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#9090b8;text-decoration:none;padding:6px 13px;font-size:12px;font-weight:600;transition:all .2s;white-space:nowrap}
+.back-btn:hover,.schema-btn:hover{background:#252545;color:#fff;border-color:var(--accent)}
+.version-badge{background:#1e1e3a;border:1px solid #3a3a60;border-radius:20px;color:var(--accent2);font-size:11px;font-weight:700;padding:3px 10px;letter-spacing:.5px}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.layout{display:flex;flex:1;max-width:1280px;width:100%;margin:0 auto;gap:0}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+aside{width:240px;flex-shrink:0;position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;padding:28px 0 40px;border-right:1px solid var(--border);scrollbar-width:thin;scrollbar-color:#2a2a45 transparent}
+aside h3{font-size:10px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);padding:0 20px;margin:20px 0 6px}
+aside a{display:block;padding:5px 20px;font-size:13px;color:var(--text2);text-decoration:none;border-left:2px solid transparent;transition:all .15s;line-height:1.4}
+aside a:hover{color:var(--accent2);border-left-color:var(--accent);background:rgba(124,110,255,.06)}
+aside a.active{color:var(--accent2);border-left-color:var(--accent);font-weight:600}
+aside a.sub{padding-left:32px;font-size:12px}
+
+/* ── Main content ────────────────────────────────────────────────────── */
+main{flex:1;padding:40px 48px 80px;min-width:0}
+.hero{margin-bottom:40px}
+.hero h1{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:8px}
+.hero p{font-size:1rem;color:var(--text2);line-height:1.65;max-width:680px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.badge-purple{background:rgba(124,110,255,.15);color:var(--accent2);border:1px solid rgba(124,110,255,.25)}
+.badge-orange{background:rgba(249,115,22,.15);color:var(--orange);border:1px solid rgba(249,115,22,.25)}
+
+/* ── Sections ────────────────────────────────────────────────────────── */
+section{margin-bottom:56px}
+h2{font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:6px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+h2 span.emoji{font-size:1.1rem}
+h3{font-size:1rem;font-weight:700;color:var(--accent2);margin:24px 0 8px}
+h4{font-size:.85rem;font-weight:700;color:var(--text2);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.8px}
+p{font-size:.93rem;line-height:1.75;color:var(--text);margin-bottom:10px}
+ul,ol{padding-left:20px;margin-bottom:12px}
+li{font-size:.93rem;line-height:1.7;color:var(--text)}
+
+/* ── Method badges ───────────────────────────────────────────────────── */
+.endpoint{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-bottom:20px;font-family:'SF Mono','Fira Code',monospace;font-size:.88rem}
+.method{border-radius:5px;padding:3px 9px;font-size:.75rem;font-weight:800;letter-spacing:.5px;flex-shrink:0}
+.method-post{background:rgba(249,115,22,.2);color:#fb923c;border:1px solid rgba(249,115,22,.3)}
+.method-get{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.endpoint-url{color:var(--accent2);font-weight:600;word-break:break-all}
+.endpoint-desc{color:var(--text2);font-size:.82rem;margin-left:auto;white-space:nowrap}
+
+/* ── Code blocks ─────────────────────────────────────────────────────── */
+pre{background:#0a0a16;border:1px solid var(--border);border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:'SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.6;margin-bottom:16px;position:relative}
+pre code{color:#c5c8d0}
+.str{color:#a5d6a7}
+.num{color:#80cbc4}
+.key{color:#90caf9}
+.bool{color:#ce93d8}
+.comment{color:#555577;font-style:italic}
+.copy-btn{position:absolute;top:10px;right:10px;background:#1e1e3a;border:1px solid #3a3a60;color:#888;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:#2a2a50;color:#fff}
+
+/* ── Param tables ────────────────────────────────────────────────────── */
+.param-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:20px}
+.param-table th{text-align:left;padding:8px 12px;background:var(--surface2);color:var(--text2);font-size:.78rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.param-table td{padding:8px 12px;border-bottom:1px solid rgba(30,30,56,.7);vertical-align:top}
+.param-table tr:hover td{background:rgba(124,110,255,.04)}
+.param-name{font-family:'SF Mono','Fira Code',monospace;color:var(--accent2);font-size:.82rem}
+.param-type{font-family:'SF Mono','Fira Code',monospace;color:#fb923c;font-size:.78rem}
+.param-default{font-family:'SF Mono','Fira Code',monospace;color:#4ade80;font-size:.78rem}
+.param-req{color:#ef4444;font-size:.75rem;font-weight:700}
+
+/* ── Callouts ────────────────────────────────────────────────────────── */
+.callout{border-radius:8px;padding:14px 18px;margin:16px 0;font-size:.88rem;line-height:1.6;border-left:3px solid}
+.callout-tip{background:rgba(34,197,94,.08);border-color:var(--green);color:#86efac}
+.callout-warn{background:rgba(249,115,22,.08);border-color:var(--orange);color:#fdba74}
+.callout-info{background:rgba(124,110,255,.08);border-color:var(--accent);color:#c4b5fd}
+.callout strong{display:inline-block;margin-bottom:3px}
+
+/* ── Filter grid ─────────────────────────────────────────────────────── */
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:16px}
+.filter-chip{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:'SF Mono','Fira Code',monospace;font-size:.78rem;color:var(--accent2)}
+
+/* ── Warp grid ───────────────────────────────────────────────────────── */
+.warp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-bottom:16px}
+.warp-chip{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:'SF Mono','Fira Code',monospace;font-size:.78rem;color:#80cbc4}
+
+/* ── Steps ───────────────────────────────────────────────────────────── */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:20px;padding-bottom:28px;position:relative}
+.step:not(:last-child)::before{content:'';position:absolute;left:17px;top:38px;bottom:0;width:2px;background:var(--border)}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);color:var(--accent2);font-weight:800;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.step-body{flex:1;padding-top:4px}
+.step-body h4{color:#fff;font-size:.95rem;margin-top:0;text-transform:none;letter-spacing:0}
+
+/* ── Error table ─────────────────────────────────────────────────────── */
+.status-code{font-family:'SF Mono','Fira Code',monospace;font-weight:700;font-size:.85rem}
+.s200{color:var(--green)}
+.s400{color:var(--orange)}
+.s404{color:#facc15}
+.s500{color:var(--red)}
+
+/* ── Footer note ─────────────────────────────────────────────────────── */
+.footer-note{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:.82rem;color:#444;text-align:center}
+.footer-note a{color:#555;text-decoration:none}
+.footer-note a:hover{color:#888}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  aside{display:none}
+  main{padding:24px 20px 60px}
+  h2{font-size:1.2rem}
+  .hero h1{font-size:1.5rem}
+  .endpoint{flex-wrap:wrap}.endpoint-desc{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP BAR ════════════════════════════════════════════════════════════ -->
+<div class="top-bar">
+  <img src="/static/logo-blanco-new.png" alt="TextOnFlow">
+  <div class="top-bar-right">
+    <span class="version-badge">API v6.0</span>
+    <a class="schema-btn" href="/openapi.json" target="_blank">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      openapi.json
+    </a>
+    <a class="back-btn" href="/">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Volver al editor
+    </a>
+  </div>
+</div>
+
+<!-- ══ LAYOUT ═════════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+<!-- Sidebar -->
+<aside id="sidebar">
+  <h3>Inicio</h3>
+  <a href="#quickstart">Inicio rápido</a>
+  <a href="#base-url">Base URL</a>
+
+  <h3>Endpoints</h3>
+  <a href="#generate-multi">POST /generate-multi</a>
+  <a href="#image-get" class="sub">GET /image/{filename}</a>
+  <a href="#generate-ai">POST /api/generate-image</a>
+  <a href="#image-job" class="sub">GET /api/image-job/{id}</a>
+  <a href="#qr">POST /api/qr</a>
+
+  <h3>Modelos</h3>
+  <a href="#model-request">MultiTextRequest</a>
+  <a href="#model-textfield">TextField</a>
+  <a href="#model-overlay">ImageOverlay</a>
+  <a href="#model-shape">CanvasShape</a>
+
+  <h3>Características</h3>
+  <a href="#vars">Variables dinámicas</a>
+  <a href="#countdown">Contadores regresivos</a>
+  <a href="#filters">Filtros de imagen</a>
+  <a href="#warp">Efectos warp</a>
+  <a href="#fonts">Fuentes disponibles</a>
+
+  <h3>Guías</h3>
+  <a href="#manychat-flow">Flujo ManyChat completo</a>
+  <a href="#errors">Códigos de error</a>
+  <a href="#limits">Límites y buenas prácticas</a>
+</aside>
+
+<!-- Main -->
+<main>
+
+<!-- ══ HERO ═══════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <h1>Documentación técnica</h1>
+  <p>TextOnFlow es una API de renderizado de imágenes personalizadas, diseñada para agencias ManyChat que gestionan campañas de marketing por WhatsApp Business. Cada solicitud produce una imagen PNG con texto dinámico, overlays y efectos visuales en milisegundos.</p>
+  <div class="hero-badges">
+    <span class="badge badge-green">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+      API Online
+    </span>
+    <span class="badge badge-purple">Python · FastAPI · Pillow</span>
+    <span class="badge badge-orange">Google Gemini 2.5 Flash (IA)</span>
+  </div>
+</div>
+
+<!-- ══ INICIO RÁPIDO ═══════════════════════════════════════════════════════ -->
+<section id="quickstart">
+  <h2><span class="emoji">⚡</span> Inicio rápido</h2>
+  <p>Una sola llamada POST a <code>/generate-multi</code> recibe una imagen base + texto dinámico y devuelve la URL de la imagen renderizada lista para enviar por WhatsApp.</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code><span class="comment"># Ejemplo mínimo — cURL</span>
+curl -X POST https://www.textonflow.com/generate-multi \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "template_name": "mi-plantilla.jpg",
+    "texts": [
+      {
+        "text": "Hola, {nombre}",
+        "x": 100, "y": 80,
+        "font_size": 72,
+        "font_color": "#FFFFFF",
+        "font_name": "DejaVuSans-Bold"
+      }
+    ],
+    "vars": { "nombre": "Ana García" }
+  }'</span></code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Respuesta:</strong> JSON con <code>{"url": "https://www.textonflow.com/image/abc123.png"}</code>. Esa URL es la imagen final lista para usar en el nodo "Send Image" de ManyChat.
+  </div>
+</section>
+
+<!-- ══ BASE URL ════════════════════════════════════════════════════════════ -->
+<section id="base-url">
+  <h2><span class="emoji">🌐</span> Base URL</h2>
+  <div class="endpoint">
+    <span style="color:var(--accent2);font-weight:700">Base URL</span>
+    <span class="endpoint-url">https://www.textonflow.com</span>
+  </div>
+  <p>Todos los endpoints son HTTPS. No se requiere API key para <code>/generate-multi</code>. El servidor está alojado en Railway (región US-West) con dominio personalizado via SiteGround.</p>
+  <div class="callout callout-info">
+    <strong>CORS:</strong> Todos los orígenes están permitidos (<code>*</code>). Puedes llamar la API directamente desde ManyChat HTTP Request, Make.com, n8n, Zapier o cualquier cliente HTTP.
+  </div>
+</section>
+
+<!-- ══ GENERATE MULTI ══════════════════════════════════════════════════════ -->
+<section id="generate-multi">
+  <h2><span class="emoji">🖼️</span> Renderizar imagen</h2>
+
+  <div class="endpoint">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-url">/generate-multi</span>
+    <span class="endpoint-desc">Endpoint principal de renderizado</span>
+  </div>
+
+  <p>Recibe una imagen base (plantilla) y un array de campos de texto, y devuelve una imagen PNG compuesta con todos los elementos renderizados.</p>
+
+  <h3>Body (JSON)</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Req.</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">template_name</td><td class="param-type">string</td><td class="param-req">✓</td><td>—</td><td>Nombre del archivo en <code>/templates/</code> (ej. <code>oferta.jpg</code>) o URL completa HTTPS de la imagen base</td></tr>
+    <tr><td class="param-name">texts</td><td class="param-type">TextField[]</td><td class="param-req">✓</td><td>—</td><td>Array de campos de texto a renderizar (ver modelo TextField)</td></tr>
+    <tr><td class="param-name">vars</td><td class="param-type">object</td><td></td><td><code>{}</code></td><td>Variables de sustitución. Reemplaza <code>{clave}</code> en cualquier <code>text</code> del array</td></tr>
+    <tr><td class="param-name">overlays</td><td class="param-type">ImageOverlay[]</td><td></td><td><code>[]</code></td><td>Imágenes a superponer (foto de perfil del cliente, logo, etc.)</td></tr>
+    <tr><td class="param-name">shapes</td><td class="param-type">CanvasShape[]</td><td></td><td><code>[]</code></td><td>Formas geométricas (rectángulos, círculos, estrellas)</td></tr>
+    <tr><td class="param-name">filter_name</td><td class="param-type">string</td><td></td><td><code>"none"</code></td><td>Filtro de color aplicado a la imagen base antes de renderizar texto. Ver lista de filtros.</td></tr>
+    <tr><td class="param-name">render_scale</td><td class="param-type">int</td><td></td><td><code>1</code></td><td><code>1</code> = rápido (recomendado para ManyChat), <code>2</code> = alta calidad (editor)</td></tr>
+    <tr><td class="param-name">watermark</td><td class="param-type">bool</td><td></td><td><code>false</code></td><td>Si <code>true</code>, agrega el sello <em>textonflow.com</em> en la esquina inferior derecha</td></tr>
+  </table>
+
+  <h3>Respuesta exitosa (200)</h3>
+  <pre><code>{
+  <span class="key">"url"</span>: <span class="str">"https://www.textonflow.com/image/a3f8c2d1.png"</span>,
+  <span class="key">"width"</span>: <span class="num">1080</span>,
+  <span class="key">"height"</span>: <span class="num">1080</span>,
+  <span class="key">"texts_rendered"</span>: <span class="num">2</span>
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <strong>Vida útil de la imagen:</strong> Las imágenes generadas se almacenan temporalmente en el servidor. Úsalas inmediatamente en tu flujo de ManyChat — no las uses como CDN permanente.
+  </div>
+</section>
+
+<!-- ══ GET IMAGE ══════════════════════════════════════════════════════════ -->
+<section id="image-get">
+  <div class="endpoint">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-url">/image/{filename}</span>
+    <span class="endpoint-desc">Recuperar imagen renderizada</span>
+  </div>
+  <p>Devuelve el archivo PNG generado por <code>/generate-multi</code>. La URL completa viene en el campo <code>url</code> de la respuesta de renderizado — úsala directamente en el nodo de imagen de ManyChat.</p>
+</section>
+
+<!-- ══ AI GENERATE IMAGE ═══════════════════════════════════════════════════ -->
+<section id="generate-ai">
+  <h2><span class="emoji">✨</span> Generación de imágenes con IA</h2>
+  <p>Genera imágenes con <strong>Google Gemini 2.5 Flash Image</strong>. El proceso es asíncrono: primero inicias el job y luego haces polling hasta recibir el resultado. El texto del prompt pasa por el modelo <strong>Gemini 2.0 Flash</strong> para enriquecimiento antes de generarse.</p>
+
+  <div class="endpoint">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-url">/api/generate-image</span>
+    <span class="endpoint-desc">Iniciar generación IA (async)</span>
+  </div>
+
+  <h3>Body (JSON)</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Req.</th><th>Descripción</th></tr>
+    <tr><td class="param-name">prompt</td><td class="param-type">string</td><td class="param-req">✓</td><td>Descripción en texto de la imagen a generar</td></tr>
+    <tr><td class="param-name">style</td><td class="param-type">string</td><td></td><td>Estilo visual aplicado al prompt. Ver lista completa abajo.</td></tr>
+    <tr><td class="param-name">aspect_ratio</td><td class="param-type">string</td><td></td><td><code>1:1</code>, <code>9:16</code>, <code>3:4</code>, <code>4:3</code>, <code>16:9</code>, <code>4:5</code>, <code>3:2</code>, <code>2:3</code> — Defecto: <code>1:1</code></td></tr>
+    <tr><td class="param-name">width</td><td class="param-type">integer</td><td></td><td>Ancho de salida en px (si se usa aspecto personalizado). Rango: 64–4096.</td></tr>
+    <tr><td class="param-name">height</td><td class="param-type">integer</td><td></td><td>Alto de salida en px (si se usa aspecto personalizado). Rango: 64–4096.</td></tr>
+    <tr><td class="param-name">reference_images</td><td class="param-type">array</td><td></td><td>Hasta 5 imágenes de referencia. Cada objeto: <code>{"mime_type": "image/jpeg", "data": "&lt;base64&gt;"}</code></td></tr>
+  </table>
+
+  <h3>Estilos visuales disponibles</h3>
+  <table class="param-table">
+    <tr><th>Valor</th><th>Descripción</th></tr>
+    <tr><td class="param-name">cinematografico</td><td>Cinematográfico — iluminación dramática, colores profundos</td></tr>
+    <tr><td class="param-name">boceto</td><td>Boceto a lápiz sobre papel</td></tr>
+    <tr><td class="param-name">acuarela</td><td>Pintura en acuarela con bordes suaves</td></tr>
+    <tr><td class="param-name">steampunk</td><td>Estética victoriana con maquinaria de vapor</td></tr>
+    <tr><td class="param-name">risografia</td><td>Risografía — colores planos, trama de puntos</td></tr>
+    <tr><td class="param-name">monocromo</td><td>Blanco y negro con alto contraste</td></tr>
+    <tr><td class="param-name">pintura-oleo</td><td>Pintura al óleo con textura de pinceladas</td></tr>
+    <tr><td class="param-name">dibujo-antiguo</td><td>Grabado antiguo / ilustración vintage</td></tr>
+    <tr><td class="param-name">cyborg</td><td>Cyberpunk / neón con elementos tecnológicos</td></tr>
+    <tr><td class="param-name">plumilla</td><td>Plumilla — tinta china con trazos nítidos</td></tr>
+    <tr><td class="param-name">amanecer</td><td>Paleta de amanecer: rosados, naranjas y azules</td></tr>
+    <tr><td class="param-name">color</td><td>Explosión de color vibrante</td></tr>
+  </table>
+
+  <h3>Respuesta (200)</h3>
+  <pre><code>{ <span class="key">"job_id"</span>: <span class="str">"550e8400-e29b-41d4-a716-446655440000"</span> }</code></pre>
+
+  <div class="endpoint" style="margin-top:20px">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-url">/api/image-job/{job_id}</span>
+    <span class="endpoint-desc">Polling del resultado</span>
+  </div>
+
+  <h3 id="image-job">Estados de respuesta (polling)</h3>
+  <pre><code><span class="comment">// Pendiente — seguir haciendo polling cada 2 segundos</span>
+{ <span class="key">"status"</span>: <span class="str">"pending"</span> }
+
+<span class="comment">// Completado — imagen disponible</span>
+{
+  <span class="key">"status"</span>: <span class="str">"done"</span>,
+  <span class="key">"url"</span>: <span class="str">"https://www.textonflow.com/storage/gen_abc123.png"</span>
+}
+
+<span class="comment">// Error — el modelo rechazó el prompt o falló la generación</span>
+{ <span class="key">"status"</span>: <span class="str">"error"</span>, <span class="key">"error"</span>: <span class="str">"Prompt rejected by safety filters"</span> }</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Tiempo de generación:</strong> Entre 15 y 40 segundos dependiendo de la carga del modelo. Haz polling cada 2–3 segundos hasta recibir <code>status: "done"</code> o <code>"error"</code>.
+  </div>
+</section>
+
+<!-- ══ QR ══════════════════════════════════════════════════════════════════ -->
+<section id="qr">
+  <h2><span class="emoji">📱</span> Código QR</h2>
+  <div class="endpoint">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-url">/api/qr</span>
+    <span class="endpoint-desc">Generar QR personalizado</span>
+  </div>
+  <p>Genera un QR como PNG en base64, listo para usarse como overlay en una imagen de plantilla.</p>
+
+  <h3>Body (JSON)</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Req.</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">text</td><td class="param-type">string</td><td class="param-req">✓</td><td>—</td><td>URL o texto a codificar en el QR</td></tr>
+    <tr><td class="param-name">dark_color</td><td class="param-type">string</td><td></td><td><code>"#000000"</code></td><td>Color de los módulos del QR (hex)</td></tr>
+    <tr><td class="param-name">light_color</td><td class="param-type">string</td><td></td><td><code>"#FFFFFF"</code></td><td>Color de fondo del QR (hex)</td></tr>
+    <tr><td class="param-name">bg_color</td><td class="param-type">string</td><td></td><td><code>"#FFFFFF"</code></td><td>Color del área de padding (hex)</td></tr>
+    <tr><td class="param-name">padding</td><td class="param-type">int</td><td></td><td><code>20</code></td><td>Padding en píxeles alrededor del QR (0–120)</td></tr>
+  </table>
+
+  <h3>Respuesta (200)</h3>
+  <pre><code>{ <span class="key">"image"</span>: <span class="str">"data:image/png;base64,iVBORw0KGgo..."</span> }</code></pre>
+</section>
+
+<!-- ══ MODELO MULTITEXTREQUEST ════════════════════════════════════════════ -->
+<section id="model-request">
+  <h2><span class="emoji">📦</span> Modelo — MultiTextRequest</h2>
+  <p>El body completo del endpoint <code>/generate-multi</code>. Combina todos los elementos visuales en una sola solicitud atómica.</p>
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"template_name"</span>: <span class="str">"plantilla-oferta.jpg"</span>,   <span class="comment">// nombre en /templates/ o URL HTTPS</span>
+  <span class="key">"texts"</span>: [ <span class="comment">/* array de TextField */</span> ],
+  <span class="key">"vars"</span>: {                                     <span class="comment">// variables de sustitución</span>
+    <span class="key">"nombre"</span>: <span class="str">"Ana García"</span>,
+    <span class="key">"descuento"</span>: <span class="str">"30%"</span>
+  },
+  <span class="key">"overlays"</span>: [ <span class="comment">/* array de ImageOverlay */</span> ],
+  <span class="key">"shapes"</span>: [ <span class="comment">/* array de CanvasShape */</span> ],
+  <span class="key">"filter_name"</span>: <span class="str">"none"</span>,
+  <span class="key">"render_scale"</span>: <span class="num">1</span>,
+  <span class="key">"watermark"</span>: <span class="bool">false</span>
+}</code></pre>
+</section>
+
+<!-- ══ MODELO TEXTFIELD ═══════════════════════════════════════════════════ -->
+<section id="model-textfield">
+  <h2><span class="emoji">✏️</span> Modelo — TextField</h2>
+  <p>Define un bloque de texto con posición, tipografía, sombra, borde, fondo y efectos warp. Todos los campos son opcionales excepto <code>text</code>, <code>x</code> e <code>y</code>.</p>
+
+  <h3>Posición y texto</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">text</td><td class="param-type">string</td><td class="param-req">requerido</td><td>Texto a mostrar. Acepta <code>{variables}</code>, emojis y saltos de línea <code>\n</code></td></tr>
+    <tr><td class="param-name">x</td><td class="param-type">int</td><td class="param-req">requerido</td><td>Posición X en píxeles desde la izquierda</td></tr>
+    <tr><td class="param-name">y</td><td class="param-type">int</td><td class="param-req">requerido</td><td>Posición Y en píxeles desde arriba</td></tr>
+    <tr><td class="param-name">font_size</td><td class="param-type">int</td><td><code>60</code></td><td>Tamaño de fuente en puntos</td></tr>
+    <tr><td class="param-name">font_color</td><td class="param-type">string</td><td><code>"#FFFFFF"</code></td><td>Color del texto en hex o rgb()</td></tr>
+    <tr><td class="param-name">font_name</td><td class="param-type">string</td><td><code>"DejaVuSans-Bold"</code></td><td>Nombre de la fuente (ver sección Fuentes)</td></tr>
+    <tr><td class="param-name">rotation</td><td class="param-type">int</td><td><code>0</code></td><td>Rotación en grados (0–360)</td></tr>
+    <tr><td class="param-name">alignment</td><td class="param-type">string</td><td><code>"left"</code></td><td>Anclaje del bloque: <code>left</code>, <code>center</code>, <code>right</code></td></tr>
+    <tr><td class="param-name">text_align</td><td class="param-type">string</td><td><code>"center"</code></td><td>Alineación interna del texto: <code>left</code>, <code>center</code>, <code>right</code></td></tr>
+    <tr><td class="param-name">line_spacing</td><td class="param-type">int</td><td><code>10</code></td><td>Espaciado extra entre líneas en píxeles</td></tr>
+  </table>
+
+  <h3>Text wrap automático</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">text_wrap_enabled</td><td class="param-type">bool</td><td><code>false</code></td><td>Activa salto de línea automático por palabra</td></tr>
+    <tr><td class="param-name">text_wrap_padding</td><td class="param-type">int</td><td><code>60</code></td><td>Margen izquierdo+derecho en px. El texto ocupa <em>ancho_imagen − 2×padding</em></td></tr>
+  </table>
+
+  <h3>Sombra del texto</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">shadow_enabled</td><td class="param-type">bool</td><td><code>false</code></td><td>Activa la sombra</td></tr>
+    <tr><td class="param-name">shadow_color</td><td class="param-type">string</td><td><code>"#000000"</code></td><td>Color de la sombra</td></tr>
+    <tr><td class="param-name">shadow_opacity</td><td class="param-type">int</td><td><code>100</code></td><td>Opacidad 0–100</td></tr>
+    <tr><td class="param-name">shadow_offset_x</td><td class="param-type">int</td><td><code>2</code></td><td>Desplazamiento horizontal en px</td></tr>
+    <tr><td class="param-name">shadow_offset_y</td><td class="param-type">int</td><td><code>2</code></td><td>Desplazamiento vertical en px</td></tr>
+    <tr><td class="param-name">shadow_blur</td><td class="param-type">int</td><td><code>0</code></td><td>Radio de desenfoque gaussiano (0 = sombra dura)</td></tr>
+    <tr><td class="param-name">shadow_blend_mode</td><td class="param-type">string</td><td><code>"normal"</code></td><td><code>normal</code>, <code>multiply</code>, <code>darken</code>, <code>overlay</code>, <code>soft_light</code>, <code>screen</code></td></tr>
+  </table>
+
+  <h3>Contorno (stroke) del texto</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">stroke_enabled</td><td class="param-type">bool</td><td><code>false</code></td><td>Activa el contorno del texto</td></tr>
+    <tr><td class="param-name">stroke_color</td><td class="param-type">string</td><td><code>"#000000"</code></td><td>Color del contorno</td></tr>
+    <tr><td class="param-name">stroke_opacity</td><td class="param-type">int</td><td><code>100</code></td><td>Opacidad 0–100</td></tr>
+    <tr><td class="param-name">stroke_width</td><td class="param-type">int</td><td><code>2</code></td><td>Grosor del contorno en píxeles</td></tr>
+  </table>
+
+  <h3>Caja de fondo del texto</h3>
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">background_enabled</td><td class="param-type">bool</td><td><code>false</code></td><td>Activa la caja de fondo detrás del texto</td></tr>
+    <tr><td class="param-name">background_color</td><td class="param-type">string</td><td><code>"#000000"</code></td><td>Color del fondo</td></tr>
+    <tr><td class="param-name">background_opacity</td><td class="param-type">int</td><td><code>80</code></td><td>Opacidad 0–100</td></tr>
+    <tr><td class="param-name">background_color_type</td><td class="param-type">string</td><td><code>"solid"</code></td><td><code>solid</code>, <code>gradient2</code>, <code>instagram</code></td></tr>
+    <tr><td class="param-name">background_gradient_color2</td><td class="param-type">string</td><td><code>"#FFFFFF"</code></td><td>Segundo color para tipo <code>gradient2</code></td></tr>
+    <tr><td class="param-name">background_gradient_angle</td><td class="param-type">int</td><td><code>135</code></td><td>Ángulo del gradiente en grados</td></tr>
+    <tr><td class="param-name">background_radius</td><td class="param-type">int</td><td><code>0</code></td><td>Radio de esquinas redondeadas en px</td></tr>
+    <tr><td class="param-name">background_padding_top/right/bottom/left</td><td class="param-type">int</td><td><code>10</code></td><td>Relleno interior de la caja (px por lado)</td></tr>
+    <tr><td class="param-name">background_stroke_color</td><td class="param-type">string</td><td><code>"#FFFFFF"</code></td><td>Color del borde de la caja</td></tr>
+    <tr><td class="param-name">background_stroke_width</td><td class="param-type">int</td><td><code>0</code></td><td>Grosor del borde de la caja (0 = sin borde)</td></tr>
+    <tr><td class="param-name">background_stroke_type</td><td class="param-type">string</td><td><code>"solid"</code></td><td><code>solid</code>, <code>gradient2</code>, <code>instagram</code></td></tr>
+    <tr><td class="param-name">background_stroke_dash</td><td class="param-type">string</td><td><code>"solid"</code></td><td>Estilo de línea: <code>solid</code>, <code>dashed</code>, <code>dotted</code></td></tr>
+  </table>
+</section>
+
+<!-- ══ MODELO IMAGEOVERLAY ════════════════════════════════════════════════ -->
+<section id="model-overlay">
+  <h2><span class="emoji">🖼️</span> Modelo — ImageOverlay</h2>
+  <p>Superpone una imagen sobre la plantilla. Ideal para fotos de perfil del cliente, logos o imágenes generadas por IA.</p>
+
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Req.</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">src</td><td class="param-type">string</td><td class="param-req">✓</td><td>—</td><td>URL HTTPS de la imagen o Data URL base64 (<code>data:image/png;base64,...</code>)</td></tr>
+    <tr><td class="param-name">x</td><td class="param-type">int</td><td></td><td><code>0</code></td><td>Posición X en px</td></tr>
+    <tr><td class="param-name">y</td><td class="param-type">int</td><td></td><td><code>0</code></td><td>Posición Y en px</td></tr>
+    <tr><td class="param-name">width</td><td class="param-type">int</td><td></td><td><code>100</code></td><td>Ancho en px</td></tr>
+    <tr><td class="param-name">height</td><td class="param-type">int</td><td></td><td><code>100</code></td><td>Alto en px</td></tr>
+    <tr><td class="param-name">opacity</td><td class="param-type">float</td><td></td><td><code>1.0</code></td><td>Opacidad 0.0–1.0</td></tr>
+    <tr><td class="param-name">rotation</td><td class="param-type">float</td><td></td><td><code>0</code></td><td>Rotación en grados</td></tr>
+    <tr><td class="param-name">mask_type</td><td class="param-type">string</td><td></td><td><code>"none"</code></td><td>Recorte: <code>none</code>, <code>circle</code>, <code>ellipse</code>, <code>square</code>, <code>rect</code>, <code>star12</code></td></tr>
+    <tr><td class="param-name">mask_radius</td><td class="param-type">int</td><td></td><td><code>0</code></td><td>Radio de esquinas para <code>mask_type: "rect"</code></td></tr>
+    <tr><td class="param-name">mask_border_width</td><td class="param-type">int</td><td></td><td><code>0</code></td><td>Grosor del borde alrededor del overlay (px)</td></tr>
+    <tr><td class="param-name">mask_border_color</td><td class="param-type">string</td><td></td><td><code>"#ffffff"</code></td><td>Color del borde</td></tr>
+    <tr><td class="param-name">mask_shadow_enabled</td><td class="param-type">bool</td><td></td><td><code>false</code></td><td>Activa sombra bajo el overlay</td></tr>
+    <tr><td class="param-name">mask_shadow_blur</td><td class="param-type">int</td><td></td><td><code>8</code></td><td>Desenfoque de la sombra (px)</td></tr>
+  </table>
+
+  <h3>Ejemplo — foto de perfil circular</h3>
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"src"</span>: <span class="str">"https://cdn.example.com/foto-cliente.jpg"</span>,
+  <span class="key">"x"</span>: <span class="num">60</span>, <span class="key">"y"</span>: <span class="num">60</span>,
+  <span class="key">"width"</span>: <span class="num">200</span>, <span class="key">"height"</span>: <span class="num">200</span>,
+  <span class="key">"mask_type"</span>: <span class="str">"circle"</span>,
+  <span class="key">"mask_border_width"</span>: <span class="num">4</span>,
+  <span class="key">"mask_border_color"</span>: <span class="str">"#FFFFFF"</span>,
+  <span class="key">"mask_shadow_enabled"</span>: <span class="bool">true</span>,
+  <span class="key">"mask_shadow_blur"</span>: <span class="num">12</span>
+}</code></pre>
+</section>
+
+<!-- ══ MODELO CANVASSHAPE ════════════════════════════════════════════════ -->
+<section id="model-shape">
+  <h2><span class="emoji">🔷</span> Modelo — CanvasShape</h2>
+  <p>Forma geométrica renderizada debajo de los textos. Útil para crear fondos, marcos y divisores.</p>
+
+  <table class="param-table">
+    <tr><th>Campo</th><th>Tipo</th><th>Defecto</th><th>Descripción</th></tr>
+    <tr><td class="param-name">shape_type</td><td class="param-type">string</td><td><code>"rect"</code></td><td><code>rect</code>, <code>square</code>, <code>ellipse</code>, <code>circle</code>, <code>star12</code></td></tr>
+    <tr><td class="param-name">x, y</td><td class="param-type">int</td><td><code>0</code></td><td>Posición en px</td></tr>
+    <tr><td class="param-name">width, height</td><td class="param-type">int</td><td><code>100</code></td><td>Dimensiones en px</td></tr>
+    <tr><td class="param-name">fill_color</td><td class="param-type">string</td><td><code>"#667eea"</code></td><td>Color de relleno</td></tr>
+    <tr><td class="param-name">fill_opacity</td><td class="param-type">float</td><td><code>0.8</code></td><td>Opacidad 0.0–1.0</td></tr>
+    <tr><td class="param-name">stroke_color</td><td class="param-type">string</td><td><code>"#000000"</code></td><td>Color del borde</td></tr>
+    <tr><td class="param-name">stroke_width</td><td class="param-type">int</td><td><code>0</code></td><td>Grosor del borde (0 = sin borde)</td></tr>
+    <tr><td class="param-name">rotation</td><td class="param-type">float</td><td><code>0</code></td><td>Rotación en grados</td></tr>
+    <tr><td class="param-name">z_index</td><td class="param-type">int</td><td><code>0</code></td><td>Orden de capas — mayor = encima</td></tr>
+    <tr><td class="param-name">cover_blur</td><td class="param-type">int</td><td><code>0</code></td><td>Desenfoque gaussiano aplicado a la zona de la imagen debajo de la forma (glass morphism)</td></tr>
+  </table>
+</section>
+
+<!-- ══ VARIABLES ══════════════════════════════════════════════════════════ -->
+<section id="vars">
+  <h2><span class="emoji">🔧</span> Variables dinámicas</h2>
+  <p>Usa <code>{nombre_variable}</code> dentro de cualquier campo <code>text</code> de un <code>TextField</code>. El motor sustituye automáticamente cada llave con el valor correspondiente del objeto <code>vars</code> antes de renderizar.</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"texts"</span>: [
+    { <span class="key">"text"</span>: <span class="str">"Hola, {nombre} 👋"</span>, <span class="key">"x"</span>: <span class="num">100</span>, <span class="key">"y"</span>: <span class="num">80</span>, <span class="key">"font_size"</span>: <span class="num">64</span> },
+    { <span class="key">"text"</span>: <span class="str">"Tu descuento: {descuento}"</span>, <span class="key">"x"</span>: <span class="num">100</span>, <span class="key">"y"</span>: <span class="num">180</span>, <span class="key">"font_size"</span>: <span class="num">48</span> }
+  ],
+  <span class="key">"vars"</span>: {
+    <span class="key">"nombre"</span>: <span class="str">"{{first name}}"</span>,    <span class="comment">// custom field de ManyChat</span>
+    <span class="key">"descuento"</span>: <span class="str">"{{descuento_pct}}"</span>
+  }
+}</code></pre>
+
+  <div class="callout callout-info">
+    <strong>Integración ManyChat:</strong> En el nodo "HTTP Request" de ManyChat, los custom fields se insertan con la sintaxis <code>{{custom_field_name}}</code>. TextOnFlow entonces sustituye <code>{nombre}</code> con el valor real del suscriptor.
+  </div>
+</section>
+
+<!-- ══ COUNTDOWN ══════════════════════════════════════════════════════════ -->
+<section id="countdown">
+  <h2><span class="emoji">⏱️</span> Contadores regresivos</h2>
+  <p>Un <code>TextField</code> puede convertirse en un contador regresivo activando <code>countdown_mode</code>. El texto del campo se ignora y se reemplaza automáticamente por el tiempo restante.</p>
+
+  <h3>Modo evento (fecha fija)</h3>
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"text"</span>: <span class="str">""</span>,
+  <span class="key">"x"</span>: <span class="num">540</span>, <span class="key">"y"</span>: <span class="num">400</span>,
+  <span class="key">"font_size"</span>: <span class="num">80</span>,
+  <span class="key">"font_color"</span>: <span class="str">"#FFFFFF"</span>,
+  <span class="key">"countdown_mode"</span>: <span class="str">"event"</span>,
+  <span class="key">"countdown_event_end_utc"</span>: <span class="str">"2026-12-31T23:59:59Z"</span>,
+  <span class="key">"countdown_format"</span>: <span class="str">"DD:HH:MM:SS"</span>,
+  <span class="key">"countdown_expired_text"</span>: <span class="str">"¡Oferta expirada!"</span>
+}</code></pre>
+
+  <h3>Modo urgencia (timer por suscriptor)</h3>
+  <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"text"</span>: <span class="str">""</span>,
+  <span class="key">"x"</span>: <span class="num">540</span>, <span class="key">"y"</span>: <span class="num">400</span>,
+  <span class="key">"countdown_mode"</span>: <span class="str">"urgency"</span>,
+  <span class="key">"countdown_ts_var"</span>: <span class="str">"timer_final"</span>,  <span class="comment">// nombre del custom field ManyChat</span>
+  <span class="key">"countdown_format"</span>: <span class="str">"HH:MM:SS"</span>,
+  <span class="key">"countdown_urgency_hours"</span>: <span class="num">3.0</span>,        <span class="comment">// cambia color al llegar a 3h</span>
+  <span class="key">"countdown_urgency_color"</span>: <span class="str">"#FF3B30"</span>
+}</code></pre>
+
+  <table class="param-table" style="margin-top:12px">
+    <tr><th>countdown_format</th><th>Ejemplo de salida</th></tr>
+    <tr><td class="param-name">HH:MM:SS</td><td>14:32:07</td></tr>
+    <tr><td class="param-name">DD:HH:MM:SS</td><td>03:14:32:07</td></tr>
+    <tr><td class="param-name">HH:MM</td><td>14:32</td></tr>
+  </table>
+</section>
+
+<!-- ══ FILTERS ════════════════════════════════════════════════════════════ -->
+<section id="filters">
+  <h2><span class="emoji">🎨</span> Filtros de imagen</h2>
+  <p>El campo <code>filter_name</code> de <code>MultiTextRequest</code> aplica un filtro de color a la imagen base antes de renderizar los textos.</p>
+
+  <h4>Instagram</h4>
+  <div class="filter-grid">
+    <div class="filter-chip">clarendon</div><div class="filter-chip">gingham</div>
+    <div class="filter-chip">juno</div><div class="filter-chip">lark</div>
+    <div class="filter-chip">mayfair</div><div class="filter-chip">moon</div>
+    <div class="filter-chip">nashville</div><div class="filter-chip">perpetua</div>
+    <div class="filter-chip">reyes</div><div class="filter-chip">rise</div>
+    <div class="filter-chip">slumber</div><div class="filter-chip">valencia</div>
+    <div class="filter-chip">walden</div><div class="filter-chip">xpro2</div>
+    <div class="filter-chip">inkwell</div><div class="filter-chip">toaster</div>
+    <div class="filter-chip">lo_fi</div><div class="filter-chip">hefe</div>
+  </div>
+
+  <h4>Cinematográficos / LUT</h4>
+  <div class="filter-grid">
+    <div class="filter-chip">bleach_bypass</div><div class="filter-chip">candlelight</div>
+    <div class="filter-chip">crisp_warm</div><div class="filter-chip">crisp_winter</div>
+    <div class="filter-chip">fall_colors</div><div class="filter-chip">foggy_night</div>
+    <div class="filter-chip">horror_blue</div><div class="filter-chip">late_sunset</div>
+    <div class="filter-chip">moonlight_ps</div><div class="filter-chip">soft_warming</div>
+    <div class="filter-chip">teal_orange</div><div class="filter-chip">fuji_eterna</div>
+    <div class="filter-chip">filmstock</div><div class="filter-chip">tension_green</div>
+    <div class="filter-chip">edgy_amber</div><div class="filter-chip">drop_blues</div>
+    <div class="filter-chip">2strip</div><div class="filter-chip">3strip</div>
+    <div class="filter-chip">futuristic</div><div class="filter-chip">night_from_day</div>
+    <div class="filter-chip">fuji_f125_2393</div><div class="filter-chip">fuji_f125_2395</div>
+    <div class="filter-chip">fuji_reala</div><div class="filter-chip">kodak_5205</div>
+    <div class="filter-chip">kodak_5218_2383</div><div class="filter-chip">kodak_5218_2395</div>
+  </div>
+</section>
+
+<!-- ══ WARP ════════════════════════════════════════════════════════════════ -->
+<section id="warp">
+  <h2><span class="emoji">🌀</span> Efectos Warp (deformación de texto)</h2>
+  <p>El campo <code>warp_style</code> de un <code>TextField</code> deforma el texto con distintas curvaturas. Combínalo con <code>warp_bend</code> (−100 a 100) para controlar la intensidad.</p>
+  <div class="warp-grid">
+    <div class="warp-chip">none</div><div class="warp-chip">arc</div>
+    <div class="warp-chip">arc_lower</div><div class="warp-chip">arc_upper</div>
+    <div class="warp-chip">arch</div><div class="warp-chip">bulge</div>
+    <div class="warp-chip">shell_lower</div><div class="warp-chip">shell_upper</div>
+    <div class="warp-chip">flag</div><div class="warp-chip">wave</div>
+    <div class="warp-chip">fish</div><div class="warp-chip">rise</div>
+    <div class="warp-chip">fisheye</div><div class="warp-chip">inflate</div>
+    <div class="warp-chip">squeeze</div><div class="warp-chip">twist</div>
+  </div>
+</section>
+
+<!-- ══ FUENTES ════════════════════════════════════════════════════════════ -->
+<section id="fonts">
+  <h2><span class="emoji">🔤</span> Fuentes disponibles</h2>
+  <p>Pasa el nombre exacto en el campo <code>font_name</code> del <code>TextField</code>. Todas las fuentes están precargadas en el servidor.</p>
+  <div class="filter-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    <div class="filter-chip">DejaVuSans-Bold</div>
+    <div class="filter-chip">Montserrat-Bold</div>
+    <div class="filter-chip">Montserrat-SemiBold</div>
+    <div class="filter-chip">Montserrat-Regular</div>
+    <div class="filter-chip">Oswald-Bold</div>
+    <div class="filter-chip">Roboto-Bold</div>
+    <div class="filter-chip">Roboto-Regular</div>
+    <div class="filter-chip">Pacifico-Regular</div>
+    <div class="filter-chip">BebasNeue-Regular</div>
+    <div class="filter-chip">PlayfairDisplay-Bold</div>
+    <div class="filter-chip">SourceSansPro-Bold</div>
+    <div class="filter-chip">NotoSans-Bold</div>
+    <div class="filter-chip">NotoSansArabic-Bold</div>
+    <div class="filter-chip">NotoEmoji-Regular</div>
+  </div>
+  <div class="callout callout-tip" style="margin-top:12px">
+    <strong>Emojis:</strong> Todos los emojis Unicode son compatibles. El renderizador usa Noto Emoji automáticamente para los caracteres de emoji sin necesidad de configuración adicional.
+  </div>
+</section>
+
+<!-- ══ FLUJO MANYCHAT ══════════════════════════════════════════════════════ -->
+<section id="manychat-flow">
+  <h2><span class="emoji">🤖</span> Flujo ManyChat completo</h2>
+  <p>Ejemplo de integración end-to-end: cuando un suscriptor activa el flujo, se genera una imagen personalizada y se envía por WhatsApp.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Nodo "Action" — Establecer custom field <code>timer_final</code> (solo si usas countdown urgencia)</h4>
+        <p>Calcula el timestamp Unix de expiración y guárdalo en el custom field del suscriptor.</p>
+        <p>Fórmula ManyChat: <code>{{NOW}} + 86400</code> (24 horas en segundos).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Nodo "HTTP Request" — Llamar a TextOnFlow</h4>
+        <p><strong>Method:</strong> POST<br>
+        <strong>URL:</strong> <code>https://www.textonflow.com/generate-multi</code><br>
+        <strong>Headers:</strong> <code>Content-Type: application/json</code></p>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>{
+  <span class="key">"template_name"</span>: <span class="str">"mi-plantilla.jpg"</span>,
+  <span class="key">"texts"</span>: [
+    {
+      <span class="key">"text"</span>: <span class="str">"Hola, {nombre} 🎉"</span>,
+      <span class="key">"x"</span>: <span class="num">540</span>, <span class="key">"y"</span>: <span class="num">120</span>,
+      <span class="key">"font_size"</span>: <span class="num">72</span>,
+      <span class="key">"font_color"</span>: <span class="str">"#FFFFFF"</span>,
+      <span class="key">"alignment"</span>: <span class="str">"center"</span>,
+      <span class="key">"shadow_enabled"</span>: <span class="bool">true</span>,
+      <span class="key">"shadow_blur"</span>: <span class="num">6</span>
+    }
+  ],
+  <span class="key">"vars"</span>: {
+    <span class="key">"nombre"</span>: <span class="str">"{{first name}}"</span>
+  }
+}</code></pre>
+        <div class="callout callout-info">
+          <strong>Response mapping en ManyChat:</strong> Guarda el campo <code>url</code> de la respuesta en un custom field, por ejemplo <code>imagen_url</code>.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Nodo "Send Message" → Image</h4>
+        <p>En el campo URL de la imagen, usa el custom field donde guardaste la respuesta:</p>
+        <p><code>{{imagen_url}}</code></p>
+        <p>ManyChat descargará la imagen de TextOnFlow y la enviará al suscriptor por WhatsApp.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>¡Listo! 🎯</h4>
+        <p>El suscriptor recibe una imagen personalizada con su nombre, datos de la oferta y/o contador regresivo en tiempo real — todo sin ningún diseñador ni exportación manual.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ERRORES ════════════════════════════════════════════════════════════ -->
+<section id="errors">
+  <h2><span class="emoji">⚠️</span> Códigos de error</h2>
+  <table class="param-table">
+    <tr><th>HTTP</th><th>Código</th><th>Causa</th><th>Solución</th></tr>
+    <tr>
+      <td><span class="status-code s200">200</span></td>
+      <td>OK</td>
+      <td>Solicitud exitosa</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><span class="status-code s400">400</span></td>
+      <td>Bad Request</td>
+      <td>JSON inválido o campo requerido faltante</td>
+      <td>Revisa que <code>template_name</code> y <code>texts</code> estén presentes</td>
+    </tr>
+    <tr>
+      <td><span class="status-code s404">404</span></td>
+      <td>Not Found</td>
+      <td>El archivo de plantilla no existe</td>
+      <td>Verifica el nombre exacto del archivo en <code>template_name</code></td>
+    </tr>
+    <tr>
+      <td><span class="status-code s400">422</span></td>
+      <td>Unprocessable Entity</td>
+      <td>Tipo de dato incorrecto (ej. string donde se espera int)</td>
+      <td>Revisa los tipos del modelo. FastAPI devuelve detalles en <code>detail</code></td>
+    </tr>
+    <tr>
+      <td><span class="status-code s500">500</span></td>
+      <td>Internal Server Error</td>
+      <td>Error en el renderizado (fuente no encontrada, imagen corrupta)</td>
+      <td>Verifica el <code>font_name</code> y que la imagen base sea accesible</td>
+    </tr>
+    <tr>
+      <td><span class="status-code s500">503</span></td>
+      <td>Service Unavailable</td>
+      <td>Servidor en mantenimiento o reinicio</td>
+      <td>Reintenta en 10–30 segundos</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ══ LÍMITES ════════════════════════════════════════════════════════════ -->
+<section id="limits">
+  <h2><span class="emoji">📏</span> Límites y buenas prácticas</h2>
+
+  <h3>Límites técnicos</h3>
+  <ul>
+    <li>Tamaño máximo recomendado de imagen base: <strong>3840 × 3840 px</strong> (para render_scale 1)</li>
+    <li>Imágenes externas (overlays, template_name por URL): máximo <strong>15 segundos</strong> de timeout de descarga</li>
+    <li>Tiempo de respuesta típico: <strong>200–800 ms</strong> para plantillas locales con render_scale 1</li>
+    <li>La generación IA puede tardar <strong>8–30 segundos</strong> — usa el sistema de polling</li>
+  </ul>
+
+  <h3>Buenas prácticas</h3>
+  <ul>
+    <li><strong>Usa render_scale: 1</strong> para flujos automáticos de ManyChat — es significativamente más rápido y el resultado es idéntico para pantallas móviles</li>
+    <li><strong>Subir plantillas al editor</strong> en lugar de URLs externas — elimina el delay de descarga y es más estable</li>
+    <li><strong>Tamaño recomendado de plantillas:</strong> 1080×1080 px para stories cuadradas, 1080×1920 px para vertical</li>
+    <li><strong>Fonts:</strong> Usa <code>Montserrat-Bold</code> o <code>BebasNeue-Regular</code> para texto de marketing — mayor impacto visual</li>
+    <li><strong>Overlays de fotos de perfil:</strong> Usa <code>mask_type: "circle"</code> con <code>mask_border_width: 4</code> para un acabado profesional</li>
+    <li><strong>Variables:</strong> Si un custom field puede estar vacío en ManyChat, define un fallback en el texto: <code>{nombre|Cliente}</code> — TextOnFlow usa el valor antes del <code>|</code> si está disponible</li>
+  </ul>
+
+  <div class="callout callout-warn">
+    <strong>No uses la URL de imagen como CDN:</strong> Las imágenes generadas son temporales. Si tu cliente necesita guardar la imagen, hazlo desde el lado de ManyChat usando el nodo "Save Attachment" o descargándola en tu propio almacenamiento.
+  </div>
+</section>
+
+<div class="footer-note">
+  TextOnFlow © 2026 — Todos los derechos reservados.<br>
+  Cabo San Lucas, BCS — México &nbsp;·&nbsp;
+  <a href="mailto:hola@textonflow.com">hola@textonflow.com</a><br><br>
+  <a href="/">Editor</a> &nbsp;·&nbsp;
+  <a href="/manual">Manual</a> &nbsp;·&nbsp;
+  <a href="/faq">FAQ</a> &nbsp;·&nbsp;
+  <a href="/precios">Precios</a> &nbsp;·&nbsp;
+  <a href="/terminos">Términos</a> &nbsp;·&nbsp;
+  <a href="/privacidad">Privacidad</a>
+</div>
+
+</main>
+</div><!-- /.layout -->
+
+<script>
+// ── Copy code ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  var pre = btn.parentElement;
+  var code = pre.querySelector('code');
+  var text = code.innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '✓ Copiado';
+    btn.style.color = '#4ade80';
+    setTimeout(function() { btn.textContent = 'Copiar'; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ── Active sidebar link on scroll ──────────────────────────────────────────
+(function() {
+  var links = document.querySelectorAll('aside a[href^="#"]');
+  var sections = [];
+  links.forEach(function(a) {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ el: el, a: a });
+  });
+  function onScroll() {
+    var scrollY = window.scrollY + 80;
+    var active = null;
+    sections.forEach(function(s) {
+      if (s.el.offsetTop <= scrollY) active = s;
+    });
+    links.forEach(function(a) { a.classList.remove('active'); });
+    if (active) active.a.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+
+</body>
+</html>

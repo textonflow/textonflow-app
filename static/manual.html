@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de Usuario — TextOnFlow</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d0d14;color:#d0d0e8;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 80px}
+  .top-bar{background:#0d0d14;border-bottom:1px solid #1e1e2e;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  .top-bar img{height:24px;width:auto;opacity:.9;}
+  .back-btn{display:inline-flex;align-items:center;gap:7px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#a0a0c0;text-decoration:none;padding:7px 14px;font-size:13px;transition:all .2s;}
+  .back-btn:hover{background:#252540;color:#fff;border-color:#4446a0;}
+  .content{max-width:820px;margin:0 auto;padding:40px 24px;}
+  h1{font-size:2rem;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
+  .subtitle{color:#666;font-size:.95rem;margin-bottom:40px;}
+  h2{font-size:1.1rem;font-weight:700;color:#a5b4fc;margin:40px 0 12px;display:flex;align-items:center;gap:8px;}
+  p,li{font-size:.93rem;line-height:1.75;color:#b0b0c8;margin-bottom:10px;}
+  ul,ol{padding-left:22px;margin-bottom:12px;}
+  .step-block{background:#131320;border:1px solid #1e1e35;border-radius:12px;padding:20px 24px;margin-bottom:16px;}
+  .step-num{display:inline-block;background:#4f46e5;color:#fff;border-radius:50%;width:26px;height:26px;line-height:26px;text-align:center;font-size:12px;font-weight:700;margin-right:8px;flex-shrink:0;}
+  .step-row{display:flex;align-items:flex-start;gap:4px;margin-bottom:10px;}
+  .tip{background:rgba(99,102,241,.08);border-left:3px solid #6366f1;border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:.88rem;color:#a5b4fc;}
+  .warn{background:rgba(251,191,36,.06);border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:.88rem;color:#fcd34d;}
+  code{background:#1e1e30;color:#c084fc;border-radius:4px;padding:2px 6px;font-size:.85rem;}
+  .footer-note{margin-top:48px;padding-top:24px;border-top:1px solid #1e1e2e;font-size:.82rem;color:#444;text-align:center;}
+  .footer-note a{color:#555;text-decoration:none;}
+
+  /* ── Ilustraciones UI ── */
+  .ui-mock{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin:18px 0;font-family:-apple-system,'Segoe UI',sans-serif;overflow:hidden;}
+  .ui-mock-label{font-size:10px;font-weight:700;color:#555;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}
+  .mock-panel{background:#222;border:1px solid #333;border-radius:8px;padding:12px 14px;}
+  .mock-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .mock-row:last-child{margin-bottom:0;}
+  .mock-label{font-size:10px;color:#606060;font-weight:600;width:80px;flex-shrink:0;}
+  .mock-input{flex:1;background:#2a2a2a;border:1px solid #333;border-radius:5px;padding:5px 8px;font-size:11px;color:#e8e8e8;}
+  .mock-input.url{color:#a0a0a0;font-size:10px;}
+  .mock-btn{background:#7c6eff;color:#fff;border:none;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .mock-btn.outline{background:transparent;border:1px solid #333;color:#a0a0a0;}
+  .mock-btn.green{background:#16a34a;}
+  .mock-btn.blue{background:#1a73e8;}
+  .mock-section-title{font-size:11px;font-weight:700;color:#e8e8e8;display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .mock-section-title svg{width:13px;height:13px;stroke:#e8e8e8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .mock-badge{background:#2a2a2a;color:#7c6eff;border:1px solid rgba(124,110,255,.4);border-radius:9px;font-size:9px;font-weight:800;padding:1px 6px;}
+  .mock-accordion{background:#222;border:1px solid #333;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .mock-chevron{color:#555;font-size:10px;}
+  .mock-tag{background:#2a2a2a;border:1px solid #3d3d3d;color:#7c6eff;border-radius:4px;font-size:10px;padding:2px 6px;font-family:monospace;}
+
+  /* QR mockup */
+  .qr-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;width:60px;height:60px;}
+  .qr-cell{background:#222;}
+  .qr-cell.on{background:#1a1a1a;}
+
+  /* Guías ilustración */
+  .mock-canvas-row{display:flex;align-items:center;gap:12px;background:#2a2a2a;border-radius:6px;padding:8px 12px;}
+  .mock-checkbox{width:14px;height:14px;background:#7c6eff;border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .mock-checkbox svg{width:9px;height:9px;stroke:#fff;fill:none;stroke-width:3;}
+  .guide-line{position:relative;width:80px;height:36px;background:#333;border-radius:4px;overflow:hidden;}
+  .guide-v{position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(0,200,0,.6);border:none;}
+  .guide-h{position:absolute;top:50%;left:0;height:1px;width:100%;background:rgba(0,200,0,.6);}
+
+  /* JSON / campos personalizados */
+  .mock-json{background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:10px;color:#a0a0a0;line-height:1.7;}
+  .mock-json .key{color:#c084fc;}
+  .mock-json .val{color:#86efac;}
+  .mock-json .val-s{color:#fcd34d;}
+  .mock-warning{background:rgba(245,158,11,.07);border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#fcd34d;margin-top:8px;}
+
+  /* Color pickers row */
+  .color-row{display:flex;gap:6px;}
+  .color-swatch{width:28px;height:24px;border-radius:4px;border:1px solid #3d3d3d;cursor:pointer;}
+  .color-group{flex:1;}
+  .color-group label{font-size:9px;color:#606060;display:block;margin-bottom:3px;font-weight:700;}
+  .mock-range{width:100%;height:4px;background:#333;border-radius:2px;appearance:none;margin-top:4px;}
+
+  /* AI style cards */
+  .ai-style-grid{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+  .ai-style-card{background:#2a2a2a;border:1px solid #3d3d3d;border-radius:8px;padding:8px 12px;font-size:10px;color:#a0a0a0;cursor:default;min-width:80px;text-align:center;}
+  .ai-style-card.active{border-color:#7c6eff;color:#c4b5fd;background:#1e1535;}
+
+  /* Result modal mockup */
+  .result-modal-mock{background:#13132a;border:1px solid #2a2a40;border-radius:12px;padding:16px;margin:12px 0;}
+  .result-img-placeholder{background:#1e1e30;border:1px dashed #3a3a50;border-radius:8px;height:120px;display:flex;align-items:center;justify-content:center;color:#444;font-size:11px;margin-bottom:12px;}
+  .result-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .result-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:default;color:#fff;}
+  .result-btn.dl{background:#16a34a;}
+  .result-btn.drive{background:#1a73e8;}
+  .result-btn.fb{background:#1877f2;}
+  .result-btn.tg{background:#229ED9;}
+  .result-btn.copy{background:#667eea;}
+  .result-status{background:#1e1e30;border-radius:8px;padding:9px 14px;font-size:11px;color:#a0b4cc;text-align:center;margin-top:8px;}
+
+  /* Sección badge */
+  .new-badge{background:#7c6eff;color:#fff;font-size:9px;font-weight:800;border-radius:4px;padding:2px 6px;letter-spacing:.5px;text-transform:uppercase;margin-left:6px;vertical-align:middle;}
+  .update-badge{background:#f59e0b;color:#000;font-size:9px;font-weight:800;border-radius:4px;padding:2px 6px;letter-spacing:.5px;text-transform:uppercase;margin-left:6px;vertical-align:middle;}
+
+  /* DAPI & Webhooks manual sections */
+  .api-flow{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 0;flex-wrap:wrap;}
+  .api-flow-node{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+  .api-flow-icon{font-size:26px;}
+  .api-flow-label{font-size:10px;color:#9ca3af;line-height:1.3;max-width:80px;}
+  .api-flow-arrow{font-size:20px;color:#4f46e5;font-weight:700;}
+  .api-step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+  .api-step-card{background:#131320;border:1px solid #1e1e35;border-radius:10px;padding:14px 16px;}
+  .api-step-num-big{font-size:28px;font-weight:900;color:#4f46e5;line-height:1;margin-bottom:6px;}
+  .api-step-title{font-size:.85rem;font-weight:700;color:#c4b5fd;margin-bottom:4px;}
+  .api-step-desc{font-size:.82rem;color:#6b7280;line-height:1.5;}
+  .integration-row{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
+  .integration-card{flex:1;min-width:200px;background:#131320;border:1px solid #1e1e35;border-radius:10px;padding:14px 16px;}
+  .integration-logo{font-size:20px;margin-bottom:6px;}
+  .integration-name{font-size:.85rem;font-weight:700;color:#e0e0f0;margin-bottom:4px;}
+  .integration-desc{font-size:.8rem;color:#6b7280;line-height:1.5;}
+  .mock-endpoint{background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:12px 14px;font-family:monospace;font-size:11px;margin:12px 0;}
+  .mock-ep-method{display:inline-block;background:#4f46e5;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;margin-right:6px;}
+  .mock-ep-url{color:#86efac;}
+  .var-pill{display:inline-block;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);color:#c4b5fd;border-radius:20px;padding:2px 8px;font-size:.78rem;font-family:monospace;margin:2px;}
+  .result-json{background:#0a0a1a;border:1px solid #1e2a3a;border-radius:8px;padding:12px 14px;font-family:monospace;font-size:11px;color:#94a3b8;line-height:1.7;margin:12px 0;}
+  .rj-key{color:#c084fc;}.rj-str{color:#86efac;}.rj-bool{color:#60a5fa;}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <img src="/static/logo-blanco-new.png" alt="TextOnFlow">
+  <a class="back-btn" href="/">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver al editor
+  </a>
+</div>
+
+<div class="content">
+  <h1>Manual de Usuario</h1>
+  <p class="subtitle">Guía completa para usar TextOnFlow — el editor de imágenes personalizadas para ManyChat y WhatsApp. Actualizado 2026-04-09.</p>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>¿Qué es TextOnFlow?</h2>
+  <p>TextOnFlow es una herramienta visual de arrastrar-y-soltar para crear imágenes personalizadas con texto, stickers, marcos, contadores regresivos y códigos QR. Diseñado para integrarse con ManyChat y WhatsApp, permite que cada usuario reciba una imagen única con su nombre, ciudad o cualquier dato de sus custom fields.</p>
+  <p>También incluye un generador de imágenes con IA (Gemini 2.5) para crear la imagen base sin necesitar un diseñador.</p>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 1 — Cargar tu imagen base</h2>
+  <p>Tienes tres formas de obtener la imagen base. Elige la que mejor se adapte a tu flujo:</p>
+
+  <div class="step-block">
+    <div class="step-row"><span class="step-num">A</span><p><strong>Pegar un link:</strong> Copia la URL de tu imagen y pégala en el campo de texto. Funciona con links directos (.jpg, .png, .webp). Presiona <strong>Cargar</strong> para confirmar.</p></div>
+    <div class="step-row"><span class="step-num">B</span><p><strong>Subir desde tu PC:</strong> Haz clic en <strong>↑ Subir</strong> para seleccionar un archivo directamente desde tu computadora.</p></div>
+    <div class="step-row"><span class="step-num">C</span><p><strong>Generar con IA:</strong> Describe la imagen que quieres y Gemini la genera en segundos. Ve a la sección <em>Paso 1B — Generación con IA</em> más abajo para el flujo completo.</p></div>
+  </div>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Panel de carga de imagen</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="mock-section-title">
+        <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Sustituir Imagen
+      </div>
+    </div>
+    <div class="mock-row">
+      <div class="mock-input url" style="flex:1;">https://…/mi-imagen.jpg</div>
+      <button class="mock-btn outline">Cargar</button>
+      <button class="mock-btn">↑ Subir</button>
+    </div>
+    <div class="mock-row" style="margin-top:4px;">
+      <div style="flex:1;background:#2a2a2a;border:1px solid #333;border-radius:5px;padding:5px 8px;font-size:10px;color:#606060;">Filtro: Sin filtro</div>
+      <div style="background:#2a2a2a;border:1px solid #333;border-radius:5px;padding:5px 8px;font-size:10px;color:#a0a0a0;display:flex;align-items:center;gap:4px;">
+        <div class="mock-checkbox"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div> Guías
+      </div>
+      <div style="font-size:10px;color:#606060;padding:5px 8px;">1024 × 1024 px</div>
+    </div>
+  </div>
+
+  <div class="tip">Una vez cargada la imagen, el título cambia de "Cargar Imagen" a <strong>"Sustituir Imagen"</strong> para dejar claro que el siguiente clic reemplazará la base actual.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 1B — Generación de imagen con IA <span class="new-badge">IA</span></h2>
+  <p>TextOnFlow incluye un generador de imágenes impulsado por <strong>Gemini 2.5 Flash</strong>. Puedes crear la imagen base sin necesitar un diseñador ni acceso a un banco de imágenes.</p>
+
+  <div class="step-block">
+    <div class="step-row"><span class="step-num">1</span><p>En la pantalla de inicio haz clic en el botón <strong>Crear con IA</strong>. Se abre el panel de generación.</p></div>
+    <div class="step-row"><span class="step-num">2</span><p>Escribe un prompt descriptivo en español o inglés, elige el <strong>aspecto de imagen</strong> (cuadrada, horizontal, vertical, Story…) y selecciona un <strong>estilo visual</strong> (Cinematográfico, Boceto, Acuarela, Steampunk, etc.).</p></div>
+    <div class="step-row"><span class="step-num">3</span><p>Haz clic en <strong>Generar imagen</strong>. El proceso tarda entre 15 y 40 segundos. Verás el progreso animado mientras esperas.</p></div>
+    <div class="step-row"><span class="step-num">4</span><p>Cuando la imagen esté lista puedes <strong>Usar esta imagen</strong> (carga en el canvas), <strong>Volver a intentar</strong> (nueva generación con el mismo prompt) o <strong>Editar prompt</strong> para ajustarlo.</p></div>
+  </div>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Panel IA (selección de aspecto y estilo)</div>
+    <div class="mock-panel">
+      <div style="font-size:9px;color:#606060;font-weight:700;margin-bottom:6px;">ASPECTO DE IMAGEN</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="background:#7c6eff;color:#fff;border-radius:8px;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;">1:1<br><span style="font-size:8px;font-weight:400;">Cuadrada</span></div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;color:#a0a0a0;border-radius:8px;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;">16:9<br><span style="font-size:8px;font-weight:400;">Horizontal</span></div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;color:#a0a0a0;border-radius:8px;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;">9:16<br><span style="font-size:8px;font-weight:400;">Story</span></div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;color:#a0a0a0;border-radius:8px;font-size:10px;font-weight:700;padding:6px 10px;text-align:center;">4:5<br><span style="font-size:8px;font-weight:400;">Portrait</span></div>
+      </div>
+      <div style="font-size:9px;color:#606060;font-weight:700;margin-bottom:6px;">ESTILO VISUAL</div>
+      <div class="ai-style-grid">
+        <div class="ai-style-card active">Cinematográfico</div>
+        <div class="ai-style-card">Boceto</div>
+        <div class="ai-style-card">Steampunk</div>
+        <div class="ai-style-card">Acuarela</div>
+        <div class="ai-style-card">Risografía</div>
+        <div class="ai-style-card">Monocromo</div>
+      </div>
+      <div class="mock-row" style="margin-top:10px;">
+        <div class="mock-input" style="font-size:10px;color:#a0a0a0;">Una ciudad futurista al amanecer, colores cálidos…</div>
+      </div>
+      <button class="mock-btn" style="width:100%;padding:9px;margin-top:10px;font-size:11px;">✦ Generar imagen</button>
+    </div>
+  </div>
+
+  <div class="tip">Usa el botón <strong>Mejorar prompt</strong> (varita mágica) para que la IA expanda tu descripción automáticamente antes de generar — suele producir resultados más detallados.</div>
+
+  <div class="warn">La generación con IA está sujeta a límites de uso diario según tu plan. El contador se muestra en la barra de progreso debajo del botón de generación.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 2 — Agregar textos personalizados</h2>
+  <p>Con la imagen en el canvas, usa el panel derecho para añadir capas de texto.</p>
+  <ul>
+    <li>Haz clic en el botón <strong>＋</strong> dentro del acordeón <strong>Textos</strong>.</li>
+    <li>Escribe el contenido. Usa <code>{{nombre}}</code>, <code>{{ciudad}}</code> o cualquier variable de ManyChat.</li>
+    <li>Ajusta tamaño, fuente, color y posición arrastrando el texto directamente sobre el canvas.</li>
+    <li>Activa la <strong>sombra</strong> o el <strong>fondo</strong> del texto si necesitas mayor legibilidad.</li>
+    <li><strong>Doble clic</strong> sobre un texto en el canvas: lo centra horizontal y verticalmente. <strong>Shift + doble clic</strong>: centra solo horizontalmente.</li>
+  </ul>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Acordeón de textos con variable ManyChat</div>
+    <div class="mock-accordion">
+      <div class="mock-section-title" style="margin:0;">
+        <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Textos <span class="mock-badge">2</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="mock-btn" style="padding:3px 10px;font-size:13px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">＋</button>
+        <span class="mock-chevron">▾</span>
+      </div>
+    </div>
+    <div class="mock-panel">
+      <div class="mock-row">
+        <div class="mock-label">Texto</div>
+        <div class="mock-input">¡Hola, <span class="mock-tag">{{nombre}}</span>!</div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-label">Fuente</div>
+        <div class="mock-input">Impact</div>
+        <div style="font-size:10px;color:#606060;">72 px</div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-label">Color</div>
+        <div style="width:22px;height:22px;background:#fff;border-radius:4px;border:1px solid #444;"></div>
+        <div style="font-size:10px;color:#a0a0a0;">#ffffff</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip">Las variables entre dobles llaves <code>{{variable}}</code> son reemplazadas automáticamente por ManyChat con los datos reales de cada contacto. Puedes usar cualquier custom field de tu cuenta.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 3 — Stickers y Marcos</h2>
+  <ul>
+    <li>En <strong>Stickers</strong> añade imágenes o íconos sobre el canvas. Puedes subir cualquier PNG con fondo transparente.</li>
+    <li><strong>Doble clic</strong> sobre un sticker en el canvas: lo centra horizontal y verticalmente. <strong>Shift + doble clic</strong>: centra solo horizontalmente.</li>
+    <li>En <strong>Marcos</strong> agrega rectángulos con color, borde y opacidad personalizables para enmarcar zonas de la imagen.</li>
+    <li>Mueve y redimensiona cada elemento arrastrando sus esquinas sobre el canvas.</li>
+    <li>Clic derecho sobre cualquier elemento para <strong>agrupar</strong>, <strong>desagrupar</strong>, <strong>duplicar</strong> o <strong>eliminar</strong>.</li>
+  </ul>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Acordeones del panel (Stickers y Marcos)</div>
+    <div class="mock-accordion">
+      <div class="mock-section-title" style="margin:0;">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Stickers <span class="mock-badge">1</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="mock-btn" style="padding:3px 10px;font-size:13px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">＋</button>
+        <span class="mock-chevron">▾</span>
+      </div>
+    </div>
+    <div class="mock-accordion">
+      <div class="mock-section-title" style="margin:0;">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+        Marcos <span class="mock-badge">0</span>
+      </div>
+      <span class="mock-chevron">▾</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 4 — Contador regresivo</h2>
+  <p>En el acordeón <strong>Contador</strong> agrega un temporizador visible en la imagen:</p>
+  <ul>
+    <li><strong>Contador de Evento:</strong> todos los usuarios ven la misma cuenta regresiva hacia una fecha fija.</li>
+    <li><strong>Contador de Urgencia:</strong> cada usuario tiene su propio contador personal que empieza al recibir el mensaje.</li>
+  </ul>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Acordeón contador</div>
+    <div class="mock-accordion">
+      <div class="mock-section-title" style="margin:0;">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Contador <span class="mock-badge">1</span>
+      </div>
+      <span class="mock-chevron" style="transform:rotate(180deg);display:inline-block;">▾</span>
+    </div>
+    <div class="mock-panel" style="margin-top:6px;">
+      <div class="mock-row">
+        <div class="mock-label">Tipo</div>
+        <div style="display:flex;gap:6px;">
+          <div style="background:#7c6eff;color:#fff;border-radius:4px;font-size:10px;padding:3px 10px;font-weight:700;">Evento</div>
+          <div style="background:#2a2a2a;color:#a0a0a0;border-radius:4px;font-size:10px;padding:3px 10px;border:1px solid #333;">Urgencia</div>
+        </div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-label">Fecha</div>
+        <div class="mock-input">2026-12-31 23:59</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 5 — Código QR</h2>
+  <p>En el acordeón <strong>Código QR</strong> puedes agregar un código QR personalizado directamente sobre la imagen.</p>
+  <ul>
+    <li>Escribe la <strong>URL o texto</strong> que codificará el QR.</li>
+    <li>Presiona <strong>Agregar QR al canvas</strong> para colocarlo centrado en la imagen.</li>
+    <li>Ajusta el <strong>color de los módulos</strong>, el <strong>fondo</strong>, el <strong>color del marco</strong> y el <strong>padding</strong> — el QR se actualiza automáticamente en el canvas sin crear uno nuevo.</li>
+    <li>Redimensiona el QR arrastrando sus esquinas en el canvas.</li>
+  </ul>
+
+  <div class="tip">Los cambios de color y padding actualizan el QR existente en tiempo real — sin crear duplicados. Si cambias la URL y presionas "Agregar QR", se crea un QR nuevo adicional.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 6 — Guías de alineación</h2>
+  <p>Activa el checkbox de <strong>Guías</strong> en la barra superior del panel para mostrar líneas de centrado sobre el canvas. Son solo visuales — no aparecen en la imagen final.</p>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Guías de alineación activas</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="mock-canvas-row">
+        <div class="mock-checkbox"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+        <span style="font-size:11px;color:#e8e8e8;">Guías</span>
+      </div>
+      <div class="guide-line">
+        <div class="guide-v"></div>
+        <div class="guide-h"></div>
+      </div>
+      <span style="font-size:11px;color:#606060;">Las líneas verdes marcan el centro horizontal y vertical del canvas.</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 7 — Filtros y fondo</h2>
+  <p>Usa el selector de <strong>Filtro</strong> para aplicar efectos al canvas: brillo, contraste, escala de grises, sepia y más de 15 filtros estilo Instagram. El color de fondo del área de trabajo (gris, blanco o negro) es solo visual y no afecta la imagen final que se envía a ManyChat.</p>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 8 — JSON para ManyChat</h2>
+  <p>El panel derecho tiene una sección <strong>JSON para ManyChat</strong> al final. Este JSON conecta TextOnFlow con tu bot.</p>
+  <ul>
+    <li>El JSON se actualiza automáticamente cada vez que modificas el diseño.</li>
+    <li>Cópialo con el botón <strong>Copiar</strong> y pégalo en el bloque "Dynamic Image URL" de ManyChat.</li>
+    <li>Cada vez que modifiques posición, fuente o tamaño, debes <strong>volver a copiar y reemplazar</strong> el JSON en tu bot.</li>
+  </ul>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — JSON generado en el panel derecho</div>
+    <div class="mock-json">
+      <span class="key">"url"</span>: <span class="val-s">"https://www.textonflow.com/generate-multi"</span>,<br>
+      <span class="key">"texts"</span>: [<br>
+      &nbsp;&nbsp;{<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"content"</span>: <span class="val-s">"Hola {{nombre}}"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"font_size"</span>: <span class="val">72</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"x"</span>: <span class="val">512</span>, <span class="key">"y"</span>: <span class="val">200</span><br>
+      &nbsp;&nbsp;}<br>
+      ]
+    </div>
+    <div class="mock-warning">
+      ⚠ <strong>Cada vez que cambies algo</strong> (tamaño, posición, fuente…) debes copiar el JSON actualizado y reemplazarlo en tu bot de ManyChat para que los cambios tengan efecto.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 9 — Visualizar y exportar <span class="update-badge">ACTUALIZADO</span></h2>
+  <p>Cuando tu diseño esté listo, haz clic en el botón flotante <strong>▶ Visualizar imagen</strong> que aparece debajo del canvas. El servidor procesa la imagen con Pillow en alta resolución (2× supersampling) y abre el modal de resultado.</p>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Botón flotante y estado de generación</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0;">
+      <button class="mock-btn" style="padding:12px 32px;font-size:13px;border-radius:10px;display:flex;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+        Visualizar imagen
+      </button>
+      <div class="result-status">Generando imagen personalizada… aguarda un momento</div>
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:4px;">↑ El mensaje de estado aparece justo debajo del botón mientras procesa.</div>
+  </div>
+
+  <p>En el modal de resultado encontrarás:</p>
+  <div class="result-modal-mock">
+    <div class="result-img-placeholder">Vista previa de la imagen generada</div>
+    <div class="result-btn-row" style="flex-wrap:nowrap;overflow-x:auto;gap:6px;">
+      <!-- Descargar -->
+      <div class="result-btn dl" style="font-size:11px;padding:7px 10px;white-space:nowrap;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </div>
+      <!-- Drive -->
+      <div class="result-btn drive" style="font-size:11px;padding:7px 10px;white-space:nowrap;">
+        <svg width="12" height="11" viewBox="0 0 87.3 78"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 49.5C.4 50.9 0 52.45 0 54h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.85l5.65 10.85z" fill="#ea4335"/><path d="M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="M59.85 54H27.5L13.75 77.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="M73.4 27.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.85 54h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+        Drive
+      </div>
+      <!-- Copiar URL -->
+      <div class="result-btn copy" style="font-size:11px;padding:7px 10px;white-space:nowrap;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copiar URL
+      </div>
+      <!-- Compartir (Web Share API) -->
+      <div class="result-btn" style="background:#7c3aed;font-size:11px;padding:7px 10px;white-space:nowrap;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Compartir
+      </div>
+      <!-- Facebook (solo icono) -->
+      <div class="result-btn fb" style="padding:7px 9px;width:31px;height:31px;box-sizing:border-box;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </div>
+      <!-- Telegram (solo icono) -->
+      <div class="result-btn tg" style="padding:7px 9px;width:31px;height:31px;box-sizing:border-box;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+      </div>
+      <!-- WhatsApp (solo icono) -->
+      <div class="result-btn" style="background:#25D366;padding:7px 9px;width:31px;height:31px;box-sizing:border-box;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+      </div>
+    </div>
+    <div style="background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:8px 10px;font-size:10px;color:#888;font-family:monospace;display:flex;align-items:center;justify-content:space-between;">
+      <span style="color:#a0a0a0;">JSON para ManyChat</span>
+      <span style="background:#16a34a;color:#fff;border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700;font-family:sans-serif;">Copiar JSON</span>
+    </div>
+  </div>
+
+  <ul>
+    <li><strong>Descargar</strong> — descarga la imagen al equipo como archivo JPG.</li>
+    <li><strong>Drive</strong> — sube directamente a tu Google Drive (requiere conexión previa).</li>
+    <li><strong>Copiar URL</strong> — copia el link directo de la imagen.</li>
+    <li><strong>Compartir</strong> (morado) — abre el selector nativo de apps del dispositivo para compartir la imagen como archivo (mobile). En desktop descarga la imagen automáticamente.</li>
+    <li><strong>Facebook / Telegram</strong> (íconos) — comparte la URL pública en redes sociales.</li>
+    <li><strong>WhatsApp</strong> (ícono verde) — en mobile comparte la imagen como foto; en desktop descarga la imagen y abre WhatsApp Web para que la adjuntes.</li>
+    <li><strong>Copiar JSON</strong> — copia el payload listo para pegar en ManyChat Dynamic Image.</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Paso 10 — Google Drive <span class="update-badge">ACTUALIZADO</span></h2>
+  <p>TextOnFlow puede guardar tus imágenes directamente en tu Google Drive, en una carpeta llamada <strong>TextOnFlow</strong>. La integración funciona 100% en el navegador — sin pasar por nuestros servidores.</p>
+
+  <p>El panel de Google Drive está en el <strong>panel derecho</strong>, justo arriba de la sección JSON. También puedes guardar directamente desde el modal de resultado con el botón "Drive".</p>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Panel Drive en el panel derecho (encima del JSON)</div>
+    <div style="background:#0d0d1a;border:1px solid #2a2a40;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <svg width="16" height="14" viewBox="0 0 87.3 78" style="flex-shrink:0;"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 49.5C.4 50.9 0 52.45 0 54h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.85l5.65 10.85z" fill="#ea4335"/><path d="M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="M59.85 54H27.5L13.75 77.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="M73.4 27.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.85 54h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+          <span style="font-size:12px;color:#b8b8cc;font-family:sans-serif;">Google Drive</span>
+          <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0;"></span>
+        </div>
+        <button class="mock-btn" style="background:#555;font-size:10px;padding:4px 10px;">Desconectar</button>
+      </div>
+      <div style="margin-top:5px;font-size:10px;color:#555;font-family:sans-serif;">📁 Carpeta: TextOnFlow</div>
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:4px;">↑ LED verde = conectado. Debajo del Drive aparece la sección JSON.</div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-row"><span class="step-num">1</span><p>Haz clic en <strong>Conectar</strong> en el panel Drive. Se abre la ventana de autorización de Google.</p></div>
+    <div class="step-row"><span class="step-num">2</span><p>Selecciona tu cuenta y haz clic en <strong>"Permitir"</strong>. TextOnFlow solo pide acceso a los archivos que él mismo crea (<code>drive.file</code> scope — acceso mínimo).</p></div>
+    <div class="step-row"><span class="step-num">3</span><p>El LED cambia a verde y el botón dice "Desconectar". Ahora puedes guardar imágenes desde el modal de resultado con el botón <strong>Drive</strong> o directamente desde la IA con el botón <strong>Drive</strong> del modal AI.</p></div>
+  </div>
+
+  <div class="tip"><strong>La sesión se recuerda.</strong> Una vez autorizado, no necesitas volver a conectar. Solo se pide nuevamente si el token expira (~1 hora de inactividad).</div>
+
+  <div class="warn"><strong>Alcance mínimo:</strong> TextOnFlow solo puede ver y modificar los archivos que él mismo crea. No puede acceder a ningún otro archivo de tu Google Drive.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Distorsión de texto <span class="new-badge">NUEVO</span></h2>
+  <p>La sección <strong>Distorsión</strong> en el panel de texto aplica efectos de curvatura y sesgo al texto seleccionado. Está organizada en 3 columnas:</p>
+  <ul>
+    <li><strong>Columna 1 — Curvatura (Warp):</strong> elige entre 15 estilos de deformación: Arco, Arco inferior, Bandera, Pez, Ojo de pez, Inflar, Apretar, Ola, Aro, y más. Usa el botón <strong>✕</strong> para quitar el warp.</li>
+    <li><strong>Columna 2 — Sesgo horizontal (X):</strong> inclina el texto hacia la izquierda o derecha. Slider entre −50 y 50. Botón de reset al centro.</li>
+    <li><strong>Columna 3 — Sesgo vertical (Y):</strong> inclina el texto hacia arriba o abajo. Slider entre −50 y 50. Botón de reset al centro.</li>
+  </ul>
+
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Sección Distorsión (3 columnas)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#1e1e30;border-radius:8px;padding:10px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:#a5b4fc;font-weight:700;letter-spacing:.5px;">CURVATURA</div>
+        <div style="background:#2a2a2a;border:1px solid #333;border-radius:5px;padding:4px 7px;font-size:10px;color:#e8e8e8;">Arco ▾</div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;border-radius:5px;padding:4px 7px;font-size:10px;color:#a0a0a0;text-align:center;">✕</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:#a5b4fc;font-weight:700;letter-spacing:.5px;">SESGO X</div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="flex:1;height:3px;background:linear-gradient(to right,#667eea 60%,#2a2a2a 60%);border-radius:2px;"></div>
+          <span style="font-size:10px;color:#e8e8e8;width:22px;text-align:right;">15</span>
+        </div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;border-radius:5px;padding:2px 6px;font-size:9px;color:#a0a0a0;text-align:center;cursor:pointer;">↺</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:#a5b4fc;font-weight:700;letter-spacing:.5px;">SESGO Y</div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="flex:1;height:3px;background:#2a2a2a;border-radius:2px;"></div>
+          <span style="font-size:10px;color:#e8e8e8;width:22px;text-align:right;">0</span>
+        </div>
+        <div style="background:#2a2a2a;border:1px solid #3d3d3d;border-radius:5px;padding:2px 6px;font-size:9px;color:#a0a0a0;text-align:center;cursor:pointer;">↺</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip">La vista previa en el canvas refleja el warp exactamente como se verá en la imagen final. Puedes combinar curvatura + sesgo para efectos creativos.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Gotero (cuentagotas) <span class="new-badge">NUEVO</span></h2>
+  <p>El <strong>gotero</strong> permite seleccionar el color de texto directamente desde cualquier punto de la imagen base. Está disponible en el panel de texto junto al selector de color.</p>
+  <ul>
+    <li>Haz clic en el ícono del cuentagotas (🔬) junto al color del texto.</li>
+    <li>El cursor cambia a una mira. Haz clic sobre cualquier pixel del canvas para tomar su color.</li>
+    <li>El color del texto se actualiza automáticamente al color tomado.</li>
+  </ul>
+
+  <div class="tip">Ideal para hacer que el color del texto combine con los tonos de tu imagen de fondo — sin necesidad de copiar y pegar códigos hexadecimales.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Viñeta <span class="new-badge">NUEVO</span></h2>
+  <p>El efecto de <strong>viñeta</strong> oscurece los bordes del canvas para dar profundidad y enfocar la atención al centro. Se configura en el acordeón <strong>Viñeta</strong> del panel derecho.</p>
+  <ul>
+    <li><strong>Intensidad:</strong> controla qué tan oscuros son los bordes (0 = sin viñeta, 100 = bordes negros).</li>
+    <li><strong>Radio:</strong> qué tan grande es el área central sin oscurecer.</li>
+    <li>La viñeta se renderiza en la imagen final (sí aparece al generar).</li>
+  </ul>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>🔗 API de Render Dinámico <span class="new-badge">NUEVO</span></h2>
+  <p>La <strong>API de Render Dinámico</strong> te permite generar imágenes personalizadas para cada contacto <em>en tiempo real</em>, sin descargar nada manualmente. ManyChat llama una URL con los datos del contacto y TextOnFlow devuelve la imagen lista al instante.</p>
+  <p><strong>Caso de uso ideal:</strong> campañas de WhatsApp donde cada persona ve su nombre, su ciudad, su descuento personalizado o cualquier dato de sus Custom Fields.</p>
+
+  <!-- Diagrama de flujo -->
+  <div class="ui-mock">
+    <div class="ui-mock-label">Flujo completo — Imagen personalizada por contacto</div>
+    <div class="api-flow">
+      <div class="api-flow-node">
+        <div class="api-flow-icon">💬</div>
+        <div class="api-flow-label">ManyChat<br>envía mensaje</div>
+      </div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node">
+        <div class="api-flow-icon">🔗</div>
+        <div class="api-flow-label">URL con variables<br>del contacto</div>
+      </div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node">
+        <div class="api-flow-icon">⚡</div>
+        <div class="api-flow-label">TextOnFlow<br>renderiza &lt;1 seg</div>
+      </div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node">
+        <div class="api-flow-icon">🖼️</div>
+        <div class="api-flow-label">Imagen JPEG<br>personalizada</div>
+      </div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node">
+        <div class="api-flow-icon">📱</div>
+        <div class="api-flow-label">WhatsApp<br>la muestra</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 pasos -->
+  <div class="api-step-grid">
+    <div class="api-step-card">
+      <div class="api-step-num-big">1</div>
+      <div class="api-step-title">Variables en tus textos</div>
+      <div class="api-step-desc">En cualquier capa de texto, usa llaves simples: <code>{nombre}</code> <code>{descuento}</code> <code>{ciudad}</code>. TextOnFlow las detecta automáticamente.</div>
+    </div>
+    <div class="api-step-card">
+      <div class="api-step-num-big">2</div>
+      <div class="api-step-title">Descarga una vez</div>
+      <div class="api-step-desc">Genera o descarga tu diseño al menos una vez para que la imagen quede registrada en el servidor. Solo necesitas hacer esto una vez por plantilla.</div>
+    </div>
+    <div class="api-step-card">
+      <div class="api-step-num-big">3</div>
+      <div class="api-step-title">Guarda como Template</div>
+      <div class="api-step-desc">Abre el panel <strong>🔗 API de Render Dinámico</strong> al final del editor. Escribe un nombre y haz clic en <strong>Guardar Template API</strong>.</div>
+    </div>
+    <div class="api-step-card">
+      <div class="api-step-num-big">4</div>
+      <div class="api-step-title">Pega en ManyChat</div>
+      <div class="api-step-desc">Copia la URL de render y pégala como <strong>Image URL</strong> en tu flujo de ManyChat. Agrega las variables de ManyChat como parámetros.</div>
+    </div>
+  </div>
+
+  <!-- Mock del panel -->
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Panel API de Render Dinámico (en el editor)</div>
+    <div style="background:#0a0a1a;border:1px solid rgba(102,126,234,.25);border-radius:10px;overflow:hidden;">
+      <!-- Header accordion -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(90deg,rgba(102,126,234,.12),rgba(139,92,246,.08));border-bottom:1px solid rgba(102,126,234,.15);">
+        <span style="font-size:13px;">🔗</span>
+        <span style="font-size:12px;font-weight:700;color:#a5b4fc;flex:1;">API de Render Dinámico</span>
+        <span style="font-size:9px;font-weight:700;color:#7dd3fc;background:rgba(125,211,252,.12);border:1px solid rgba(125,211,252,.3);border-radius:20px;padding:1px 6px;">BETA</span>
+        <span style="font-size:10px;color:#6b7280;">▼</span>
+      </div>
+      <!-- Steps preview -->
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+        <!-- Step 1 -->
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:20px;height:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">1</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#c4b5fd;margin-bottom:3px;">Escribe variables en tus textos</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span class="var-pill">{nombre}</span>
+              <span class="var-pill">{descuento}</span>
+              <span class="var-pill">{producto}</span>
+            </div>
+            <div style="margin-top:5px;padding:6px 8px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:5px;font-size:10px;color:#86efac;">
+              ✓ Variables detectadas en tus textos: <strong>{nombre}</strong> · <strong>{descuento}</strong>
+            </div>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:20px;height:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">2</div>
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:#c4b5fd;margin-bottom:5px;">Guarda como Template</div>
+            <div style="background:#1a1a2e;border:1px solid #3d3d6b;border-radius:5px;padding:6px 8px;font-size:10px;color:#666;margin-bottom:6px;">Black Friday ES — Promo</div>
+            <div style="text-align:center;padding:6px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:6px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;">💾 Guardar Template API</div>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:20px;height:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">3</div>
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:#c4b5fd;margin-bottom:5px;">Tu URL de Render</div>
+            <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.4);border:1px solid rgba(102,126,234,.3);border-radius:6px;padding:6px 8px;">
+              <span style="flex:1;font-size:9px;color:#7dd3fc;font-family:monospace;">https://www.textonflow.com/render/a1b2c3d4</span>
+              <span style="padding:3px 7px;background:rgba(102,126,234,.2);border-radius:4px;font-size:11px;color:#a5b4fc;cursor:pointer;">📋</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ejemplo en ManyChat -->
+  <h2 style="font-size:.95rem;margin-top:24px;">Cómo usar la URL en ManyChat</h2>
+  <p>En el bloque de imagen de ManyChat, selecciona <strong>URL dinámica</strong> y pega tu URL agregando las variables de ManyChat como parámetros:</p>
+  <div class="mock-endpoint">
+    https://www.textonflow.com/render/<span style="color:#fcd34d;">a1b2c3d4</span>?<span style="color:#c084fc;">nombre</span>=<span style="color:#86efac;">{{first name}}</span>&amp;<span style="color:#c084fc;">descuento</span>=<span style="color:#86efac;">{{custom field: descuento}}</span>
+  </div>
+  <ul>
+    <li>Cada parámetro en la URL corresponde a una variable <code>{...}</code> de tu diseño.</li>
+    <li>ManyChat sustituye <code>{{first name}}</code> por el nombre real del contacto antes de llamar la URL.</li>
+    <li>TextOnFlow renderiza la imagen en menos de 1 segundo y ManyChat la muestra directamente.</li>
+    <li>La imagen se cachea 30 segundos para no repetir renders idénticos.</li>
+  </ul>
+
+  <div class="tip">Puedes usar la URL de render también en SMS, email o cualquier herramienta que acepte una URL de imagen dinámica — no es exclusiva de ManyChat.</div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>⚡ Integraciones — Make, Zapier y Webhooks <span class="new-badge">NUEVO</span></h2>
+  <p>Además de la URL de render directa, TextOnFlow acepta <strong>webhooks POST</strong> desde cualquier herramienta de automatización. Esto permite que sistemas externos (CRM, Shopify, Google Sheets, HubSpot…) disparen la generación de imágenes sin que intervenga ManyChat.</p>
+
+  <!-- Diagrama push -->
+  <div class="ui-mock">
+    <div class="ui-mock-label">Flujo Push — El sistema externo dispara la imagen</div>
+    <div class="api-flow">
+      <div class="api-flow-node"><div class="api-flow-icon">🛒</div><div class="api-flow-label">Shopify<br>nueva venta</div></div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node"><div class="api-flow-icon">⚙️</div><div class="api-flow-label">Make / Zapier<br>detecta evento</div></div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node"><div class="api-flow-icon">🔔</div><div class="api-flow-label">POST<br>/webhook/render</div></div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node"><div class="api-flow-icon">🖼️</div><div class="api-flow-label">TextOnFlow<br>genera imagen</div></div>
+      <div class="api-flow-arrow">→</div>
+      <div class="api-flow-node"><div class="api-flow-icon">📲</div><div class="api-flow-label">URL lista<br>para usar</div></div>
+    </div>
+  </div>
+
+  <!-- Endpoint -->
+  <h2 style="font-size:.95rem;margin-top:24px;">Endpoint del Webhook</h2>
+  <div class="mock-endpoint">
+    <span class="mock-ep-method">POST</span>
+    <span class="mock-ep-url">https://www.textonflow.com/webhook/render</span>
+  </div>
+  <p>Envía un JSON con el ID del template y las variables del contacto:</p>
+  <div class="result-json">
+    {<br>
+    &nbsp;&nbsp;<span class="rj-key">"template_id"</span>: <span class="rj-str">"a1b2c3d4"</span>,<br>
+    &nbsp;&nbsp;<span class="rj-key">"variables"</span>: {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="rj-key">"nombre"</span>: <span class="rj-str">"Juan García"</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="rj-key">"descuento"</span>: <span class="rj-str">"30"</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="rj-key">"producto"</span>: <span class="rj-str">"Curso Premium"</span><br>
+    &nbsp;&nbsp;}<br>
+    }
+  </div>
+  <p>TextOnFlow responde con JSON:</p>
+  <div class="result-json">
+    {<br>
+    &nbsp;&nbsp;<span class="rj-key">"ok"</span>: <span class="rj-bool">true</span>,<br>
+    &nbsp;&nbsp;<span class="rj-key">"image_url"</span>: <span class="rj-str">"https://www.textonflow.com/storage/wh_a1b2c3d4_Juan_ab12cd.jpg"</span>,<br>
+    &nbsp;&nbsp;<span class="rj-key">"template_id"</span>: <span class="rj-str">"a1b2c3d4"</span>,<br>
+    &nbsp;&nbsp;<span class="rj-key">"variables_used"</span>: [<span class="rj-str">"nombre"</span>, <span class="rj-str">"descuento"</span>, <span class="rj-str">"producto"</span>]<br>
+    }
+  </div>
+  <p>La <code>image_url</code> es una URL pública que puedes usar directamente en ManyChat, Telegram, email o cualquier canal. La imagen se guarda y es accesible inmediatamente.</p>
+
+  <!-- Integraciones -->
+  <h2 style="font-size:.95rem;margin-top:24px;">Configurar en Make.com (ex-Integromat)</h2>
+  <div class="integration-row">
+    <div class="integration-card">
+      <div class="integration-logo">⚙️</div>
+      <div class="integration-name">Make — Módulo HTTP</div>
+      <div class="integration-desc">
+        1. Agrega un módulo <strong>HTTP → Make a Request</strong><br>
+        2. URL: <code>https://www.textonflow.com/webhook/render</code><br>
+        3. Método: <strong>POST</strong><br>
+        4. Headers: <code>Content-Type: application/json</code><br>
+        5. Body: JSON con <code>template_id</code> y <code>variables</code><br>
+        6. Mapea los campos del módulo anterior a las variables
+      </div>
+    </div>
+    <div class="integration-card">
+      <div class="integration-logo">⚡</div>
+      <div class="integration-name">Zapier — Webhooks by Zapier</div>
+      <div class="integration-desc">
+        1. Action: <strong>Webhooks by Zapier → POST</strong><br>
+        2. URL: <code>https://www.textonflow.com/webhook/render</code><br>
+        3. Payload Type: <strong>JSON</strong><br>
+        4. Data: escribe <code>template_id</code> y dentro de <code>variables</code> los campos del trigger<br>
+        5. Usa la <code>image_url</code> de la respuesta en pasos posteriores
+      </div>
+    </div>
+  </div>
+
+  <!-- Make mock -->
+  <div class="ui-mock">
+    <div class="ui-mock-label">Ilustración — Escenario en Make.com</div>
+    <div style="display:flex;align-items:center;gap:16px;padding:12px;overflow-x:auto;">
+      <!-- Node 1: Trigger -->
+      <div style="text-align:center;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1a1a1a;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px;">🛒</div>
+        <div style="font-size:9px;color:#9ca3af;max-width:70px;">Shopify<br>New Order</div>
+      </div>
+      <div style="color:#4f46e5;font-size:18px;flex-shrink:0;">→</div>
+      <!-- Node 2: HTTP -->
+      <div style="text-align:center;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1a1535;border:2px solid #4f46e5;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px;">🔔</div>
+        <div style="font-size:9px;color:#9ca3af;max-width:70px;">HTTP<br>POST Request</div>
+      </div>
+      <div style="color:#4f46e5;font-size:18px;flex-shrink:0;">→</div>
+      <!-- Node 3: ManyChat -->
+      <div style="text-align:center;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1a1a1a;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px;">💬</div>
+        <div style="font-size:9px;color:#9ca3af;max-width:70px;">ManyChat<br>Send Message</div>
+      </div>
+    </div>
+    <!-- HTTP module detail -->
+    <div class="mock-panel" style="margin-top:10px;">
+      <div class="mock-section-title">HTTP · Make a Request</div>
+      <div class="mock-row">
+        <div class="mock-label">URL</div>
+        <div class="mock-input url">https://www.textonflow.com/webhook/render</div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-label">Método</div>
+        <div class="mock-input">POST</div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-label">Body (JSON)</div>
+        <div style="flex:1;">
+          <div class="mock-json">
+            {<br>
+            &nbsp;<span class="key">"template_id"</span>: <span class="val-s">"a1b2c3d4"</span>,<br>
+            &nbsp;<span class="key">"variables"</span>: {<br>
+            &nbsp;&nbsp;<span class="key">"nombre"</span>: <span class="val-s">{{1.customer.first_name}}</span>,<br>
+            &nbsp;&nbsp;<span class="key">"producto"</span>: <span class="val-s">{{1.line_items[].title}}</span><br>
+            &nbsp;}<br>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip">El campo <code>output_format</code> acepta <strong>"url"</strong> (por defecto) o <strong>"base64"</strong>. Usa base64 cuando necesitas incrustar la imagen directamente sin guardarla.</div>
+
+  <div class="warn">La imagen generada por el webhook se guarda en el servidor. No se elimina automáticamente — ideal para que ManyChat pueda acceder a ella en cualquier momento del flujo.</div>
+
+  <!-- Casos de uso reales -->
+  <h2 style="font-size:.95rem;margin-top:24px;">Casos de uso reales</h2>
+  <div class="api-step-grid">
+    <div class="api-step-card">
+      <div style="font-size:20px;margin-bottom:6px;">🎂</div>
+      <div class="api-step-title">Felicitación de cumpleaños</div>
+      <div class="api-step-desc">Google Sheets detecta cumpleaños del día → Make genera imagen con nombre y foto → ManyChat envía por WhatsApp.</div>
+    </div>
+    <div class="api-step-card">
+      <div style="font-size:20px;margin-bottom:6px;">🛒</div>
+      <div class="api-step-title">Confirmación de pedido</div>
+      <div class="api-step-desc">Shopify registra nueva venta → Zapier llama el webhook → imagen con nombre + número de pedido → enviada al cliente.</div>
+    </div>
+    <div class="api-step-card">
+      <div style="font-size:20px;margin-bottom:6px;">🏆</div>
+      <div class="api-step-title">Certificado de logro</div>
+      <div class="api-step-desc">CRM marca contacto como "completado" → Make genera certificado personalizado → enviado por WhatsApp o email.</div>
+    </div>
+    <div class="api-step-card">
+      <div style="font-size:20px;margin-bottom:6px;">🎟️</div>
+      <div class="api-step-title">Ticket de evento</div>
+      <div class="api-step-desc">HubSpot confirma registro → imagen con nombre + fecha + QR personalizado → enviado automáticamente.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Extensión de Chrome</h2>
+  <p>Instala la extensión de TextOnFlow para Chrome. Haz clic derecho en cualquier imagen del navegador y ábrela directamente en el editor sin tener que copiar y pegar links.</p>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <h2>Atajos de teclado útiles</h2>
+  <ul>
+    <li><code>Doble clic</code> sobre texto o sticker — centra en X e Y</li>
+    <li><code>Shift + Doble clic</code> — centra solo en X (horizontal)</li>
+    <li><code>Flechas ↑↓←→</code> — mueve el elemento seleccionado 1 px</li>
+    <li><code>Shift + Flechas</code> — mueve 10 px</li>
+    <li><code>Clic derecho</code> sobre elemento — menú contextual (agrupar, duplicar, eliminar)</li>
+    <li><code>Shift + clic</code> en canvas — selección múltiple</li>
+  </ul>
+
+  <div class="footer-note">
+    TextOnFlow © 2026 — Todos los derechos reservados.<br>
+    Cabo San Lucas, BCS — México &nbsp;·&nbsp; <a href="mailto:hola@textonflow.com">hola@textonflow.com</a><br><br>
+    <a href="/faq">Preguntas frecuentes</a> &nbsp;·&nbsp;
+    <a href="/privacidad">Privacidad</a> &nbsp;·&nbsp;
+    <a href="/terminos">Términos de uso</a> &nbsp;·&nbsp;
+    <a href="/sitemap.xml">Mapa del sitio</a>
+  </div>
+</div>
+</body>
+</html>

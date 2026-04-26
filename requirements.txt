@@ -1,0 +1,11 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pillow==11.0.0
+pydantic==2.10.0
+requests==2.32.3
+python-multipart==0.0.20
+qrcode==7.4.2
+pilmoji==2.0.5
+urllib3==2.2.3
+numpy==1.26.4
+rjsmin>=1.2.2
