@@ -1,11 +1,9 @@
 [phases.setup]
-aptPkgs = ["fonts-liberation", "fontconfig", "fonts-noto-color-emoji", "fonts-noto-extra", "curl"]
+aptPkgs = ["fonts-liberation", "fontconfig", "fonts-noto-color-emoji", "fonts-noto-extra"]
 
 [phases.build]
 cmds = [
   "pip install -r requirements.txt",
   "fc-cache -fv",
-  "mkdir -p static && curl -sf -o static/app.js 'https://a957156e-d374-4132-9cee-a0afec9e64e1-00-2u2btyprd2joh.riker.replit.dev/api/download/app.js' && echo 'BUILD: app.js ok' || echo 'BUILD: app.js fallback'",
-  "curl -sf -o static/styles.css 'https://a957156e-d374-4132-9cee-a0afec9e64e1-00-2u2btyprd2joh.riker.replit.dev/api/download/styles.css' && echo 'BUILD: styles.css ok' || echo 'BUILD: styles.css fallback'",
-  "curl -sf -o index.html 'https://a957156e-d374-4132-9cee-a0afec9e64e1-00-2u2btyprd2joh.riker.replit.dev/api/download/index.html' && echo 'BUILD: index.html ok' || echo 'BUILD: index.html fallback'"
+  "mkdir -p static/temp"
 ]
