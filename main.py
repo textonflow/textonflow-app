@@ -2029,7 +2029,25 @@ async def status():
 @app.get("/health")
 async def health():
     """Health check rápido — solo verifica que la app esté viva."""
-    return {"status": "ok", "version": "8.0.0", "numpy": _NUMPY_OK}
+    db_ok = False
+    db_err = ""
+    try:
+        conn = get_db()
+        if conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            db_ok = True
+    except Exception as e:
+        db_err = str(e)[:100]
+    return {
+        "status": "ok",
+        "version": "8.1.0",
+        "numpy": _NUMPY_OK,
+        "db": db_ok,
+        "psycopg2": _PSYCOPG2_OK,
+        "db_url_prefix": SUPABASE_DATABASE_URL[:40] if SUPABASE_DATABASE_URL else "NOT SET",
+        "db_err": db_err,
+    }
 
 
 @app.get("/api/stats")
