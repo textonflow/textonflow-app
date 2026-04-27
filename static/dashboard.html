@@ -157,6 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
       <div class="card-label">Plan actual</div>
       <div class="card-value" id="stat-plan">—</div>
       <div id="plan-badge-wrap"></div>
+      <div id="plan-status-extra"></div>
       <div class="card-sub" style="margin-top:12px" id="plan-desc">—</div>
     </div>
 
@@ -325,6 +326,26 @@ async function loadDashboard() {
     // Plan badge
     const badgeWrap = document.getElementById('plan-badge-wrap');
     badgeWrap.innerHTML = `<span class="plan-badge ${plan}">${planLabel(plan)}</span>`;
+
+    // Watermark y JSON export status
+    const wmActive = me.watermark_active;
+    const canExport = me.can_export_json;
+    const statusWrap = document.getElementById('plan-status-extra');
+    if (statusWrap) {
+      statusWrap.innerHTML = `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;${wmActive
+            ? 'background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)'
+            : 'background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)'}">
+            ${wmActive ? '✦ Marca de agua activa' : '✓ Sin marca de agua'}
+          </span>
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;${canExport
+            ? 'background:rgba(124,110,255,.15);color:#a5b4fc;border:1px solid rgba(124,110,255,.2)'
+            : 'background:rgba(100,100,130,.1);color:#888;border:1px solid rgba(100,100,130,.2)'}">
+            ${canExport ? '✓ Export JSON activo' : '🔒 Export JSON — solo planes pagados'}
+          </span>
+        </div>`;
+    }
 
     // Sección upgrade
     const upgradeSection = document.getElementById('upgrade-section');
