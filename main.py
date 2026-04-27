@@ -141,10 +141,29 @@ def init_db():
                 );
             """)
             cur.execute("""
+                CREATE TABLE IF NOT EXISTS image_sessions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    session_key TEXT NOT NULL UNIQUE,
+                    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    image_name TEXT NOT NULL,
+                    image_type TEXT NOT NULL DEFAULT 'url',
+                    opened_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    closed_at TIMESTAMPTZ,
+                    duration_seconds INTEGER,
+                    ip TEXT
+                );
+            """)
+            cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_renders_user_id ON renders(user_id);
             """)
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_image_sessions_opened ON image_sessions(opened_at);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_image_sessions_name ON image_sessions(image_name);
             """)
             # Columnas opcionales — se agregan si no existen (idempotente)
             for _col_sql in [
@@ -2562,6 +2581,126 @@ async def user_track_copy(request: Request):
     except Exception as e:
         logger.warning(f"track-copy error: {e}")
     return {"ok": True}
+
+# ─── Image Session Tracking ───────────────────────────────────────────────────
+
+class _SessionOpenBody(BaseModel):
+    session_key: str
+    image_name: str
+    image_type: str = "url"
+
+@app.post("/user/session/open")
+async def image_session_open(body: _SessionOpenBody, request: Request):
+    """Registra apertura de una sesión de imagen (anónimo o autenticado)."""
+    conn = get_db()
+    if not conn:
+        return {"ok": True}
+    user_id = None
+    try:
+        payload = _get_current_user(request)
+        if payload:
+            user_id = payload.get("sub") or payload.get("user_id")
+    except Exception:
+        pass
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO image_sessions (session_key, user_id, image_name, image_type, ip)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (session_key) DO NOTHING
+            """, (body.session_key, user_id, body.image_name[:500], body.image_type, _get_client_ip(request)))
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"session/open error: {e}")
+    return {"ok": True}
+
+class _SessionCloseBody(BaseModel):
+    session_key: str
+
+@app.post("/user/session/close")
+async def image_session_close(body: _SessionCloseBody, request: Request):
+    """Registra cierre de una sesión de imagen y calcula duración."""
+    conn = get_db()
+    if not conn:
+        return {"ok": True}
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE image_sessions
+                SET closed_at = NOW(),
+                    duration_seconds = GREATEST(0, EXTRACT(EPOCH FROM (NOW() - opened_at))::INTEGER)
+                WHERE session_key = %s AND closed_at IS NULL
+            """, (body.session_key,))
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"session/close error: {e}")
+    return {"ok": True}
+
+@app.get("/api/admin/image-sessions")
+async def admin_image_sessions(request: Request):
+    """Reporte de sesiones por imagen — solo superadmin."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # KPIs globales
+            cur.execute("""
+                SELECT
+                  COUNT(*) AS total_sessions,
+                  COUNT(*) FILTER (WHERE opened_at >= NOW() - INTERVAL '24 hours') AS sessions_today,
+                  COUNT(*) FILTER (WHERE opened_at >= NOW() - INTERVAL '7 days') AS sessions_week,
+                  ROUND(AVG(duration_seconds) FILTER (WHERE duration_seconds IS NOT NULL AND duration_seconds < 7200))::INTEGER AS avg_duration_sec,
+                  COUNT(DISTINCT image_name) AS unique_images
+                FROM image_sessions
+            """)
+            kpis = dict(cur.fetchone())
+            # Top imágenes por número de aperturas
+            cur.execute("""
+                SELECT image_name, image_type,
+                  COUNT(*) AS total_opens,
+                  COUNT(*) FILTER (WHERE opened_at >= NOW() - INTERVAL '24 hours') AS opens_today,
+                  ROUND(AVG(duration_seconds) FILTER (WHERE duration_seconds IS NOT NULL AND duration_seconds < 7200))::INTEGER AS avg_duration_sec,
+                  MAX(opened_at) AS last_opened
+                FROM image_sessions
+                GROUP BY image_name, image_type
+                ORDER BY total_opens DESC
+                LIMIT 50
+            """)
+            top_images = []
+            for r in cur.fetchall():
+                row = dict(r)
+                row["last_opened"] = row["last_opened"].isoformat() if row.get("last_opened") else None
+                top_images.append(row)
+            # Aperturas por día (últimos 30 días)
+            cur.execute("""
+                SELECT DATE(opened_at) AS day, COUNT(*) AS opens
+                FROM image_sessions
+                WHERE opened_at >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(opened_at) ORDER BY day
+            """)
+            by_day = [{"day": str(r["day"]), "opens": r["opens"]} for r in cur.fetchall()]
+            # Últimas 100 sesiones
+            cur.execute("""
+                SELECT s.session_key, s.image_name, s.image_type,
+                  s.opened_at, s.closed_at, s.duration_seconds, s.ip,
+                  u.email AS user_email
+                FROM image_sessions s
+                LEFT JOIN users u ON s.user_id = u.id
+                ORDER BY s.opened_at DESC LIMIT 100
+            """)
+            recent = []
+            for r in cur.fetchall():
+                row = dict(r)
+                row["opened_at"] = row["opened_at"].isoformat() if row.get("opened_at") else None
+                row["closed_at"] = row["closed_at"].isoformat() if row.get("closed_at") else None
+                recent.append(row)
+    except Exception as e:
+        logger.error(f"admin_image_sessions error: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    return {"kpis": {k: (int(v) if v is not None else 0) for k, v in kpis.items()}, "top_images": top_images, "by_day": by_day, "recent": recent}
 
 # ─── Admin: gestión de usuarios ───────────────────────────────────────────────
 
