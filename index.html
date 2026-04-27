@@ -2781,11 +2781,10 @@ function _obFinish() {
   if (typeof showToast === 'function') showToast('✦ Tutorial disponible en el botón inferior del panel →', 3500);
 }
 
-// Mostrar onboarding al entrar salvo que el usuario haya marcado "no mostrar"
+// Mostrar onboarding a todos los visitantes salvo que lo hayan ocultado
 (function _checkOnboarding(){
-  var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
   var hidden = localStorage.getItem('tof_ob_hidden');
-  if (tok && !hidden) {
+  if (!hidden) {
     setTimeout(showOnboarding, 1200);
   }
 })();
