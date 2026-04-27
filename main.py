@@ -15,6 +15,7 @@ except ImportError:
 import os
 import re
 import math
+import asyncio
 from html.parser import HTMLParser
 import uuid
 import uvicorn
@@ -2229,7 +2230,6 @@ async def user_register(body: _UserRegisterBody):
     if _em_key:
         async def _send_welcome():
             try:
-                import asyncio as _aio
                 import functools
                 _body = {
                     "CampaignName": "TextOnFlow Bienvenida",
@@ -2247,7 +2247,7 @@ async def user_register(body: _UserRegisterBody):
                         f"<a href='https://www.textonflow.com/dashboard'>textonflow.com/dashboard</a></p>"
                     ),
                 }
-                loop = _aio.get_event_loop()
+                loop = asyncio.get_event_loop()
                 resp = await loop.run_in_executor(
                     None,
                     functools.partial(
