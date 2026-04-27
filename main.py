@@ -171,6 +171,7 @@ def init_db():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_exports_used INTEGER NOT NULL DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_copies INTEGER NOT NULL DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_paused BOOLEAN NOT NULL DEFAULT FALSE",
             ]:
                 try:
                     cur.execute(_col_sql)
@@ -2717,6 +2718,7 @@ async def admin_list_users(request: Request, page: int = 1, limit: int = 200):
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
                 SELECT id, email, plan, renders_used, renders_limit, is_active,
+                       COALESCE(is_paused, FALSE) AS is_paused,
                        watermark_exempt, json_exports_used,
                        COALESCE(json_copies, 0) AS json_copies,
                        last_active_at, created_at, updated_at
@@ -2827,6 +2829,30 @@ async def admin_toggle_active(body: _AdminUserActionBody, request: Request):
     action = "activado" if row["is_active"] else "desactivado"
     logger.info(f"👤 Admin {action} usuario {row['email']}")
     return {"ok": True, "user_id": str(row["id"]), "email": row["email"], "is_active": row["is_active"]}
+
+@app.post("/api/admin/users/toggle-paused")
+async def admin_toggle_paused(body: _AdminUserActionBody, request: Request):
+    """Pausa o reanuda la cuenta de un usuario sin desactivarla (superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "UPDATE users SET is_paused = NOT COALESCE(is_paused, FALSE), updated_at = NOW() WHERE id = %s "
+                "RETURNING id, email, is_paused", (body.user_id,)
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en toggle-paused: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not row:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    action = "pausado" if row["is_paused"] else "reanudado"
+    logger.info(f"⏸ Admin {action} usuario {row['email']}")
+    return {"ok": True, "user_id": str(row["id"]), "email": row["email"], "is_paused": row["is_paused"]}
 
 @app.post("/api/admin/users/toggle-watermark")
 async def admin_toggle_watermark(body: _AdminUserActionBody, request: Request):
