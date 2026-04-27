@@ -256,10 +256,15 @@ function planLabel(plan) {
   return map[plan] || plan;
 }
 
-function planDesc(plan, used, limit) {
-  const remaining = Math.max(0, limit - used);
+function planDesc(plan, used, limit, trialDays, trialExpired) {
   if (plan === 'admin') return 'Acceso ilimitado.';
-  if (plan === 'trial') return `${remaining} renders disponibles en tu periodo de prueba.`;
+  if (plan === 'trial') {
+    if (trialExpired) return '⚠ Tu periodo de prueba de 7 días ha expirado. Activa un plan para seguir.';
+    if (trialDays !== null && trialDays !== undefined)
+      return `${trialDays === 0 ? 'Último día de tu trial' : `${trialDays} día${trialDays !== 1 ? 's' : ''} restante${trialDays !== 1 ? 's' : ''} de trial`} — renders ilimitados.`;
+    return 'Trial activo — renders ilimitados.';
+  }
+  const remaining = Math.max(0, limit - used);
   if (plan === 'starter') return `${remaining.toLocaleString()} renders disponibles este mes.`;
   if (plan === 'agency') return `${remaining.toLocaleString()} renders disponibles este mes.`;
   return '';
@@ -295,33 +300,50 @@ async function loadDashboard() {
     const usage = await usageRes.json();
 
     // Rellenar datos
-    const plan    = usage.plan || 'trial';
-    const used    = usage.renders_used || 0;
-    const limit   = usage.renders_limit || 20;
-    const pct     = usage.pct || 0;
-    const email   = me.email || '—';
+    const plan             = usage.plan || 'trial';
+    const used             = usage.renders_used || 0;
+    const limit            = usage.renders_limit || 20;
+    const pct              = usage.pct || 0;
+    const email            = me.email || '—';
+    const trialDays        = usage.trial_days_remaining ?? me.trial_days_remaining ?? null;
+    const trialExpired     = usage.trial_expired || me.trial_expired || false;
 
     document.getElementById('user-email-sub').textContent = email;
     document.getElementById('info-email').textContent = email;
     document.getElementById('info-created').textContent = fmtDate(me.created_at);
     document.getElementById('info-status').textContent = me.is_active ? '✓ Activa' : '✗ Inactiva';
 
-    document.getElementById('stat-used').textContent = used.toLocaleString();
-    document.getElementById('stat-remaining').textContent = `de ${limit.toLocaleString()} renders`;
     document.getElementById('stat-plan').textContent = planLabel(plan);
-    document.getElementById('plan-desc').textContent = planDesc(plan, used, limit);
+    document.getElementById('plan-desc').textContent = planDesc(plan, used, limit, trialDays, trialExpired);
 
-    document.getElementById('prog-used-lbl').textContent  = `${used.toLocaleString()} usados`;
-    document.getElementById('prog-limit-lbl').textContent = `${limit.toLocaleString()} límite`;
-
-    const fill = document.getElementById('prog-fill');
-    fill.style.width = `${Math.min(100, pct)}%`;
-    fill.className = 'progress-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
-
-    const note = document.getElementById('prog-note');
-    if (pct >= 90) note.textContent = '⚠ Casi al límite — considera actualizar tu plan.';
-    else if (pct >= 70) note.textContent = `Usando el ${pct}% de tu cuota mensual.`;
-    else note.textContent = '';
+    if (plan === 'trial') {
+      // Trial: mostrar días restantes en lugar de renders
+      const daysLeft = trialExpired ? 0 : (trialDays !== null ? trialDays : '—');
+      document.getElementById('stat-used').textContent = daysLeft;
+      document.getElementById('stat-remaining').textContent = 'días de trial restantes';
+      document.getElementById('prog-used-lbl').textContent = 'renders ilimitados';
+      document.getElementById('prog-limit-lbl').textContent = `trial ${trialExpired ? 'expirado' : 'activo'}`;
+      const fill = document.getElementById('prog-fill');
+      const trialPct = trialExpired ? 100 : (trialDays !== null ? Math.round((7 - trialDays) / 7 * 100) : 0);
+      fill.style.width = `${trialPct}%`;
+      fill.className = 'progress-fill' + (trialExpired ? ' danger' : trialDays <= 1 ? ' warn' : '');
+      const note = document.getElementById('prog-note');
+      if (trialExpired) note.textContent = '⚠ Trial expirado — activa un plan para seguir usando TextOnFlow.';
+      else if (trialDays <= 2) note.textContent = `¡Solo ${trialDays} día${trialDays !== 1 ? 's' : ''} de trial restante${trialDays !== 1 ? 's' : ''}! Activa tu plan para no perder acceso.`;
+      else note.textContent = '';
+    } else {
+      document.getElementById('stat-used').textContent = used.toLocaleString();
+      document.getElementById('stat-remaining').textContent = `de ${limit.toLocaleString()} renders`;
+      document.getElementById('prog-used-lbl').textContent  = `${used.toLocaleString()} usados`;
+      document.getElementById('prog-limit-lbl').textContent = `${limit.toLocaleString()} límite`;
+      const fill = document.getElementById('prog-fill');
+      fill.style.width = `${Math.min(100, pct)}%`;
+      fill.className = 'progress-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+      const note = document.getElementById('prog-note');
+      if (pct >= 90) note.textContent = '⚠ Casi al límite — considera actualizar tu plan.';
+      else if (pct >= 70) note.textContent = `Usando el ${pct}% de tu cuota mensual.`;
+      else note.textContent = '';
+    }
 
     // Plan badge
     const badgeWrap = document.getElementById('plan-badge-wrap');
