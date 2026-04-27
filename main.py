@@ -2343,6 +2343,44 @@ async def user_usage(request: Request):
     }
 
 
+# ─── Helpers de rate limit por usuario (Phase 3) ─────────────────────────────
+
+def _check_user_render_limit(user_id: str) -> tuple:
+    """(used, limit, exceeded, plan) — lee desde BD."""
+    conn = get_db()
+    if not conn:
+        return 0, 999999, False, "unknown"
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT plan, renders_used, renders_limit FROM users WHERE id = %s",
+                (user_id,)
+            )
+            row = cur.fetchone()
+        if not row:
+            return 0, 999999, False, "unknown"
+        used  = row["renders_used"]
+        limit = USER_PLAN_LIMITS.get(row["plan"], row["renders_limit"])
+        return used, limit, used >= limit, row["plan"]
+    except Exception as e:
+        logger.error(f"Error en _check_user_render_limit: {e}")
+        return 0, 999999, False, "unknown"
+
+def _increment_user_renders(user_id: str) -> None:
+    """Incrementa renders_used del usuario en BD."""
+    conn = get_db()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET renders_used = renders_used + 1, updated_at = NOW() WHERE id = %s",
+                (user_id,)
+            )
+    except Exception as e:
+        logger.error(f"Error en _increment_user_renders: {e}")
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 #  GENERADOR DE IMÁGENES (módulo Design)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2589,14 +2627,29 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
 
 @app.post("/generate-multi")
 async def generate_multi_text(request: MultiTextRequest, http_req: Request):
-    # ── Rate limit por IP (bypass para superadmin) ───────────────────────────
-    if not _is_superadmin(http_req):
-        _ip = _get_client_ip(http_req)
+    # ── Rate limit: usuario autenticado (JWT) o IP (fallback) ────────────────
+    _user_payload = _get_current_user(http_req)
+    _user_id      = _user_payload["sub"] if _user_payload else None
+    _ip           = _get_client_ip(http_req)
+
+    if _is_superadmin(http_req):
+        _used, _limit = 0, 999999
+    elif _user_id:
+        # Usuario autenticado → verificar límite de su plan
+        _used, _limit, _exceeded, _plan = _check_user_render_limit(_user_id)
+        if _exceeded:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Límite de renders alcanzado ({_used}/{_limit} · Plan {_plan.capitalize()}). Actualiza tu plan en textonflow.com/precios",
+                headers={"X-RateLimit-Used": str(_used), "X-RateLimit-Limit": str(_limit), "X-Plan": _plan},
+            )
+    else:
+        # Sin JWT → rate limit por IP
         _used, _limit, _exceeded = _check_rate_limit(_ip)
         if _exceeded:
             raise HTTPException(
                 status_code=429,
-                detail=f"Límite diario alcanzado ({_limit} imágenes/día · Plan Free). Se restablece en {_reset_time_str()}.",
+                detail=f"Límite diario alcanzado ({_limit} imágenes/día). Crea una cuenta gratis en textonflow.com",
                 headers={"X-RateLimit-Used": str(_used), "X-RateLimit-Limit": str(_limit)},
             )
     try:
@@ -2891,7 +2944,12 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
 
         # ── Contadores ────────────────────────────────────────────────────────
         _increment_images_generated()
-        _used_after, _lim = _increment_ip_usage(_ip)
+        if _user_id:
+            _increment_user_renders(_user_id)
+            _used_after = _used + 1
+            _lim        = _limit
+        else:
+            _used_after, _lim = _increment_ip_usage(_ip)
 
         return {"image_url": image_url, "usage": {"used": _used_after, "limit": _lim}}
 
