@@ -3,28 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Términos de Uso — TextOnFlow</title>
+<title>Términos de Servicio — TextOnFlow</title>
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0d0d14;color:#d0d0e8;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 60px}
+  body{background:#0d0d14;color:#d0d0e8;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 80px}
   .top-bar{background:#0d0d14;border-bottom:1px solid #1e1e2e;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
   .top-bar img{height:24px;width:auto;opacity:.9;}
   .back-btn{display:inline-flex;align-items:center;gap:7px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#a0a0c0;text-decoration:none;padding:7px 14px;font-size:13px;transition:all .2s;}
   .back-btn:hover{background:#252540;color:#fff;border-color:#4446a0;}
-  .content{max-width:780px;margin:0 auto;padding:40px 24px;}
-  h1{font-size:2rem;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
-  .date{color:#555;font-size:.85rem;margin-bottom:40px;}
-  h2{font-size:1.05rem;font-weight:700;color:#a5b4fc;margin:32px 0 12px;}
-  p,li{font-size:.93rem;line-height:1.75;color:#b0b0c8;margin-bottom:10px;}
-  ul{padding-left:22px;margin-bottom:12px;}
+  .content{max-width:800px;margin:0 auto;padding:48px 24px;}
+  h1{font-size:2.1rem;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
+  .subtitle{color:#7c6eff;font-size:.9rem;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+  .date{color:#555;font-size:.85rem;margin-bottom:48px;}
+  h2{font-size:1.05rem;font-weight:800;color:#a5b4fc;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid #1a1a30;}
+  h3{font-size:.95rem;font-weight:700;color:#c4b5fd;margin:20px 0 10px;}
+  p,li{font-size:.93rem;line-height:1.8;color:#b0b0c8;margin-bottom:10px;}
+  ul,ol{padding-left:22px;margin-bottom:14px;}
   strong{color:#d0d0e8;}
-  .footer-note{margin-top:48px;padding-top:24px;border-top:1px solid #1e1e2e;font-size:.82rem;color:#444;text-align:center;}
+  a{color:#a5b4fc;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .highlight-box{background:#0d0d20;border:1px solid #2a2a50;border-left:3px solid #7c6eff;border-radius:8px;padding:16px 18px;margin:16px 0;}
+  .sla-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.88rem;}
+  .sla-table th{background:#131325;color:#a5b4fc;font-weight:700;text-align:left;padding:10px 14px;border:1px solid #2a2a40;}
+  .sla-table td{padding:9px 14px;border:1px solid #1e1e30;color:#b0b0c8;vertical-align:top;}
+  .sla-table tr:nth-child(even) td{background:#0d0d1a;}
+  .badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-left:6px;vertical-align:middle;}
+  .badge-agency{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+  .badge-all{background:rgba(124,110,255,.15);color:#a5b4fc;border:1px solid rgba(124,110,255,.25);}
+  .toc{background:#0d0d20;border:1px solid #1e1e38;border-radius:10px;padding:20px 24px;margin-bottom:40px;}
+  .toc h3{color:#888;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;margin-top:0;}
+  .toc ol{margin:0;padding-left:18px;}
+  .toc li{font-size:.88rem;margin-bottom:5px;}
+  .toc a{color:#9090c0;}
+  .footer-note{margin-top:60px;padding-top:24px;border-top:1px solid #1e1e2e;font-size:.82rem;color:#444;text-align:center;line-height:1.9;}
+  .footer-note a{color:#555;text-decoration:none;margin:0 6px;}
+  .footer-note a:hover{color:#888;}
+  @media(max-width:640px){.content{padding:32px 16px;}.top-bar{padding:12px 16px;}.sla-table{font-size:.8rem;}}
 </style>
 </head>
 <body>
+
 <div class="top-bar">
-  <img src="/static/logo-blanco-new.png" alt="TextOnFlow">
+  <img src="/static/logo-blanco-new.png" alt="TextOnFlow" onerror="this.src='/static/logo-blanco.webp'">
   <a class="back-btn" href="/">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     Volver al editor
@@ -32,79 +53,228 @@
 </div>
 
 <div class="content">
-  <h1>Términos de Uso</h1>
-  <p class="date">Última actualización: marzo 2026 — Versión 2.0</p>
+  <div class="subtitle">Legal</div>
+  <h1>Términos de Servicio</h1>
+  <p class="date">Última actualización: 27 de abril de 2026 — Versión 3.0</p>
 
-  <h2>1. Aceptación de los términos</h2>
-  <p>Al acceder y usar <strong>TextOnFlow</strong> (disponible en <strong>www.textonflow.com</strong>), aceptas estos Términos de Uso en su totalidad. Si no estás de acuerdo con alguna parte, no utilices el servicio.</p>
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#s1">Aceptación de los términos</a></li>
+      <li><a href="#s2">Descripción del servicio</a></li>
+      <li><a href="#s3">Uso permitido</a></li>
+      <li><a href="#s4">Uso prohibido</a></li>
+      <li><a href="#s5">Contenido del usuario</a></li>
+      <li><a href="#s6">Propiedad intelectual</a></li>
+      <li><a href="#s7">Imágenes generadas por IA y copyright</a></li>
+      <li><a href="#s8">Planes, facturación y cancelación</a></li>
+      <li><a href="#s9">Política de reembolsos</a></li>
+      <li><a href="#s10">Nivel de Servicio — SLA (Plan Agency)</a></li>
+      <li><a href="#s11">Retención y eliminación de datos</a></li>
+      <li><a href="#s12">Limitación de responsabilidad</a></li>
+      <li><a href="#s13">Disponibilidad del servicio</a></li>
+      <li><a href="#s14">Modificaciones</a></li>
+      <li><a href="#s15">Ley aplicable y jurisdicción</a></li>
+      <li><a href="#s16">Contacto</a></li>
+    </ol>
+  </div>
 
-  <h2>2. Descripción del servicio</h2>
-  <p>TextOnFlow es una plataforma de edición visual que permite crear imágenes personalizadas con texto dinámico, stickers, marcos y contadores, diseñadas para integrarse con herramientas de automatización de marketing como ManyChat y WhatsApp Business.</p>
+  <h2 id="s1">1. Aceptación de los términos</h2>
+  <p>Al acceder, registrarte o usar <strong>TextOnFlow</strong> (disponible en <strong>www.textonflow.com</strong>), aceptas estos Términos de Servicio en su totalidad, incluyendo la <a href="/privacidad">Política de Privacidad</a> y la Política de Uso Aceptable incorporada en el proceso de registro.</p>
+  <p>Si actúas en nombre de una empresa o agencia, garantizas que tienes autorización para vincular a esa entidad a estos términos. Si no estás de acuerdo con alguna parte, no utilices el servicio.</p>
 
-  <h2>3. Uso permitido</h2>
+  <h2 id="s2">2. Descripción del servicio</h2>
+  <p>TextOnFlow es una plataforma SaaS de edición visual que permite crear imágenes personalizadas con texto dinámico, stickers, marcos, contadores y elementos de diseño. Incluye:</p>
+  <ul>
+    <li>Editor visual en navegador con exportación de imágenes.</li>
+    <li>API REST de renderizado integrable con ManyChat, WhatsApp Business y plataformas de automatización.</li>
+    <li>Generación de imágenes e texto asistida por inteligencia artificial (Google Gemini).</li>
+    <li>Gestión de proyectos y plantillas de diseño.</li>
+  </ul>
+
+  <h2 id="s3">3. Uso permitido</h2>
   <p>Puedes usar TextOnFlow para:</p>
   <ul>
-    <li>Crear imágenes personalizadas para campañas de marketing y comunicación.</li>
-    <li>Integrar la API de renderizado en flujos de ManyChat y WhatsApp.</li>
+    <li>Crear imágenes personalizadas para campañas de marketing, felicitaciones y comunicación comercial.</li>
+    <li>Integrar la API de renderizado en flujos automatizados de ManyChat, WhatsApp, Make o Zapier.</li>
     <li>Generar imágenes con contenido propio o con licencia apropiada.</li>
+    <li>Uso comercial dentro de los límites del plan contratado.</li>
   </ul>
 
-  <h2>4. Uso prohibido</h2>
-  <p>Está estrictamente prohibido usar TextOnFlow para:</p>
+  <h2 id="s4">4. Uso prohibido</h2>
+  <p>Está estrictamente prohibido:</p>
   <ul>
-    <li>Generar imágenes con contenido ilegal, difamatorio, violento, obsceno o que infrinja derechos de terceros.</li>
-    <li>Realizar ingeniería inversa, copiar o redistribuir el software o la API sin autorización.</li>
-    <li>Usar el servicio para spam masivo o comunicaciones no solicitadas.</li>
-    <li>Intentar vulnerar la seguridad o los sistemas de TextOnFlow.</li>
+    <li>Generar imágenes con contenido ilegal, difamatorio, violento, obsceno, que incite al odio o que infrinja derechos de terceros.</li>
+    <li>Material que explote, dañe o ponga en riesgo a menores.</li>
+    <li>Realizar ingeniería inversa, copiar, redistribuir o sublicenciar el software o la API sin autorización escrita.</li>
+    <li>Compartir credenciales de cuenta o accesos API con terceros no autorizados.</li>
+    <li>Usar el servicio para spam masivo, phishing o comunicaciones fraudulentas.</li>
+    <li>Intentar vulnerar la seguridad, disponibilidad o integridad de los sistemas de TextOnFlow.</li>
+    <li>Superar los límites de uso establecidos en tu plan mediante automatización o scraping.</li>
   </ul>
+  <p>TextOnFlow se reserva el derecho de suspender o terminar cuentas que violen estas condiciones, sin previo aviso y sin reembolso.</p>
 
-  <h2>5. Contenido del usuario</h2>
-  <p>Eres el único responsable del contenido (imágenes, textos, variables) que cargas o generas con TextOnFlow. Al usar el servicio, garantizas que tienes los derechos necesarios sobre dicho contenido y que no infringe las leyes aplicables ni los derechos de terceros.</p>
-
-  <h2>6. Propiedad intelectual</h2>
-  <p>Todo el software, diseño, código y marca de TextOnFlow son propiedad de sus creadores. Se prohíbe su reproducción o distribución sin autorización expresa por escrito.</p>
-
-  <h2>7. Imágenes generadas por IA y copyright</h2>
-  <p>Las imágenes generadas mediante la función "Crear con IA" son producidas por Google Gemini, un modelo de inteligencia artificial de terceros. Al respecto, el usuario reconoce y acepta lo siguiente:</p>
+  <h2 id="s5">5. Contenido del usuario</h2>
+  <p>Eres el único responsable del contenido (imágenes, textos, variables) que cargas o generas. Al usar el servicio, garantizas que:</p>
   <ul>
-    <li><strong>Derechos de autor inciertos:</strong> La legislación internacional sobre la propiedad intelectual del contenido generado íntegramente por inteligencia artificial está en evolución. En la mayoría de las jurisdicciones, incluyendo México y Estados Unidos, el contenido producido sin autoría humana sustancial puede no estar protegido por derechos de autor tradicionales. TextOnFlow no transfiere ni garantiza ningún derecho de autor formal sobre las imágenes generadas por IA.</li>
-    <li><strong>Uso comercial bajo riesgo propio:</strong> El usuario puede utilizar las imágenes generadas por IA con fines comerciales, pero asume íntegramente el riesgo legal derivado de la incertidumbre normativa vigente. Se recomienda consultar a un asesor legal antes de registrar o licenciar este tipo de contenido.</li>
-    <li><strong>Contenido de terceros:</strong> Los resultados de la IA pueden, en raras ocasiones, parecerse a obras protegidas preexistentes. El usuario es responsable de verificar que el contenido generado no infrinja derechos de terceros antes de publicarlo o comercializarlo.</li>
-    <li><strong>Modelos y datos de Google Gemini:</strong> La generación de imágenes está sujeta además a los <a href="https://policies.google.com/terms" target="_blank" style="color:#a5b4fc;">Términos de Servicio de Google</a> y a la política de uso aceptable de Gemini.</li>
+    <li>Tienes todos los derechos necesarios sobre dicho contenido.</li>
+    <li>El contenido no infringe leyes aplicables ni derechos de terceros.</li>
+    <li>Has obtenido los consentimientos necesarios de personas cuyos datos o imágenes uses.</li>
   </ul>
-  <p>TextOnFlow no garantiza la precisión, calidad ni originalidad del contenido generado por IA. El usuario es responsable de revisar y aprobar el contenido antes de publicarlo o distribuirlo.</p>
 
-  <h2>8. Retención y eliminación de datos</h2>
+  <h2 id="s6">6. Propiedad intelectual</h2>
+  <p>Todo el software, diseño, código, API, marca TextOnFlow y sus logotipos son propiedad de sus creadores. Se prohíbe su reproducción o distribución sin autorización expresa por escrito.</p>
+  <p>Las imágenes generadas por el usuario mediante el editor (con sus propias imágenes y textos) son propiedad del usuario, sujeto a los derechos de los activos de origen utilizados.</p>
+
+  <h2 id="s7">7. Imágenes generadas por IA y copyright</h2>
+  <p>Las imágenes producidas por la función "Crear con IA" son generadas por Google Gemini. El usuario reconoce y acepta:</p>
+  <ul>
+    <li><strong>Derechos de autor inciertos:</strong> La legislación internacional sobre la propiedad intelectual del contenido generado íntegramente por IA está en evolución. TextOnFlow no transfiere ni garantiza ningún derecho de autor formal sobre estas imágenes.</li>
+    <li><strong>Uso comercial bajo riesgo propio:</strong> El usuario puede utilizar estas imágenes con fines comerciales, pero asume íntegramente el riesgo legal derivado de la incertidumbre normativa.</li>
+    <li><strong>Términos de Google:</strong> El uso está sujeto a los <a href="https://policies.google.com/terms" target="_blank">Términos de Servicio de Google</a> y la política de uso aceptable de Gemini.</li>
+  </ul>
+
+  <h2 id="s8">8. Planes, facturación y cancelación</h2>
+
+  <h3>8.1 Planes disponibles</h3>
+  <table class="sla-table">
+    <thead>
+      <tr><th>Plan</th><th>Precio</th><th>Renders / mes</th><th>Período de prueba</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Trial</strong></td><td>Gratuito</td><td>Ilimitados</td><td>7 días</td></tr>
+      <tr><td><strong>Starter</strong></td><td>$29 USD / mes</td><td>1,000</td><td>—</td></tr>
+      <tr><td><strong>Agency</strong></td><td>$79 USD / mes</td><td>10,000</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p>Los precios están en dólares estadounidenses (USD) e incluyen acceso completo a todas las funciones del plan contratado. TextOnFlow se reserva el derecho de modificar los precios notificando con al menos 30 días de antelación.</p>
+
+  <h3>8.2 Facturación</h3>
+  <ul>
+    <li>La suscripción se factura mensualmente mediante <strong>Stripe</strong>, un procesador de pagos de terceros.</li>
+    <li>La facturación se renueva automáticamente cada 30 días desde la fecha de activación.</li>
+    <li>TextOnFlow no almacena datos de tarjetas de crédito — son gestionados íntegramente por Stripe bajo cumplimiento PCI-DSS.</li>
+    <li>Se emite recibo por correo electrónico en cada cobro.</li>
+  </ul>
+
+  <h3>8.3 Cancelación</h3>
+  <ul>
+    <li>Puedes cancelar tu suscripción en cualquier momento desde el portal de facturación en tu dashboard.</li>
+    <li>Al cancelar, tu plan permanece activo hasta el final del período facturado en curso.</li>
+    <li>No se emiten reembolsos por el período no utilizado tras la cancelación (ver §9).</li>
+    <li>Al finalizar el período, la cuenta retorna a estado Trial expirado con acceso limitado.</li>
+  </ul>
+
+  <h3>8.4 Período de prueba (Trial)</h3>
+  <p>El período de prueba de 7 días ofrece acceso ilimitado a todas las funciones sin requerir tarjeta de crédito. Al finalizar los 7 días, el acceso se limita automáticamente. No hay cargos automáticos al terminar el trial.</p>
+
+  <h2 id="s9">9. Política de reembolsos</h2>
+  <div class="highlight-box">
+    <p><strong>Política general:</strong> Las suscripciones mensuales no son reembolsables una vez iniciado el período de facturación.</p>
+  </div>
+  <ul>
+    <li><strong>Reembolso dentro de las primeras 48 horas:</strong> Si experimentas problemas técnicos graves e irresolubles en las primeras 48 horas de tu primera suscripción y lo notificas a hola@textonflow.com, evaluaremos el caso y podemos emitir un reembolso completo a nuestra discreción.</li>
+    <li><strong>Cargos duplicados:</strong> Si ocurre un cobro duplicado por error técnico, se reembolsará íntegramente.</li>
+    <li><strong>Cancelaciones por incumplimiento:</strong> Si TextOnFlow termina tu cuenta por incumplimiento de estos términos, no se emite reembolso.</li>
+    <li><strong>Interrupciones del servicio:</strong> En caso de interrupciones graves que activen los créditos de SLA (§10), los créditos se aplican en la siguiente factura, no como reembolso en efectivo.</li>
+  </ul>
+  <p>Para solicitudes de reembolso: <strong>hola@textonflow.com</strong> con asunto "Solicitud de reembolso" y número de transacción Stripe.</p>
+
+  <h2 id="s10">10. Nivel de Servicio — SLA <span class="badge badge-agency">Solo Plan Agency</span></h2>
+
+  <div class="highlight-box">
+    <p><strong>TextOnFlow garantiza una disponibilidad mensual del <span style="color:#f59e0b;">99.5%</span> para clientes del Plan Agency</strong>, medida sobre el endpoint principal de renderizado (<code>/generate-multi</code>) y la API REST.</p>
+  </div>
+
+  <h3>10.1 Definición de disponibilidad</h3>
+  <p>La disponibilidad mensual se calcula como:</p>
+  <p style="font-family:monospace;background:#0a0a1a;padding:10px 14px;border-radius:6px;color:#a5b4fc;margin:8px 0;">Disponibilidad = (Minutos_totales − Minutos_inactividad_no_programada) / Minutos_totales × 100</p>
+  <p>Un período de inactividad se define como la incapacidad del endpoint principal de responder solicitudes válidas durante más de 5 minutos consecutivos.</p>
+
+  <h3>10.2 Exclusiones del SLA</h3>
+  <p>No se contabiliza como inactividad a efectos del SLA:</p>
+  <ul>
+    <li>Mantenimiento programado notificado con al menos 24 horas de antelación.</li>
+    <li>Interrupciones causadas por proveedores externos (Google Gemini, Stripe, Railway, Supabase) fuera de nuestro control.</li>
+    <li>Ataques DDoS u otros eventos de fuerza mayor.</li>
+    <li>Interrupciones causadas por el uso indebido del usuario o superación de límites de rate.</li>
+    <li>Inactividad de funciones en beta o experimentales.</li>
+  </ul>
+
+  <h3>10.3 Créditos por incumplimiento</h3>
+  <table class="sla-table">
+    <thead>
+      <tr><th>Disponibilidad mensual</th><th>Crédito en siguiente factura</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>99.5% – 100%</td><td>Sin crédito (dentro del SLA)</td></tr>
+      <tr><td>99.0% – 99.49%</td><td>10% del cargo mensual</td></tr>
+      <tr><td>98.0% – 98.99%</td><td>25% del cargo mensual</td></tr>
+      <tr><td>95.0% – 97.99%</td><td>50% del cargo mensual</td></tr>
+      <tr><td>Menos del 95%</td><td>100% del cargo mensual (un mes gratuito)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.4 Cómo reclamar créditos SLA</h3>
+  <ol>
+    <li>Envía un correo a <strong>hola@textonflow.com</strong> con asunto "Reclamación SLA".</li>
+    <li>Incluye: fecha/hora del incidente, descripción del problema, evidencia de errores (capturas, logs).</li>
+    <li>Las reclamaciones deben realizarse dentro de los 15 días naturales posteriores al incidente.</li>
+    <li>TextOnFlow verificará los registros de disponibilidad y responderá en un plazo de 5 días hábiles.</li>
+    <li>Los créditos aprobados se aplican en la siguiente factura mensual.</li>
+  </ol>
+  <p><strong>Nota:</strong> El SLA aplica exclusivamente a funciones de producción del Plan Agency. Los planes Trial y Starter no tienen garantía de disponibilidad formal.</p>
+
+  <h2 id="s11">11. Retención y eliminación de datos</h2>
   <p>TextOnFlow opera con una política de <strong>retención mínima de datos</strong>:</p>
+  <table class="sla-table">
+    <thead>
+      <tr><th>Tipo de dato</th><th>Retención</th><th>Eliminación</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Imágenes cargadas por el usuario</td><td>0 — procesadas en memoria</td><td>Inmediata al finalizar la solicitud</td></tr>
+      <tr><td>Imágenes generadas por IA</td><td>0 en servidores propios</td><td>Entregadas directamente sin almacenar</td></tr>
+      <tr><td>Email y hash de contraseña</td><td>Mientras la cuenta esté activa</td><td>Al eliminar la cuenta</td></tr>
+      <tr><td>Contador de renders</td><td>Mientras la cuenta esté activa</td><td>Al eliminar la cuenta</td></tr>
+      <tr><td>Proyectos guardados</td><td>Mientras la cuenta esté activa</td><td>Al eliminar la cuenta</td></tr>
+      <tr><td>Logs técnicos anónimos</td><td>30 días</td><td>Automática</td></tr>
+      <tr><td>Registros de facturación (Stripe)</td><td>7 años (obligación legal fiscal)</td><td>Por ley, no eliminables antes del plazo</td></tr>
+    </tbody>
+  </table>
+  <p>Para ejercer el derecho de eliminación de cuenta: utiliza el botón <strong>"Eliminar mi cuenta"</strong> en tu dashboard o contacta a <strong>hola@textonflow.com</strong>.</p>
+
+  <h2 id="s12">12. Limitación de responsabilidad</h2>
+  <p>TextOnFlow se proporciona "tal cual" y "según disponibilidad". En la máxima medida permitida por la ley:</p>
   <ul>
-    <li><strong>Imágenes cargadas por el usuario:</strong> Se procesan en memoria durante la solicitud y se eliminan inmediatamente al concluir el procesamiento. No se almacenan en ninguna base de datos ni sistema de archivos persistente.</li>
-    <li><strong>Imágenes generadas por IA:</strong> Se retornan directamente al usuario como respuesta de la API. No se guardan copias en nuestros servidores.</li>
-    <li><strong>Metadatos de sesión:</strong> Información técnica anonimizada (sin imágenes ni contenido personal identificable) puede conservarse hasta <strong>30 días</strong> con fines de seguridad, diagnóstico y mejora del servicio, y luego se elimina automáticamente.</li>
-    <li><strong>API keys y credenciales:</strong> No almacenamos credenciales de usuarios. Las API keys de integración se transmiten encriptadas y no se registran en logs.</li>
+    <li>No garantizamos que el servicio esté libre de errores, interrupciones o pérdida de datos.</li>
+    <li>No somos responsables por pérdida de beneficios, datos o daños indirectos derivados del uso del servicio.</li>
+    <li>Nuestra responsabilidad máxima total no excederá el importe pagado por el usuario en los últimos 3 meses.</li>
   </ul>
-  <p>Para ejercer el derecho de acceso, rectificación o eliminación de cualquier dato, contacta a <strong>hola@textonflow.com</strong>.</p>
 
-  <h2>9. Limitación de responsabilidad</h2>
-  <p>TextOnFlow se proporciona "tal cual", sin garantías de ningún tipo. En ningún caso seremos responsables por daños directos, indirectos o consecuentes derivados del uso o la imposibilidad de uso del servicio.</p>
+  <h2 id="s13">13. Disponibilidad del servicio</h2>
+  <p>Nos esforzamos por mantener el servicio disponible continuamente. Para disponibilidad garantizada, ver el SLA del Plan Agency (§10). Los planes Trial y Starter no incluyen garantía de disponibilidad formal.</p>
 
-  <h2>10. Disponibilidad del servicio</h2>
-  <p>Nos esforzamos por mantener el servicio disponible continuamente, pero no garantizamos una disponibilidad del 100%. Podemos realizar mantenimientos o actualizaciones en cualquier momento.</p>
+  <h2 id="s14">14. Modificaciones de los términos</h2>
+  <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Notificaremos cambios materiales por correo electrónico con al menos 15 días de antelación. El uso continuado del servicio después de la fecha efectiva implica la aceptación de los términos actualizados.</p>
 
-  <h2>11. Modificaciones</h2>
-  <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor al publicarse en esta página. El uso continuo del servicio implica la aceptación de los términos actualizados.</p>
+  <h2 id="s15">15. Ley aplicable y jurisdicción</h2>
+  <p>Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Para disputas menores de $5,000 USD intentaremos resolución amistosa vía correo electrónico. Disputas mayores serán resueltas ante los tribunales competentes de Cabo San Lucas, Baja California Sur, México.</p>
 
-  <h2>12. Ley aplicable</h2>
-  <p>Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Cualquier disputa será resuelta ante los tribunales competentes de México.</p>
-
-  <h2>13. Contacto</h2>
-  <p>Para cualquier consulta sobre estos términos, escríbenos a: <strong>hola@textonflow.com</strong></p>
+  <h2 id="s16">16. Contacto</h2>
+  <p>Para consultas sobre estos términos o reclamaciones:</p>
+  <ul>
+    <li><strong>Email:</strong> hola@textonflow.com</li>
+    <li><strong>Asunto sugerido:</strong> "Términos de Servicio — [tu consulta]"</li>
+    <li><strong>Tiempo de respuesta:</strong> 2 días hábiles</li>
+  </ul>
 
   <div class="footer-note">
     TextOnFlow © 2026 — Todos los derechos reservados.<br>
-    Cabo San Lucas, BCS — México &nbsp;·&nbsp; <a href="mailto:hola@textonflow.com" style="color:#555;text-decoration:none;">hola@textonflow.com</a><br><br>
+    Cabo San Lucas, BCS — México &nbsp;·&nbsp; <a href="mailto:hola@textonflow.com">hola@textonflow.com</a><br><br>
     <a href="/manual">Manual</a>
     <a href="/faq">Preguntas frecuentes</a>
     <a href="/privacidad">Privacidad</a>
+    <a href="/precios">Planes y precios</a>
     <a href="/sitemap.xml">Mapa del sitio</a>
   </div>
 </div>
