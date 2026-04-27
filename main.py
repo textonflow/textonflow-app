@@ -6078,8 +6078,7 @@ class DesignLayoutRequest(BaseModel):
     context: Optional[str] = None
 
 @app.post("/api/ai/design-layout")
-async def ai_design_layout(req: DesignLayoutRequest, request: Request):
-    user = await _get_optional_user(request)
+async def ai_design_layout(req: DesignLayoutRequest):
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
