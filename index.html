@@ -630,6 +630,12 @@
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                         <h4 id="upload-section-title" style="margin: 0;" data-i18n="upload_section_title">Cargar Imagen</h4>
                         <div style="display:flex; align-items:center; gap:6px; margin-left: auto;">
+                            <!-- Botón cuenta de usuario -->
+                            <button id="auth-btn" onclick="handleAuthBtn()"
+                                style="display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(124,110,255,0.4);background:rgba(20,20,36,0.8);font-size:11px;font-weight:700;color:#c4b5fd;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(6px);transition:all .2s;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span id="auth-btn-label">Iniciar sesión</span>
+                            </button>
                             <!-- Toggle de idioma -->
                             <button id="lang-btn-main" onclick="toggleLang()" title="Español / English"
                                 style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;cursor:pointer;border:1px solid rgba(102,126,234,0.35);background:rgba(20,20,36,0.7);font-size:11px;font-weight:700;color:#c4b5fd;letter-spacing:0.4px;white-space:nowrap;backdrop-filter:blur(6px);">
@@ -1797,5 +1803,158 @@
     </div>
 </div>
 
+<!-- ══ MODAL DE AUTENTICACIÓN ══════════════════════════════════════════════ -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
+  <div style="background:#13132a;border:1px solid #1e1e38;border-radius:20px;padding:32px 28px;width:100%;max-width:380px;margin:16px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
+    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555577;font-size:20px;cursor:pointer;line-height:1;">×</button>
+    <div style="display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #1e1e38;">
+      <button id="auth-tab-login"    onclick="authSwitchTab('login')"    style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Iniciar sesión</button>
+      <button id="auth-tab-register" onclick="authSwitchTab('register')" style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Crear cuenta</button>
+    </div>
+    <div id="auth-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:10px 13px;font-size:12px;margin-bottom:16px;"></div>
+    <div id="auth-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;border-radius:8px;padding:10px 13px;font-size:12px;margin-bottom:16px;"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <input id="auth-email" type="email" placeholder="tu@email.com"
+        style="background:#0a0a12;border:1px solid #1e1e38;border-radius:8px;padding:11px 13px;color:#d0d0e8;font-size:13px;outline:none;width:100%;"
+        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'"
+        onkeydown="if(event.key==='Enter')authSubmit()">
+      <input id="auth-password" type="password" placeholder="Contraseña (mín. 8 caracteres)"
+        style="background:#0a0a12;border:1px solid #1e1e38;border-radius:8px;padding:11px 13px;color:#d0d0e8;font-size:13px;outline:none;width:100%;"
+        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'"
+        onkeydown="if(event.key==='Enter')authSubmit()">
+      <button id="auth-submit-btn" onclick="authSubmit()"
+        style="background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;">
+        Iniciar sesión
+      </button>
+    </div>
+    <div id="auth-login-footer" style="margin-top:14px;text-align:center;font-size:11px;color:#555577;">
+      ¿No tienes cuenta? <a href="#" onclick="authSwitchTab('register')" style="color:#a5b4fc;text-decoration:none;">Crear cuenta gratis →</a>
+    </div>
+    <div id="auth-register-footer" style="display:none;margin-top:14px;text-align:center;font-size:11px;color:#555577;">
+      Al registrarte aceptas los <a href="/terminos" target="_blank" style="color:#a5b4fc;">Términos de uso</a>.<br>
+      ¿Ya tienes cuenta? <a href="#" onclick="authSwitchTab('login')" style="color:#a5b4fc;text-decoration:none;">Iniciar sesión →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth modal ────────────────────────────────────────────────────────────────
+var _authTab = 'login';
+var _TOF_TOKEN_KEY = 'tof_token';
+
+function openAuthModal(tab) {
+  _authTab = tab || 'login';
+  document.getElementById('auth-modal').style.display = 'flex';
+  authSwitchTab(_authTab);
+  setTimeout(function(){ document.getElementById('auth-email').focus(); }, 100);
+}
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+}
+function authSwitchTab(tab) {
+  _authTab = tab;
+  var tl = document.getElementById('auth-tab-login');
+  var tr = document.getElementById('auth-tab-register');
+  var sb = document.getElementById('auth-submit-btn');
+  var lf = document.getElementById('auth-login-footer');
+  var rf = document.getElementById('auth-register-footer');
+  if (tab === 'login') {
+    tl.style.background = '#252545'; tl.style.color = '#d0d0e8';
+    tr.style.background = '#1a1a2e'; tr.style.color = '#8888aa';
+    sb.textContent = 'Iniciar sesión'; lf.style.display='block'; rf.style.display='none';
+  } else {
+    tr.style.background = '#252545'; tr.style.color = '#d0d0e8';
+    tl.style.background = '#1a1a2e'; tl.style.color = '#8888aa';
+    sb.textContent = 'Crear cuenta gratuita'; lf.style.display='none'; rf.style.display='block';
+  }
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+function _authShowErr(msg) {
+  var el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-success').style.display = 'none';
+}
+function _authShowOk(msg) {
+  var el = document.getElementById('auth-success');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+async function authSubmit() {
+  var email = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  var btn = document.getElementById('auth-submit-btn');
+  if (!email || !password) { _authShowErr('Completa todos los campos.'); return; }
+  btn.disabled = true; btn.textContent = 'Procesando...';
+  var endpoint = _authTab === 'login' ? '/user/login' : '/user/register';
+  try {
+    var res = await fetch(endpoint, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: password })
+    });
+    var data = await res.json();
+    if (!res.ok) { _authShowErr(data.detail || 'Error al procesar.'); return; }
+    // Guardar token
+    localStorage.setItem(_TOF_TOKEN_KEY, data.token);
+    var plan = (data.user && data.user.plan) || 'trial';
+    var planLabel = { trial: 'Prueba', starter: 'Starter', agency: 'Agency', admin: 'Admin' };
+    if (_authTab === 'register') {
+      _authShowOk('¡Cuenta creada! Plan gratuito activo — 20 renders disponibles.');
+    } else {
+      _authShowOk('¡Sesión iniciada!');
+    }
+    _authUpdateBtn(email, plan);
+    setTimeout(function(){ closeAuthModal(); }, 1500);
+  } catch(e) {
+    _authShowErr('Error de conexión. Intenta de nuevo.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = _authTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta gratuita';
+  }
+}
+function _authUpdateBtn(email, plan) {
+  var btn = document.getElementById('auth-btn');
+  var lbl = document.getElementById('auth-btn-label');
+  if (email) {
+    var short = email.split('@')[0].substring(0, 12);
+    lbl.textContent = short;
+    btn.style.borderColor = 'rgba(34,197,94,.4)';
+    btn.style.color = '#4ade80';
+    btn.title = 'Mi cuenta';
+  } else {
+    lbl.textContent = 'Iniciar sesión';
+    btn.style.borderColor = 'rgba(124,110,255,.4)';
+    btn.style.color = '#c4b5fd';
+    btn.title = '';
+  }
+}
+function handleAuthBtn() {
+  var tok = localStorage.getItem(_TOF_TOKEN_KEY) || sessionStorage.getItem(_TOF_TOKEN_KEY);
+  if (tok) { window.location.href = '/dashboard'; }
+  else { openAuthModal('login'); }
+}
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAuthModal(); });
+// Cargar estado en inicio
+(async function _authInit(){
+  var tok = localStorage.getItem(_TOF_TOKEN_KEY) || sessionStorage.getItem(_TOF_TOKEN_KEY);
+  if (!tok) return;
+  try {
+    var res = await fetch('/user/me', { headers: { Authorization: 'Bearer ' + tok } });
+    if (res.ok) {
+      var data = await res.json();
+      _authUpdateBtn(data.email, data.plan);
+    } else {
+      localStorage.removeItem(_TOF_TOKEN_KEY);
+    }
+  } catch(e) { /* silently skip */ }
+})();
+// Exponer para 429 handler
+window.openAuthModal = openAuthModal;
+</script>
 </body>
 </html>
