@@ -3,241 +3,449 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Panel Admin — TextOnFlow</title>
+<title>TextOnFlow — Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a12;--card:#13132a;--border:#1e1e38;--text:#d0d0e8;--text2:#8888aa;--accent:#7c6eff;--accent2:#a5b4fc;--green:#4ade80;--red:#f87171;--gold:#f59e0b;--warn:#fbbf24}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-/* Login */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;width:100%;max-width:380px}
-.login-card h2{color:var(--accent2);font-size:1.4rem;margin-bottom:6px}
-.login-card p{color:var(--text2);font-size:.82rem;margin-bottom:24px}
-/* Topbar */
-#app{display:none}
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.topbar-logo{font-size:1rem;font-weight:800;color:var(--accent2);letter-spacing:.5px}
-.topbar-logo span{color:var(--text2);font-weight:400;margin-left:8px;font-size:.8rem}
-/* Main */
-.main{padding:28px 24px;max-width:1300px;margin:0 auto}
-h1{font-size:1.3rem;color:var(--text);margin-bottom:4px}
-.sub{color:var(--text2);font-size:.82rem;margin-bottom:24px}
-/* Stats bar */
-.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
-.stat-chip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:.8rem;color:var(--text2)}
-.stat-chip strong{color:var(--text);font-size:1.1rem;display:block;margin-bottom:2px}
-/* Filters */
-.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.search-input{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 13px;color:var(--text);font-size:.82rem;width:240px;outline:none}
+:root{
+  --bg:#080810;--card:#0f0f1e;--card2:#12122a;--border:#1c1c35;
+  --text:#d4d4f0;--text2:#7070a0;--text3:#404060;
+  --accent:#7c6eff;--accent2:#a5b4fc;--accent3:#c4b5fd;
+  --green:#4ade80;--red:#f87171;--gold:#f59e0b;--warn:#fbbf24;--blue:#38bdf8;
+  --sidebar:220px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;font-size:13px}
+
+/* ── Login ── */
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:99}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.login-logo{font-size:1.5rem;font-weight:900;color:var(--accent2);margin-bottom:4px}
+.login-sub{color:var(--text2);font-size:.8rem;margin-bottom:28px}
+.login-err{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:8px;padding:9px 12px;font-size:.78rem;margin-bottom:14px}
+input[type=text],input[type=password]{width:100%;background:#08080f;border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:.9rem;margin-bottom:12px;outline:none;transition:border .2s}
+input:focus{border-color:var(--accent)}
+.btn-primary{width:100%;background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:9px;padding:13px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.5}
+
+/* ── Layout ── */
+#app{display:none;height:100%;flex-direction:column}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-logo{font-size:.95rem;font-weight:800;color:var(--accent2)}
+.topbar-logo span{color:var(--text2);font-weight:400;font-size:.75rem;margin-left:6px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-admin{font-size:.75rem;color:var(--text2)}
+.btn-logout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red);border-radius:6px;padding:5px 12px;font-size:.72rem;cursor:pointer;font-weight:700}
+.last-refresh{font-size:.7rem;color:var(--text3);font-style:italic}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;padding:16px 24px 0;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
+.tab{padding:9px 18px;border-radius:8px 8px 0 0;font-size:.78rem;font-weight:700;color:var(--text2);cursor:pointer;border:1px solid transparent;border-bottom:none;transition:.15s;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg);border-color:var(--border);color:var(--accent2);border-bottom-color:var(--bg)}
+
+/* ── Content ── */
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── KPI Cards ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.kpi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px}
+.kpi-val{font-size:1.8rem;font-weight:900;color:var(--text);line-height:1}
+.kpi-sub{font-size:.7rem;color:var(--text3);margin-top:4px}
+.kpi.accent .kpi-val{color:var(--accent2)}
+.kpi.green .kpi-val{color:var(--green)}
+.kpi.gold .kpi-val{color:var(--gold)}
+.kpi.red .kpi-val{color:var(--red)}
+.kpi.blue .kpi-val{color:var(--blue)}
+
+/* ── Plan dist ── */
+.plan-dist{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.plan-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:.75rem;display:flex;align-items:center;gap:8px}
+.plan-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Charts ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:860px){.charts-row{grid-template-columns:1fr}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.chart-title{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px}
+.chart-wrap{position:relative;height:180px}
+
+/* ── Top users ── */
+.top-users{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:24px}
+.section-title{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.trow{display:grid;grid-template-columns:24px 1fr 80px 70px 70px 100px;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.03)}
+.trow:last-child{border-bottom:none}
+.trow.thead{font-size:.67rem;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:.4px;padding-bottom:6px}
+.rank{font-size:.7rem;color:var(--text3);font-weight:700}
+.email-cell{font-size:.75rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.num-cell{font-size:.78rem;font-weight:700;text-align:right}
+
+/* ── Users table ── */
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search-input{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.78rem;width:220px;outline:none}
 .search-input:focus{border-color:var(--accent)}
-.filter-btn{padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text2);transition:.15s}
+.filter-btn{padding:6px 13px;border-radius:7px;font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text2);transition:.15s;white-space:nowrap}
 .filter-btn.active,.filter-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
-/* Table */
-.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;font-size:.8rem}
-thead{background:#0d0d22}
-th{padding:11px 14px;text-align:left;color:var(--text2);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;border-bottom:1px solid var(--border)}
-td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.75rem}
+thead{background:#09091a}
+th{padding:9px 12px;text-align:left;color:var(--text3);font-weight:700;font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;border-bottom:1px solid var(--border)}
+th.sortable{cursor:pointer}
+th.sortable:hover{color:var(--text2)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(124,110,255,.03)}
+
 /* Badges */
-.badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:2px 9px;font-size:.7rem;font-weight:700;white-space:nowrap}
-.badge-trial{background:rgba(136,136,170,.12);color:var(--text2);border:1px solid rgba(136,136,170,.2)}
-.badge-starter{background:rgba(124,110,255,.15);color:var(--accent2);border:1px solid rgba(124,110,255,.25)}
-.badge-agency{background:rgba(245,158,11,.12);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
-.badge-admin{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
-.badge-active{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
-.badge-inactive{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
-.badge-wm{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.15)}
-.badge-nowm{background:rgba(34,197,94,.08);color:var(--green);border:1px solid rgba(34,197,94,.15)}
-/* Progress mini */
-.prog-mini{background:#1a1a2e;border-radius:4px;height:5px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
-.prog-mini-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .3s}
-.prog-mini-fill.warn{background:var(--warn)}
-.prog-mini-fill.danger{background:var(--red)}
-/* Action buttons */
-.btn-action{padding:4px 10px;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
-.btn-toggle-active{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
-.btn-toggle-active:hover{background:rgba(239,68,68,.25)}
-.btn-activate{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
-.btn-activate:hover{background:rgba(34,197,94,.25)}
-.btn-wm{background:rgba(124,110,255,.12);color:var(--accent2);border:1px solid rgba(124,110,255,.2)}
-.btn-wm:hover{background:rgba(124,110,255,.25)}
-.btn-reset{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
-.btn-reset:hover{background:rgba(245,158,11,.25)}
-/* Form elements */
-input[type=text],input[type=password]{width:100%;background:#0a0a12;border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:.9rem;margin-bottom:14px;outline:none}
-input:focus{border-color:var(--accent)}
-.btn-primary{width:100%;background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:8px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer}
-.btn-primary:hover{opacity:.9}
+.badge{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 8px;font-size:.67rem;font-weight:700;white-space:nowrap}
+.badge-trial{background:rgba(112,112,160,.1);color:#9090c0;border:1px solid rgba(112,112,160,.18)}
+.badge-starter{background:rgba(124,110,255,.12);color:var(--accent2);border:1px solid rgba(124,110,255,.2)}
+.badge-agency{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.18)}
+.badge-admin{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.18)}
+.badge-ok{background:rgba(34,197,94,.08);color:var(--green);border:1px solid rgba(34,197,94,.15)}
+.badge-off{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.15)}
+.badge-wm{background:rgba(239,68,68,.06);color:#f87171;border:1px solid rgba(239,68,68,.12)}
+.badge-nowm{background:rgba(34,197,94,.06);color:var(--green);border:1px solid rgba(34,197,94,.12)}
+
+/* Progress */
+.prog{background:#1a1a2e;border-radius:3px;height:4px;width:60px;display:inline-block;vertical-align:middle;margin-right:4px}
+.prog-fill{height:100%;border-radius:3px;background:var(--accent)}
+.prog-fill.warn{background:var(--warn)}
+.prog-fill.danger{background:var(--red)}
+
+/* Actions */
+.btn-action{padding:3px 8px;border-radius:5px;font-size:.67rem;font-weight:700;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+.btn-action.deactivate{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.18)}
+.btn-action.deactivate:hover{background:rgba(239,68,68,.22)}
+.btn-action.activate{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.18)}
+.btn-action.activate:hover{background:rgba(34,197,94,.22)}
+.btn-action.wm{background:rgba(124,110,255,.1);color:var(--accent2);border:1px solid rgba(124,110,255,.18)}
+.btn-action.wm:hover{background:rgba(124,110,255,.22)}
+.btn-action.reset{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.18)}
+.btn-action.reset:hover{background:rgba(245,158,11,.22)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:flex-end}
+.page-btn{background:var(--card);border:1px solid var(--border);color:var(--text2);border-radius:5px;padding:4px 10px;font-size:.72rem;cursor:pointer;transition:.15s}
+.page-btn:hover,.page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.page-info{font-size:.7rem;color:var(--text3);margin-left:6px}
+
+/* Empty / Loading */
+.empty{padding:40px;text-align:center;color:var(--text3);font-size:.82rem}
+.loading{color:var(--text3);font-size:.78rem;padding:20px;text-align:center}
+
 /* Toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:.82rem;color:var(--text);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:.3s;max-width:320px}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.78rem;color:var(--text);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(60px);opacity:0;transition:.25s;max-width:300px;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.ok{border-color:rgba(34,197,94,.3);color:var(--green)}
 .toast.err{border-color:rgba(239,68,68,.3);color:var(--red)}
-/* Pagination */
-.pagination{display:flex;align-items:center;gap:8px;margin-top:16px;justify-content:flex-end}
-.page-btn{background:var(--card);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:5px 12px;font-size:.78rem;cursor:pointer;transition:.15s}
-.page-btn:hover,.page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.page-btn:disabled{opacity:.35;cursor:default}
-/* Empty */
-.empty{padding:48px;text-align:center;color:var(--text2);font-size:.85rem}
 </style>
 </head>
 <body>
 
-<!-- Login screen -->
+<!-- ── Login ── -->
 <div id="login-screen">
   <div class="login-card">
-    <h2>🛡 Panel de Administración</h2>
-    <p>Acceso restringido — solo superadministradores TextOnFlow.</p>
-    <div id="login-err" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:8px;padding:9px 12px;font-size:.8rem;margin-bottom:14px;"></div>
-    <input type="text" id="admin-user" placeholder="Usuario admin" onkeydown="if(event.key==='Enter')adminLogin()">
-    <input type="password" id="admin-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')adminLogin()">
-    <button class="btn-primary" id="login-btn" onclick="adminLogin()">Entrar</button>
+    <div class="login-logo">TextOnFlow</div>
+    <div class="login-sub">Panel de administración — acceso restringido</div>
+    <div class="login-err" id="login-err"></div>
+    <input type="text"     id="a-user" placeholder="Email admin"  onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="a-pass" placeholder="Contraseña"   onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Entrar al dashboard</button>
   </div>
 </div>
 
-<!-- App -->
+<!-- ── App ── -->
 <div id="app">
   <div class="topbar">
-    <div class="topbar-logo">TextOnFlow <span>Panel Admin</span></div>
-    <div style="display:flex;align-items:center;gap:14px">
-      <span id="admin-email-lbl" style="font-size:.78rem;color:var(--text2)"></span>
-      <button onclick="adminLogout()" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red);border-radius:6px;padding:5px 12px;font-size:.75rem;cursor:pointer;font-weight:600">Salir</button>
+    <div class="topbar-logo">TextOnFlow <span>Admin Dashboard</span></div>
+    <div class="topbar-right">
+      <span class="last-refresh" id="last-refresh"></span>
+      <span class="topbar-admin" id="admin-lbl"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
 
-  <div class="main">
-    <h1>Gestión de usuarios</h1>
-    <p class="sub">Administra cuentas, límites, watermarks y accesos.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('overview',this)">📊 Resumen</div>
+    <div class="tab" onclick="switchTab('users',this)">👤 Usuarios</div>
+  </div>
 
-    <div class="stats-row" id="stats-row">
-      <div class="stat-chip"><strong id="st-total">—</strong>Total usuarios</div>
-      <div class="stat-chip"><strong id="st-active">—</strong>Activos</div>
-      <div class="stat-chip"><strong id="st-trial">—</strong>Free/Trial</div>
-      <div class="stat-chip"><strong id="st-paid">—</strong>De pago</div>
-      <div class="stat-chip"><strong id="st-inactive">—</strong>Desactivados</div>
+  <div class="content">
+
+    <!-- ── TAB: Overview ── -->
+    <div id="tab-overview">
+
+      <!-- KPIs -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi accent"><div class="kpi-label">Total registrados</div><div class="kpi-val" id="k-total">—</div><div class="kpi-sub">todos los planes</div></div>
+        <div class="kpi green"><div class="kpi-label">Cuentas activas</div><div class="kpi-val" id="k-active">—</div><div class="kpi-sub">pueden usar la app</div></div>
+        <div class="kpi blue"><div class="kpi-label">Nuevos esta semana</div><div class="kpi-val" id="k-week">—</div><div class="kpi-sub">últimos 7 días</div></div>
+        <div class="kpi gold"><div class="kpi-label">Nuevos este mes</div><div class="kpi-val" id="k-month">—</div><div class="kpi-sub">últimos 30 días</div></div>
+        <div class="kpi accent"><div class="kpi-label">Total renders</div><div class="kpi-val" id="k-renders">—</div><div class="kpi-sub">imágenes generadas</div></div>
+        <div class="kpi blue"><div class="kpi-label">Copias JSON</div><div class="kpi-val" id="k-copies">—</div><div class="kpi-sub">clicks en copiar JSON</div></div>
+        <div class="kpi"><div class="kpi-label">Activos 7 días</div><div class="kpi-val" id="k-active7">—</div><div class="kpi-sub">con actividad reciente</div></div>
+        <div class="kpi red"><div class="kpi-label">Desactivados</div><div class="kpi-val" id="k-inactive">—</div><div class="kpi-sub">cuentas bloqueadas</div></div>
+      </div>
+
+      <!-- Plan dist -->
+      <div class="plan-dist" id="plan-dist"></div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">Renders por día — últimos 30 días</div>
+          <div class="chart-wrap"><canvas id="chart-renders"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Nuevos usuarios por día — últimos 30 días</div>
+          <div class="chart-wrap"><canvas id="chart-users"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Top usuarios -->
+      <div class="top-users">
+        <div class="section-title">🏆 Top 10 usuarios por renders</div>
+        <div class="trow thead">
+          <div>#</div><div>Email</div><div>Plan</div><div>Renders</div><div>JSON copies</div><div>Última actividad</div>
+        </div>
+        <div id="top-users-list"><div class="loading">Cargando...</div></div>
+      </div>
+
     </div>
 
-    <div class="filters">
-      <input class="search-input" type="text" id="search-input" placeholder="🔍 Buscar por email..." oninput="applyFilters()">
-      <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Todos</button>
-      <button class="filter-btn" data-f="trial" onclick="setFilter('trial',this)">Trial</button>
-      <button class="filter-btn" data-f="starter" onclick="setFilter('starter',this)">Starter</button>
-      <button class="filter-btn" data-f="agency" onclick="setFilter('agency',this)">Agency</button>
-      <button class="filter-btn" data-f="inactive" onclick="setFilter('inactive',this)">Inactivos</button>
-      <button class="filter-btn" data-f="wm" onclick="setFilter('wm',this)">Sin marca</button>
-      <button onclick="loadUsers()" style="margin-left:auto;background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 16px;font-size:.78rem;font-weight:700;cursor:pointer">↺ Actualizar</button>
+    <!-- ── TAB: Users ── -->
+    <div id="tab-users" style="display:none">
+      <div class="filters">
+        <input class="search-input" type="text" id="search-input" placeholder="🔍 Buscar por email..." oninput="applyFilters()">
+        <button class="filter-btn active" data-f="all"      onclick="setFilter('all',this)">Todos</button>
+        <button class="filter-btn" data-f="trial"    onclick="setFilter('trial',this)">Trial</button>
+        <button class="filter-btn" data-f="starter"  onclick="setFilter('starter',this)">Starter</button>
+        <button class="filter-btn" data-f="agency"   onclick="setFilter('agency',this)">Agency</button>
+        <button class="filter-btn" data-f="inactive" onclick="setFilter('inactive',this)">Inactivos</button>
+        <button class="filter-btn" data-f="wm"       onclick="setFilter('wm',this)">Sin marca</button>
+        <button onclick="refresh()" style="margin-left:auto;background:var(--accent);border:none;color:#fff;border-radius:7px;padding:6px 14px;font-size:.72rem;font-weight:700;cursor:pointer">↺ Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" onclick="sortBy('email')">Email ↕</th>
+              <th class="sortable" onclick="sortBy('plan')">Plan ↕</th>
+              <th>Renders</th>
+              <th class="sortable" onclick="sortBy('json_copies')">JSON Copies ↕</th>
+              <th>Estado</th>
+              <th>Marca agua</th>
+              <th class="sortable" onclick="sortBy('created_at')">Registro ↕</th>
+              <th>Últ. actividad</th>
+              <th style="min-width:210px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="9" class="empty">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Renders</th>
-            <th>Estado</th>
-            <th>Marca agua</th>
-            <th>Creado</th>
-            <th style="min-width:220px">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="users-tbody">
-          <tr><td colspan="7" class="empty">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="pagination" id="pagination"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_TOKEN_KEY = 'tof_admin_token';
-let _adminToken = '';
+// ── State ──────────────────────────────────────────────────────────────────────
+const TOKEN_KEY = 'tof_admin_token';
+let _tok = '';
 let _allUsers = [];
 let _filteredUsers = [];
 let _filterPlan = 'all';
-let _currentPage = 1;
-const PAGE_SIZE = 20;
+let _sortKey = 'created_at';
+let _sortAsc = false;
+let _page = 1;
+const PAGE_SIZE = 25;
+let _charts = {};
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
-async function adminLogin() {
-  const user = document.getElementById('admin-user').value.trim();
-  const pass = document.getElementById('admin-pass').value;
-  const btn  = document.getElementById('login-btn');
-  if (!user || !pass) { showLoginErr('Completa todos los campos.'); return; }
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('a-user').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  const btn   = document.getElementById('login-btn');
+  if (!email || !pass) { loginErr('Completa todos los campos.'); return; }
   btn.disabled = true; btn.textContent = 'Verificando...';
   try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({email: user, password: pass})
+    const r = await fetch('/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pass})
     });
-    const d = await res.json();
-    if (!res.ok) { showLoginErr(d.detail || 'Credenciales incorrectas.'); return; }
-    _adminToken = d.token;
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, _adminToken);
-    document.getElementById('admin-email-lbl').textContent = user;
+    const d = await r.json();
+    if (!r.ok) { loginErr(d.detail || 'Credenciales incorrectas.'); return; }
+    _tok = d.token;
+    sessionStorage.setItem(TOKEN_KEY, _tok);
+    document.getElementById('admin-lbl').textContent = email;
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadUsers();
-  } catch(e) {
-    showLoginErr('Error de conexión.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Entrar';
-  }
+    document.getElementById('app').style.display = 'flex';
+    refresh();
+  } catch(e) { loginErr('Error de conexión.'); }
+  finally { btn.disabled = false; btn.textContent = 'Entrar al dashboard'; }
 }
-function adminLogout() {
-  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-  _adminToken = '';
+function doLogout() {
+  sessionStorage.removeItem(TOKEN_KEY);
+  _tok = '';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
-function showLoginErr(msg) {
+function loginErr(m) {
   const el = document.getElementById('login-err');
-  el.textContent = msg; el.style.display = 'block';
+  el.textContent = m; el.style.display = 'block';
 }
-function adminHeaders() {
-  return {'Content-Type':'application/json','X-Admin-Token': _adminToken};
+function aHeaders() { return {'Content-Type':'application/json','X-Admin-Token': _tok}; }
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+let _activeTab = 'overview';
+function switchTab(name, el) {
+  _activeTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-overview').style.display = name === 'overview' ? '' : 'none';
+  document.getElementById('tab-users').style.display    = name === 'users'    ? '' : 'none';
 }
 
-// ── Users ─────────────────────────────────────────────────────────────────────
+// ── Data ──────────────────────────────────────────────────────────────────────
+async function refresh() {
+  await Promise.all([loadStats(), loadUsers()]);
+  document.getElementById('last-refresh').textContent =
+    'Actualizado: ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/admin/stats', {headers: aHeaders()});
+    if (r.status === 403) { doLogout(); return; }
+    const d = await r.json();
+    const s = d.stats || {};
+    document.getElementById('k-total').textContent   = s.total_users ?? '—';
+    document.getElementById('k-active').textContent  = s.active_users ?? '—';
+    document.getElementById('k-week').textContent    = s.new_this_week ?? '—';
+    document.getElementById('k-month').textContent   = s.new_this_month ?? '—';
+    document.getElementById('k-renders').textContent = s.total_renders ?? '—';
+    document.getElementById('k-copies').textContent  = s.total_json_copies ?? '—';
+    document.getElementById('k-active7').textContent = s.active_this_week ?? '—';
+    document.getElementById('k-inactive').textContent= s.inactive_users ?? '—';
+    renderPlanDist(s);
+    renderChartRenders(d.renders_by_day || []);
+    renderChartUsers(d.users_by_day || []);
+    renderTopUsers(d.top_users || []);
+  } catch(e) { console.error('stats error', e); }
+}
+
 async function loadUsers() {
   try {
-    const res = await fetch('/api/admin/users?limit=500', {headers: adminHeaders()});
-    if (res.status === 403) { adminLogout(); return; }
-    const d = await res.json();
+    const r = await fetch('/api/admin/users?limit=500', {headers: aHeaders()});
+    if (r.status === 403) { doLogout(); return; }
+    const d = await r.json();
     _allUsers = d.users || [];
-    updateStats();
     applyFilters();
-  } catch(e) {
-    toast('Error cargando usuarios.', 'err');
+  } catch(e) { console.error('users error', e); }
+}
+
+// ── Overview renders ──────────────────────────────────────────────────────────
+function renderPlanDist(s) {
+  const plans = [
+    {label:'Trial',    key:'trial_users',   color:'#7070a0'},
+    {label:'Starter',  key:'starter_users', color:'#a5b4fc'},
+    {label:'Agency',   key:'agency_users',  color:'#f59e0b'},
+    {label:'Admin',    key:'admin_users',   color:'#4ade80'},
+  ];
+  document.getElementById('plan-dist').innerHTML = plans.map(p => `
+    <div class="plan-chip">
+      <div class="plan-dot" style="background:${p.color}"></div>
+      <span style="color:#9090c0;font-size:.7rem">${p.label}</span>
+      <strong style="color:var(--text)">${s[p.key] ?? 0}</strong>
+    </div>`).join('');
+}
+
+function makeChartConfig(labels, data, color, label) {
+  return {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data,
+        backgroundColor: color + '33',
+        borderColor: color,
+        borderWidth: 1.5,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false}, tooltip:{
+        backgroundColor:'#12122a', borderColor:'#1c1c35', borderWidth:1,
+        titleColor:'#a5b4fc', bodyColor:'#d4d4f0',
+      }},
+      scales: {
+        x: {grid:{color:'#1c1c35'}, ticks:{color:'#404060', maxRotation:45, font:{size:9}}},
+        y: {grid:{color:'#1c1c35'}, ticks:{color:'#404060', font:{size:9}}, beginAtZero:true},
+      }
+    }
+  };
+}
+
+function fill30Days(data, key) {
+  const map = {};
+  data.forEach(d => map[d.day] = d[key] || 0);
+  const labels = [], vals = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = d.toISOString().slice(0,10);
+    labels.push(k.slice(5));
+    vals.push(map[k] || 0);
   }
+  return {labels, vals};
 }
-function updateStats() {
-  const total    = _allUsers.length;
-  const active   = _allUsers.filter(u => u.is_active).length;
-  const trial    = _allUsers.filter(u => u.plan === 'trial' && u.is_active).length;
-  const paid     = _allUsers.filter(u => ['starter','agency'].includes(u.plan)).length;
-  const inactive = _allUsers.filter(u => !u.is_active).length;
-  document.getElementById('st-total').textContent    = total;
-  document.getElementById('st-active').textContent   = active;
-  document.getElementById('st-trial').textContent    = trial;
-  document.getElementById('st-paid').textContent     = paid;
-  document.getElementById('st-inactive').textContent = inactive;
+
+function renderChartRenders(data) {
+  const {labels, vals} = fill30Days(data, 'renders');
+  const ctx = document.getElementById('chart-renders').getContext('2d');
+  if (_charts.renders) _charts.renders.destroy();
+  _charts.renders = new Chart(ctx, makeChartConfig(labels, vals, '#7c6eff', 'Renders'));
 }
+function renderChartUsers(data) {
+  const {labels, vals} = fill30Days(data, 'users');
+  const ctx = document.getElementById('chart-users').getContext('2d');
+  if (_charts.users) _charts.users.destroy();
+  _charts.users = new Chart(ctx, makeChartConfig(labels, vals, '#38bdf8', 'Usuarios'));
+}
+
+function renderTopUsers(list) {
+  const el = document.getElementById('top-users-list');
+  if (!list.length) { el.innerHTML = '<div class="loading">Sin datos aún.</div>'; return; }
+  el.innerHTML = list.map((u, i) => `
+    <div class="trow">
+      <div class="rank">${i+1}</div>
+      <div class="email-cell" title="${u.email}">${u.email}</div>
+      <div><span class="badge badge-${u.plan}">${u.plan.toUpperCase()}</span></div>
+      <div class="num-cell" style="color:var(--accent2)">${u.renders_used}</div>
+      <div class="num-cell" style="color:var(--blue)">${u.json_copies || 0}</div>
+      <div style="font-size:.7rem;color:var(--text3)">${fmtDate(u.last_active_at)}</div>
+    </div>`).join('');
+}
+
+// ── Users table ───────────────────────────────────────────────────────────────
 function setFilter(f, btn) {
   _filterPlan = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  _currentPage = 1;
+  _page = 1;
   applyFilters();
 }
 function applyFilters() {
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
   _filteredUsers = _allUsers.filter(u => {
     if (q && !u.email.toLowerCase().includes(q)) return false;
     if (_filterPlan === 'inactive') return !u.is_active;
@@ -245,45 +453,52 @@ function applyFilters() {
     if (_filterPlan !== 'all') return u.plan === _filterPlan;
     return true;
   });
+  sortUsers();
+}
+function sortBy(key) {
+  if (_sortKey === key) _sortAsc = !_sortAsc;
+  else { _sortKey = key; _sortAsc = false; }
+  sortUsers();
+}
+function sortUsers() {
+  _filteredUsers.sort((a, b) => {
+    let va = a[_sortKey] ?? '', vb = b[_sortKey] ?? '';
+    if (typeof va === 'number') return _sortAsc ? va - vb : vb - va;
+    return _sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
   renderTable();
 }
 function renderTable() {
   const tbody = document.getElementById('users-tbody');
-  const start = (_currentPage - 1) * PAGE_SIZE;
+  if (!tbody) return;
+  const start = (_page - 1) * PAGE_SIZE;
   const page  = _filteredUsers.slice(start, start + PAGE_SIZE);
   if (!page.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay usuarios con estos filtros.</td></tr>';
-    renderPagination();
-    return;
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Sin usuarios con estos filtros.</td></tr>`;
+    renderPagination(); return;
   }
   tbody.innerHTML = page.map(u => {
-    const planBadge = `<span class="badge badge-${u.plan}">${u.plan.toUpperCase()}</span>`;
-    const limit     = u.renders_limit || 5;
-    const pct       = Math.min(100, Math.round((u.renders_used / limit) * 100));
-    const cls       = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
-    const prog      = `<div class="prog-mini"><div class="prog-mini-fill ${cls}" style="width:${pct}%"></div></div>`;
-    const statBadge = u.is_active
-      ? '<span class="badge badge-active">✓ Activa</span>'
-      : '<span class="badge badge-inactive">✗ Inactiva</span>';
-    const wmBadge = u.watermark_exempt
-      ? '<span class="badge badge-nowm">✓ Sin marca</span>'
-      : '<span class="badge badge-wm">✦ Con marca</span>';
-    const created = u.created_at ? u.created_at.slice(0,10) : '—';
-    const toggleActiveBtn = u.is_active
-      ? `<button class="btn-action btn-toggle-active" onclick="toggleActive('${u.id}','${u.email}')">Desactivar</button>`
-      : `<button class="btn-action btn-activate" onclick="toggleActive('${u.id}','${u.email}')">Activar</button>`;
-    const wmLabel = u.watermark_exempt ? 'Quitar exención' : 'Exentar marca';
+    const limit  = u.renders_limit || 5;
+    const pct    = Math.min(100, Math.round((u.renders_used / limit) * 100));
+    const cls    = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+    const prog   = `<div class="prog"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div>`;
+    const tBtn   = u.is_active
+      ? `<button class="btn-action deactivate" onclick="toggleActive('${u.id}','${u.email}')">Desactivar</button>`
+      : `<button class="btn-action activate"   onclick="toggleActive('${u.id}','${u.email}')">Activar</button>`;
+    const wmLbl  = u.watermark_exempt ? 'Quitar exención' : 'Exentar';
     return `<tr id="row-${u.id}">
-      <td style="font-size:.79rem;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${u.email}">${u.email}</td>
-      <td>${planBadge}</td>
-      <td>${prog}<span style="font-size:.75rem;color:var(--text2)">${u.renders_used}/${limit}</span></td>
-      <td>${statBadge}</td>
-      <td>${wmBadge}</td>
-      <td style="font-size:.75rem;color:var(--text2)">${created}</td>
-      <td style="display:flex;gap:5px;flex-wrap:wrap">
-        ${toggleActiveBtn}
-        <button class="btn-action btn-wm" onclick="toggleWatermark('${u.id}','${u.email}')">${wmLabel}</button>
-        <button class="btn-action btn-reset" onclick="resetRenders('${u.id}','${u.email}')">Reset renders</button>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)" title="${u.email}">${u.email}</td>
+      <td><span class="badge badge-${u.plan}">${u.plan.toUpperCase()}</span></td>
+      <td>${prog}<span style="color:var(--text2)">${u.renders_used}/${limit}</span></td>
+      <td style="text-align:center;color:var(--blue);font-weight:700">${u.json_copies || 0}</td>
+      <td><span class="badge ${u.is_active ? 'badge-ok' : 'badge-off'}">${u.is_active ? '✓ Activa' : '✗ Inactiva'}</span></td>
+      <td><span class="badge ${u.watermark_exempt ? 'badge-nowm' : 'badge-wm'}">${u.watermark_exempt ? '✓ Sin marca' : '✦ Con marca'}</span></td>
+      <td style="color:var(--text3)">${fmtDate(u.created_at)}</td>
+      <td style="color:var(--text3)">${fmtDate(u.last_active_at)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        ${tBtn}
+        <button class="btn-action wm"    onclick="toggleWatermark('${u.id}','${u.email}')">${wmLbl}</button>
+        <button class="btn-action reset" onclick="resetRenders('${u.id}','${u.email}')">Reset</button>
       </td>
     </tr>`;
   }).join('');
@@ -291,84 +506,86 @@ function renderTable() {
 }
 function renderPagination() {
   const pages = Math.ceil(_filteredUsers.length / PAGE_SIZE);
-  const pg = document.getElementById('pagination');
-  if (pages <= 1) { pg.innerHTML = ''; return; }
-  let html = '';
-  if (_currentPage > 1) html += `<button class="page-btn" onclick="goPage(${_currentPage-1})">← Ant</button>`;
-  for (let i = 1; i <= pages; i++) {
-    html += `<button class="page-btn${i===_currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
-  }
-  if (_currentPage < pages) html += `<button class="page-btn" onclick="goPage(${_currentPage+1})">Sig →</button>`;
-  html += `<span style="font-size:.75rem;color:var(--text2);margin-left:6px">${_filteredUsers.length} usuarios</span>`;
-  pg.innerHTML = html;
+  const pg    = document.getElementById('pagination');
+  if (!pg) return;
+  if (pages <= 1) { pg.innerHTML = `<span class="page-info">${_filteredUsers.length} usuarios</span>`; return; }
+  let h = '';
+  if (_page > 1) h += `<button class="page-btn" onclick="goPage(${_page-1})">← Ant</button>`;
+  for (let i = 1; i <= pages; i++)
+    h += `<button class="page-btn${i===_page?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  if (_page < pages) h += `<button class="page-btn" onclick="goPage(${_page+1})">Sig →</button>`;
+  h += `<span class="page-info">${_filteredUsers.length} usuarios</span>`;
+  pg.innerHTML = h;
 }
-function goPage(n) { _currentPage = n; renderTable(); window.scrollTo(0,0); }
+function goPage(n) { _page = n; renderTable(); window.scrollTo(0,0); }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
-async function toggleActive(userId, email) {
-  try {
-    const res = await fetch('/api/admin/users/toggle-active', {
-      method: 'POST', headers: adminHeaders(),
-      body: JSON.stringify({user_id: userId})
-    });
-    const d = await res.json();
-    if (!res.ok) { toast(d.detail || 'Error.', 'err'); return; }
-    const u = _allUsers.find(u => u.id === userId);
-    if (u) u.is_active = d.is_active;
-    const label = d.is_active ? '✓ Cuenta activada' : '✗ Cuenta desactivada';
-    toast(`${label} — ${email}`, 'ok');
-    updateStats();
-    applyFilters();
-  } catch(e) { toast('Error de conexión.', 'err'); }
+async function toggleActive(id, email) {
+  const r = await fetch('/api/admin/users/toggle-active', {
+    method:'POST', headers:aHeaders(), body:JSON.stringify({user_id:id})
+  });
+  const d = await r.json();
+  if (!r.ok) { toast(d.detail||'Error','err'); return; }
+  const u = _allUsers.find(u=>u.id===id);
+  if (u) u.is_active = d.is_active;
+  toast(`${d.is_active?'✓ Activada':'✗ Desactivada'} — ${email}`, 'ok');
+  applyFilters(); await loadStats();
 }
-async function toggleWatermark(userId, email) {
-  try {
-    const res = await fetch('/api/admin/users/toggle-watermark', {
-      method: 'POST', headers: adminHeaders(),
-      body: JSON.stringify({user_id: userId})
-    });
-    const d = await res.json();
-    if (!res.ok) { toast(d.detail || 'Error.', 'err'); return; }
-    const u = _allUsers.find(u => u.id === userId);
-    if (u) u.watermark_exempt = d.watermark_exempt;
-    const label = d.watermark_exempt ? '✓ Exento de marca' : '✦ Marca de agua activa';
-    toast(`${label} — ${email}`, 'ok');
-    applyFilters();
-  } catch(e) { toast('Error de conexión.', 'err'); }
+async function toggleWatermark(id, email) {
+  const r = await fetch('/api/admin/users/toggle-watermark', {
+    method:'POST', headers:aHeaders(), body:JSON.stringify({user_id:id})
+  });
+  const d = await r.json();
+  if (!r.ok) { toast(d.detail||'Error','err'); return; }
+  const u = _allUsers.find(u=>u.id===id);
+  if (u) u.watermark_exempt = d.watermark_exempt;
+  toast(`${d.watermark_exempt?'✓ Exento':'✦ Con marca'} — ${email}`, 'ok');
+  applyFilters();
 }
-async function resetRenders(userId, email) {
-  if (!confirm(`¿Reiniciar contador de renders de ${email}?`)) return;
-  try {
-    const res = await fetch('/api/admin/users/reset-renders', {
-      method: 'POST', headers: adminHeaders(),
-      body: JSON.stringify({user_id: userId})
-    });
-    const d = await res.json();
-    if (!res.ok) { toast(d.detail || 'Error.', 'err'); return; }
-    const u = _allUsers.find(u => u.id === userId);
-    if (u) u.renders_used = 0;
-    toast(`✓ Renders reiniciados — ${email}`, 'ok');
-    applyFilters();
-  } catch(e) { toast('Error de conexión.', 'err'); }
+async function resetRenders(id, email) {
+  if (!confirm(`¿Reiniciar renders de ${email}?`)) return;
+  const r = await fetch('/api/admin/users/reset-renders', {
+    method:'POST', headers:aHeaders(), body:JSON.stringify({user_id:id})
+  });
+  const d = await r.json();
+  if (!r.ok) { toast(d.detail||'Error','err'); return; }
+  const u = _allUsers.find(u=>u.id===id);
+  if (u) u.renders_used = 0;
+  toast(`✓ Renders reiniciados — ${email}`, 'ok');
+  applyFilters(); await loadStats();
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60)   return 'Ahora';
+  if (diff < 3600) return Math.floor(diff/60) + 'm';
+  if (diff < 86400)return Math.floor(diff/3600) + 'h';
+  if (diff < 604800)return Math.floor(diff/86400) + 'd';
+  return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'2-digit'});
+}
 let _toastTimer;
 function toast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = `toast show ${type||''}`;
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.className = 'toast', 3200);
+  _toastTimer = setTimeout(() => t.className = 'toast', 3500);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-const savedToken = sessionStorage.getItem(ADMIN_TOKEN_KEY);
-if (savedToken) {
-  _adminToken = savedToken;
+const saved = sessionStorage.getItem(TOKEN_KEY);
+if (saved) {
+  _tok = saved;
+  document.getElementById('admin-lbl').textContent = '';
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  loadUsers();
+  document.getElementById('app').style.display = 'flex';
+  refresh();
 }
+// Auto-refresh cada 60 s
+setInterval(() => { if (_tok) refresh(); }, 60000);
 </script>
 </body>
 </html>
