@@ -7,24 +7,52 @@
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0d0d14;color:#d0d0e8;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 60px}
+  body{background:#0d0d14;color:#d0d0e8;font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 80px}
   .top-bar{background:#0d0d14;border-bottom:1px solid #1e1e2e;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
   .top-bar img{height:24px;width:auto;opacity:.9;}
   .back-btn{display:inline-flex;align-items:center;gap:7px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#a0a0c0;text-decoration:none;padding:7px 14px;font-size:13px;transition:all .2s;}
   .back-btn:hover{background:#252540;color:#fff;border-color:#4446a0;}
-  .content{max-width:780px;margin:0 auto;padding:40px 24px;}
-  h1{font-size:2rem;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
-  .date{color:#555;font-size:.85rem;margin-bottom:40px;}
-  h2{font-size:1.05rem;font-weight:700;color:#a5b4fc;margin:32px 0 12px;}
-  p,li{font-size:.93rem;line-height:1.75;color:#b0b0c8;margin-bottom:10px;}
-  ul{padding-left:22px;margin-bottom:12px;}
+  .content{max-width:800px;margin:0 auto;padding:48px 24px;}
+  h1{font-size:2.1rem;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
+  .subtitle{color:#7c6eff;font-size:.9rem;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+  .date{color:#555;font-size:.85rem;margin-bottom:48px;}
+  h2{font-size:1.05rem;font-weight:800;color:#a5b4fc;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid #1a1a30;}
+  h3{font-size:.95rem;font-weight:700;color:#c4b5fd;margin:20px 0 10px;}
+  p,li{font-size:.93rem;line-height:1.8;color:#b0b0c8;margin-bottom:10px;}
+  ul,ol{padding-left:22px;margin-bottom:14px;}
   strong{color:#d0d0e8;}
-  .footer-note{margin-top:48px;padding-top:24px;border-top:1px solid #1e1e2e;font-size:.82rem;color:#444;text-align:center;}
+  a{color:#a5b4fc;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  code{background:#1a1a30;padding:2px 7px;border-radius:4px;font-family:monospace;font-size:.88em;color:#c4b5fd;}
+  .data-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.88rem;}
+  .data-table th{background:#131325;color:#a5b4fc;font-weight:700;text-align:left;padding:10px 14px;border:1px solid #2a2a40;}
+  .data-table td{padding:9px 14px;border:1px solid #1e1e30;color:#b0b0c8;vertical-align:top;line-height:1.6;}
+  .data-table tr:nth-child(even) td{background:#0d0d1a;}
+  .rights-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+  .right-card{background:#0d0d20;border:1px solid #2a2a50;border-radius:8px;padding:14px 16px;}
+  .right-card .right-name{font-size:.88rem;font-weight:800;color:#c4b5fd;margin-bottom:5px;}
+  .right-card p{font-size:.85rem;margin:0;color:#9090c0;}
+  .highlight-box{background:#0d0d20;border:1px solid #2a2a50;border-left:3px solid #7c6eff;border-radius:8px;padding:16px 18px;margin:16px 0;}
+  .gdpr-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:4px;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.2);margin-left:6px;vertical-align:middle;}
+  .toc{background:#0d0d20;border:1px solid #1e1e38;border-radius:10px;padding:20px 24px;margin-bottom:40px;}
+  .toc h3{color:#888;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;margin-top:0;}
+  .toc ol{margin:0;padding-left:18px;}
+  .toc li{font-size:.88rem;margin-bottom:5px;}
+  .toc a{color:#9090c0;}
+  .delete-cta{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:18px 20px;margin:16px 0;display:flex;align-items:center;gap:16px;}
+  .delete-cta svg{flex-shrink:0;color:#ef4444;}
+  .delete-cta p{margin:0;font-size:.9rem;color:#c0a0a0;}
+  .delete-cta a{color:#fca5a5;}
+  .footer-note{margin-top:60px;padding-top:24px;border-top:1px solid #1e1e2e;font-size:.82rem;color:#444;text-align:center;line-height:1.9;}
+  .footer-note a{color:#555;text-decoration:none;margin:0 6px;}
+  .footer-note a:hover{color:#888;}
+  @media(max-width:640px){.content{padding:32px 16px;}.top-bar{padding:12px 16px;}.rights-grid{grid-template-columns:1fr;}.data-table{font-size:.8rem;}}
 </style>
 </head>
 <body>
+
 <div class="top-bar">
-  <img src="/static/logo-blanco-new.png" alt="TextOnFlow">
+  <img src="/static/logo-blanco-new.png" alt="TextOnFlow" onerror="this.src='/static/logo-blanco.webp'">
   <a class="back-btn" href="/">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     Volver al editor
@@ -32,60 +60,244 @@
 </div>
 
 <div class="content">
+  <div class="subtitle">Legal</div>
   <h1>Política de Privacidad</h1>
-  <p class="date">Última actualización: marzo 2026</p>
+  <p class="date">Última actualización: 27 de abril de 2026 — Versión 3.0 <span class="gdpr-badge">GDPR Compatible</span></p>
 
-  <h2>1. Responsable del tratamiento</h2>
-  <p><strong>TextOnFlow</strong> es el responsable del tratamiento de los datos personales recopilados a través de esta plataforma, accesible en <strong>www.textonflow.com</strong>.</p>
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#s1">Responsable del tratamiento</a></li>
+      <li><a href="#s2">Datos que recopilamos</a></li>
+      <li><a href="#s3">Base legal del tratamiento</a></li>
+      <li><a href="#s4">Tabla de retención de datos</a></li>
+      <li><a href="#s5">Uso de los datos</a></li>
+      <li><a href="#s6">Imágenes generadas por IA</a></li>
+      <li><a href="#s7">Compartición con terceros y sub-encargados</a></li>
+      <li><a href="#s8">Transferencias internacionales</a></li>
+      <li><a href="#s9">Cookies y almacenamiento local</a></li>
+      <li><a href="#s10">Seguridad</a></li>
+      <li><a href="#s11">Tus derechos (GDPR / LGPD / LFPDPPP)</a></li>
+      <li><a href="#s12">Eliminar tu cuenta</a></li>
+      <li><a href="#s13">Menores de edad</a></li>
+      <li><a href="#s14">Cambios a esta política</a></li>
+      <li><a href="#s15">Contacto y DPO</a></li>
+    </ol>
+  </div>
 
-  <h2>2. Datos que recopilamos</h2>
-  <p>TextOnFlow puede recopilar los siguientes tipos de datos:</p>
+  <h2 id="s1">1. Responsable del tratamiento</h2>
+  <p><strong>TextOnFlow</strong> es el responsable del tratamiento de los datos personales recopilados a través de la plataforma accesible en <strong>www.textonflow.com</strong>.</p>
   <ul>
-    <li><strong>Imágenes subidas:</strong> Las imágenes que cargas en el editor se procesan en nuestros servidores únicamente para generar la imagen personalizada. No se almacenan de forma permanente.</li>
-    <li><strong>URLs de imágenes:</strong> Las URLs de imágenes que pegas en el editor se utilizan exclusivamente para cargar y procesar la imagen.</li>
-    <li><strong>Datos de personalización:</strong> Las variables como <code>{{nombre}}</code> o <code>{{ciudad}}</code> son proporcionadas por ManyChat en el momento de la solicitud y no se almacenan en nuestros servidores.</li>
-    <li><strong>Logs del servidor:</strong> Se registran datos técnicos como dirección IP, tipo de navegador y hora de acceso con fines de seguridad y diagnóstico.</li>
+    <li><strong>Empresa:</strong> TextOnFlow</li>
+    <li><strong>Domicilio:</strong> Cabo San Lucas, Baja California Sur, México</li>
+    <li><strong>Email de contacto:</strong> hola@textonflow.com</li>
+    <li><strong>Contacto de privacidad:</strong> privacidad@textonflow.com</li>
   </ul>
 
-  <h2>3. Uso de los datos</h2>
+  <h2 id="s2">2. Datos que recopilamos</h2>
+
+  <h3>2.1 Datos de registro de cuenta</h3>
+  <ul>
+    <li><strong>Dirección de email:</strong> Utilizada para autenticación, comunicaciones de servicio y recuperación de contraseña.</li>
+    <li><strong>Contraseña hasheada:</strong> Almacenada únicamente como hash bcrypt. Nunca almacenamos la contraseña en texto plano.</li>
+    <li><strong>Fecha de creación de cuenta:</strong> Para gestión del período de prueba y comunicaciones.</li>
+    <li><strong>Plan activo y contadores de uso:</strong> Para aplicar los límites del plan contratado.</li>
+  </ul>
+
+  <h3>2.2 Datos de uso del editor</h3>
+  <ul>
+    <li><strong>Proyectos guardados:</strong> El layout JSON de diseños que guardas voluntariamente. Almacenado en nuestra base de datos.</li>
+    <li><strong>Imágenes cargadas:</strong> Procesadas en memoria RAM durante la solicitud. <strong>No se almacenan</strong> en ningún sistema de archivos o base de datos.</li>
+    <li><strong>URLs de imágenes:</strong> Utilizadas exclusivamente para cargar y procesar la imagen solicitada.</li>
+    <li><strong>Variables de personalización</strong> (<code>{"{{"}nombre{"}}"}</code>, <code>{"{{"}ciudad{"}}"}</code>): Procesadas en tiempo de solicitud sin almacenamiento persistente.</li>
+  </ul>
+
+  <h3>2.3 Datos técnicos de acceso</h3>
+  <ul>
+    <li><strong>Dirección IP:</strong> Registrada en logs del servidor para seguridad y diagnóstico.</li>
+    <li><strong>User-Agent del navegador:</strong> Para compatibilidad y diagnóstico técnico.</li>
+    <li><strong>Timestamps de solicitudes:</strong> Para análisis de rendimiento y detección de abuso.</li>
+  </ul>
+
+  <h3>2.4 Datos de facturación</h3>
+  <p>El procesamiento de pagos lo realiza <strong>Stripe</strong> directamente. TextOnFlow no almacena datos de tarjetas de crédito. Únicamente conservamos el identificador de cliente Stripe y el estado de la suscripción.</p>
+
+  <h2 id="s3">3. Base legal del tratamiento</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Tipo de tratamiento</th><th>Base legal</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Gestión de cuenta y autenticación</td><td>Ejecución del contrato (Art. 6.1.b GDPR)</td></tr>
+      <tr><td>Procesamiento de imágenes y renders</td><td>Ejecución del contrato (Art. 6.1.b GDPR)</td></tr>
+      <tr><td>Facturación y pagos</td><td>Obligación legal + ejecución del contrato</td></tr>
+      <tr><td>Logs de seguridad y diagnóstico</td><td>Interés legítimo (Art. 6.1.f GDPR)</td></tr>
+      <tr><td>Comunicaciones de servicio (cambios, incidentes)</td><td>Interés legítimo (Art. 6.1.f GDPR)</td></tr>
+      <tr><td>Registros fiscales y contables</td><td>Obligación legal (Art. 6.1.c GDPR)</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s4">4. Tabla de retención de datos</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Dato</th><th>Período de retención</th><th>Justificación</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Email y contraseña (hash)</td><td>Mientras la cuenta esté activa</td><td>Necesario para la prestación del servicio</td></tr>
+      <tr><td>Proyectos guardados</td><td>Mientras la cuenta esté activa</td><td>Servicio solicitado por el usuario</td></tr>
+      <tr><td>Contador de renders</td><td>Mientras la cuenta esté activa</td><td>Aplicación de límites del plan</td></tr>
+      <tr><td>Imágenes cargadas</td><td>0 segundos (solo en memoria durante el proceso)</td><td>Procesamiento efímero</td></tr>
+      <tr><td>Logs técnicos con IP</td><td>30 días</td><td>Seguridad y diagnóstico</td></tr>
+      <tr><td>ID de cliente Stripe</td><td>7 años tras última transacción</td><td>Obligación fiscal y legal</td></tr>
+      <tr><td>Historial de facturación</td><td>7 años</td><td>Obligación fiscal (LISR México, IRS EEUU)</td></tr>
+      <tr><td>Datos tras eliminación de cuenta</td><td>Datos de cuenta: eliminados inmediatamente. Logs anónimos: 30 días. Registros fiscales: 7 años.</td><td>Derechos GDPR + obligación legal</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s5">5. Uso de los datos</h2>
   <p>Los datos recopilados se utilizan exclusivamente para:</p>
   <ul>
-    <li>Generar y entregar imágenes personalizadas solicitadas a través de la API.</li>
-    <li>Mantener el funcionamiento y la seguridad del servicio.</li>
-    <li>Mejorar la plataforma mediante análisis técnico anónimo.</li>
+    <li>Autenticar y gestionar tu cuenta de usuario.</li>
+    <li>Generar y entregar imágenes personalizadas solicitadas a través del editor o la API.</li>
+    <li>Aplicar los límites de uso correspondientes a tu plan.</li>
+    <li>Procesar pagos y gestionar suscripciones.</li>
+    <li>Mantener la seguridad, el funcionamiento y la disponibilidad del servicio.</li>
+    <li>Cumplir con obligaciones legales y regulatorias.</li>
   </ul>
+  <p><strong>No utilizamos tus datos para publicidad, perfilado comercial ni los vendemos a terceros.</strong></p>
 
-  <h2>4. Imágenes generadas por IA</h2>
-  <p>Cuando utilizas la función "Crear con IA", tu descripción de texto es enviada a los servidores de <strong>Google Gemini</strong> para generar la imagen. Esta interacción está sujeta a la <a href="https://policies.google.com/privacy" target="_blank" style="color:#6366f1;">Política de Privacidad de Google</a>. TextOnFlow no almacena las descripciones enviadas ni las imágenes resultantes más allá del tiempo necesario para entregarlas.</p>
-
-  <h2>5. Compartición de datos con terceros</h2>
-  <p>TextOnFlow no vende ni comparte tus datos personales con terceros con fines comerciales. Solo compartimos datos con proveedores necesarios para el funcionamiento del servicio:</p>
+  <h2 id="s6">6. Imágenes generadas por IA</h2>
+  <p>Cuando utilizas la función "Crear con IA", tu descripción de texto se envía a los servidores de <strong>Google Gemini</strong> para generar la imagen. Esto implica:</p>
   <ul>
-    <li><strong>Google Gemini:</strong> para generación de imágenes con IA.</li>
-    <li><strong>Railway:</strong> como proveedor de infraestructura del servidor.</li>
+    <li>Tu prompt textual es procesado por Google bajo sus propias políticas de privacidad.</li>
+    <li>TextOnFlow no almacena los prompts ni las imágenes resultantes más allá del tiempo necesario para entregarlas.</li>
+    <li>Esta interacción está sujeta a la <a href="https://policies.google.com/privacy" target="_blank">Política de Privacidad de Google</a>.</li>
   </ul>
 
-  <h2>6. Cookies y almacenamiento local</h2>
-  <p>TextOnFlow utiliza <strong>localStorage</strong> del navegador para guardar preferencias locales del editor (fuentes, colores de marca, etc.). No utilizamos cookies de rastreo ni publicidad.</p>
+  <h2 id="s7">7. Compartición con terceros y sub-encargados</h2>
+  <p>TextOnFlow no vende datos personales. Solo compartimos datos con los siguientes sub-encargados necesarios para la prestación del servicio:</p>
+  <table class="data-table">
+    <thead>
+      <tr><th>Sub-encargado</th><th>Función</th><th>Datos compartidos</th><th>País</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Google LLC</strong> (Gemini AI)</td><td>Generación de imágenes con IA</td><td>Prompts de texto del usuario</td><td>EE.UU.</td></tr>
+      <tr><td><strong>Railway Corp</strong></td><td>Infraestructura del servidor</td><td>Todos los datos en tránsito y almacenados</td><td>EE.UU.</td></tr>
+      <tr><td><strong>Supabase Inc</strong></td><td>Base de datos PostgreSQL</td><td>Email, hash contraseña, plan, contadores, proyectos</td><td>EE.UU.</td></tr>
+      <tr><td><strong>Stripe Inc</strong></td><td>Procesamiento de pagos</td><td>Email, historial de transacciones</td><td>EE.UU.</td></tr>
+    </tbody>
+  </table>
+  <p>Todos nuestros sub-encargados están sujetos a acuerdos de procesamiento de datos (DPA) y cumplen con estándares equivalentes al GDPR.</p>
 
-  <h2>7. Seguridad</h2>
-  <p>Implementamos medidas técnicas razonables para proteger los datos transmitidos a través de la plataforma, incluyendo comunicaciones cifradas mediante HTTPS/TLS.</p>
+  <h2 id="s8">8. Transferencias internacionales de datos</h2>
+  <p>Dado que nuestros sub-encargados están ubicados en Estados Unidos, tus datos pueden ser transferidos fuera del Espacio Económico Europeo (EEE). Estas transferencias se realizan bajo:</p>
+  <ul>
+    <li><strong>Cláusulas Contractuales Estándar (CCE)</strong> aprobadas por la Comisión Europea.</li>
+    <li>Certificaciones de seguridad ISO 27001 de los proveedores de infraestructura.</li>
+    <li>Cumplimiento del Marco de Privacidad de Datos UE-EE.UU. (cuando aplica).</li>
+  </ul>
 
-  <h2>8. Derechos del usuario</h2>
-  <p>Tienes derecho a solicitar acceso, rectificación o eliminación de cualquier dato personal que pudiéramos tener. Para ejercer estos derechos, contáctanos en <strong>hola@textonflow.com</strong>.</p>
+  <h2 id="s9">9. Cookies y almacenamiento local</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Tipo</th><th>Nombre</th><th>Propósito</th><th>Duración</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>localStorage</td><td><code>tof_token</code></td><td>Token JWT de autenticación</td><td>Hasta cierre de sesión o expiración (7 días)</td></tr>
+      <tr><td>localStorage</td><td><code>manychat_configurator_prefs</code></td><td>Preferencias del editor (fuentes, posición de capas)</td><td>Indefinida (solo local)</td></tr>
+      <tr><td>localStorage</td><td><code>textonflow_brand_colors</code></td><td>Colores de marca del usuario</td><td>Indefinida (solo local)</td></tr>
+      <tr><td>localStorage</td><td><code>tof_lang</code></td><td>Preferencia de idioma (ES/EN)</td><td>Indefinida (solo local)</td></tr>
+      <tr><td>Cookie HTTP</td><td><em>Ninguna</em></td><td>No usamos cookies de rastreo ni publicidad</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p>Puedes borrar el almacenamiento local en cualquier momento desde la configuración de tu navegador. Esto no eliminará tu cuenta ni tus datos del servidor.</p>
 
-  <h2>9. Cambios a esta política</h2>
-  <p>Podemos actualizar esta política ocasionalmente. Te notificaremos publicando la nueva versión en esta página con la fecha de actualización.</p>
+  <h2 id="s10">10. Seguridad</h2>
+  <ul>
+    <li>Comunicaciones cifradas mediante <strong>HTTPS/TLS 1.3</strong> en todo momento.</li>
+    <li>Contraseñas almacenadas como hash <strong>bcrypt</strong> con salt (nunca en texto plano).</li>
+    <li>Tokens JWT con expiración de 7 días y firma segura.</li>
+    <li>Acceso a la base de datos mediante conexión cifrada SSL.</li>
+    <li>Monitoreo continuo de logs para detección de accesos no autorizados.</li>
+    <li>Infraestructura en Railway con aislamiento de contenedores.</li>
+  </ul>
+  <p>En caso de brecha de seguridad que afecte tus datos personales, te notificaremos por email en un plazo máximo de 72 horas conforme al Art. 33 GDPR.</p>
 
-  <h2>10. Contacto</h2>
-  <p>Para preguntas relacionadas con privacidad, escríbenos a: <strong>hola@textonflow.com</strong></p>
+  <h2 id="s11">11. Tus derechos (GDPR / LGPD / LFPDPPP)</h2>
+  <p>Conforme al Reglamento General de Protección de Datos (GDPR), la Lei Geral de Proteção de Dados brasileña (LGPD) y la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) mexicana, tienes los siguientes derechos:</p>
+
+  <div class="rights-grid">
+    <div class="right-card">
+      <div class="right-name">📋 Derecho de Acceso</div>
+      <p>Solicitar una copia de los datos personales que tenemos sobre ti.</p>
+    </div>
+    <div class="right-card">
+      <div class="right-name">✏️ Derecho de Rectificación</div>
+      <p>Corregir datos inexactos o incompletos asociados a tu cuenta.</p>
+    </div>
+    <div class="right-card">
+      <div class="right-name">🗑️ Derecho de Supresión (derecho al olvido)</div>
+      <p>Solicitar la eliminación de tu cuenta y datos personales.</p>
+    </div>
+    <div class="right-card">
+      <div class="right-name">📦 Derecho de Portabilidad</div>
+      <p>Recibir tus datos en formato estructurado y legible por máquina (JSON).</p>
+    </div>
+    <div class="right-card">
+      <div class="right-name">⏸️ Derecho de Limitación</div>
+      <p>Solicitar que limitemos el procesamiento de tus datos en circunstancias específicas.</p>
+    </div>
+    <div class="right-card">
+      <div class="right-name">🚫 Derecho de Oposición</div>
+      <p>Oponerte al procesamiento basado en interés legítimo.</p>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <p><strong>Plazo de respuesta:</strong> Respondemos todas las solicitudes de derechos en un plazo máximo de <strong>30 días naturales</strong>. Para solicitudes complejas, podemos extender este plazo otros 30 días notificándote.</p>
+    <p style="margin-bottom:0;margin-top:8px;"><strong>Cómo ejercer tus derechos:</strong> Envía un correo a <strong>privacidad@textonflow.com</strong> indicando tu email de cuenta y el derecho que deseas ejercer. Para supresión, usa el botón en tu dashboard.</p>
+  </div>
+
+  <p>Si consideras que el tratamiento de tus datos no es conforme, tienes derecho a presentar una reclamación ante la autoridad de protección de datos competente en tu país.</p>
+
+  <h2 id="s12">12. Eliminar tu cuenta</h2>
+
+  <div class="delete-cta">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    <p>Para eliminar tu cuenta y todos tus datos personales, ve a <a href="/static/dashboard.html">Mi cuenta → Zona peligrosa → Eliminar mi cuenta</a>. La eliminación es inmediata e irreversible.</p>
+  </div>
+
+  <p>Al eliminar tu cuenta:</p>
+  <ul>
+    <li>Tu email, contraseña y datos de perfil se eliminan <strong>inmediatamente</strong> de la base de datos.</li>
+    <li>Todos tus proyectos guardados se eliminan.</li>
+    <li>Tu suscripción activa en Stripe se cancela automáticamente.</li>
+    <li>Los logs técnicos anónimos (sin email ni datos identificables) se eliminan en 30 días.</li>
+    <li>Los registros de facturación se conservan 7 años por obligación fiscal, pero no están vinculados a tu identidad tras la eliminación.</li>
+  </ul>
+  <p>Si prefieres la eliminación manual, escribe a <strong>privacidad@textonflow.com</strong> con el asunto "Eliminar mi cuenta" desde tu dirección de registro.</p>
+
+  <h2 id="s13">13. Menores de edad</h2>
+  <p>TextOnFlow no está destinado a menores de 16 años. No recopilamos intencionalmente datos personales de menores. Si eres padre/madre o tutor y crees que tu hijo ha proporcionado datos personales, contáctanos en privacidad@textonflow.com para eliminarlos.</p>
+
+  <h2 id="s14">14. Cambios a esta política</h2>
+  <p>Podemos actualizar esta política cuando sea necesario. Los cambios materiales se notificarán por correo electrónico con al menos 15 días de antelación. La versión vigente siempre está disponible en esta página con la fecha de actualización.</p>
+
+  <h2 id="s15">15. Contacto y DPO</h2>
+  <ul>
+    <li><strong>Email general:</strong> hola@textonflow.com</li>
+    <li><strong>Contacto de privacidad / DPO:</strong> privacidad@textonflow.com</li>
+    <li><strong>Tiempo de respuesta:</strong> 2 días hábiles para consultas generales, 30 días para ejercicio de derechos.</li>
+    <li><strong>Autoridad supervisora (UE):</strong> Si resides en la UE, puedes dirigirte a tu autoridad nacional de protección de datos.</li>
+  </ul>
 
   <div class="footer-note">
     TextOnFlow © 2026 — Todos los derechos reservados.<br>
-    Cabo San Lucas, BCS — México &nbsp;·&nbsp; <a href="mailto:hola@textonflow.com" style="color:#555;text-decoration:none;">hola@textonflow.com</a><br><br>
+    Cabo San Lucas, BCS — México &nbsp;·&nbsp; <a href="mailto:hola@textonflow.com">hola@textonflow.com</a><br><br>
     <a href="/manual">Manual</a>
     <a href="/faq">Preguntas frecuentes</a>
-    <a href="/terminos">Términos de uso</a>
+    <a href="/terminos">Términos de Servicio</a>
+    <a href="/precios">Planes y precios</a>
     <a href="/sitemap.xml">Mapa del sitio</a>
   </div>
 </div>
