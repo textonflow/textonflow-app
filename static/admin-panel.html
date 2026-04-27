@@ -140,6 +140,8 @@ tr:hover td{background:rgba(124,110,255,.03)}
 .btn-action.wm:hover{background:rgba(124,110,255,.22)}
 .btn-action.reset{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.18)}
 .btn-action.reset:hover{background:rgba(245,158,11,.22)}
+.btn-action.del{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.22)}
+.btn-action.del:hover{background:rgba(239,68,68,.25);color:#fff}
 
 /* Pagination */
 .pagination{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:flex-end}
@@ -584,6 +586,7 @@ function renderTable() {
         ${pBtn}
         <button class="btn-action wm"    onclick="toggleWatermark('${u.id}','${u.email}')">${wmLbl}</button>
         <button class="btn-action reset" onclick="resetRenders('${u.id}','${u.email}')">Reset</button>
+        ${u.plan !== 'admin' ? `<button class="btn-action del" onclick="deleteUser('${u.id}','${u.email}')">🗑 Eliminar</button>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -648,6 +651,18 @@ async function resetRenders(id, email) {
   const u = _allUsers.find(u=>u.id===id);
   if (u) u.renders_used = 0;
   toast(`✓ Renders reiniciados — ${email}`, 'ok');
+  applyFilters(); await loadStats();
+}
+
+async function deleteUser(id, email) {
+  if (!confirm(`⚠️ ELIMINAR PERMANENTEMENTE\n\n${email}\n\nEsta acción no se puede deshacer. ¿Continuar?`)) return;
+  const r = await fetch('/api/admin/users/delete', {
+    method:'DELETE', headers:aHeaders(), body:JSON.stringify({user_id:id})
+  });
+  const d = await r.json();
+  if (!r.ok) { toast(d.detail||'Error al eliminar','err'); return; }
+  _allUsers = _allUsers.filter(u => u.id !== id);
+  toast(`🗑 Eliminado — ${email}`, 'ok');
   applyFilters(); await loadStats();
 }
 
