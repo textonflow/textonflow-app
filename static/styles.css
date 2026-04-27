@@ -2732,8 +2732,7 @@
 @media (max-width: 768px) {
 
     /* ── Corte de overflow horizontal ── */
-    html { overflow-x: hidden; max-width: 100vw; }
-    body { overflow-x: hidden; max-width: 100vw; }
+    body { overflow-x: hidden; }
 
     /* ── Ocultar botones de escritorio que sobresalen en móvil ── */
     #chrome-ext-fab { display: none !important; }
