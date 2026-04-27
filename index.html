@@ -2005,34 +2005,63 @@ document.getElementById('auth-modal').addEventListener('click', function(e){
     if (!logged) e.stopPropagation();
   }
 });
-// ── Timer de inactividad: 30 minutos → cierra sesión ─────────────────────────
+// ── Timer de inactividad: 30 minutos DENTRO de TextOnFlow → cierra sesión ─────
 (function _inactivityTimer(){
-  var TIMEOUT = 30 * 60 * 1000; // 30 min en ms
-  var _timer = null;
+  var TIMEOUT    = 30 * 60 * 1000; // 30 min en ms
+  var _timer     = null;
+  var _remaining = TIMEOUT;
+  var _lastTick  = null;
+
   function _logout(){
     localStorage.removeItem('tof_token');
     sessionStorage.removeItem('tof_token');
-    // Actualizar UI toolbar
     var lbl = document.getElementById('auth-btn-label');
     if (lbl) lbl.textContent = 'Iniciar sesión';
-    var dash = document.getElementById('auth-btn');
-    if (dash) { dash.onclick = function(){ openAuthModal('login'); }; }
-    // Mostrar aviso
     var note = document.createElement('div');
-    note.textContent = 'Sesión cerrada por inactividad de 30 minutos.';
+    note.textContent = 'Sesión cerrada por 30 min de inactividad en TextOnFlow.';
     note.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#13132a;border:1px solid #7c6eff;color:#a5b4fc;padding:11px 20px;border-radius:10px;font-size:13px;z-index:999999;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;';
     document.body.appendChild(note);
     setTimeout(function(){ note.remove(); openAuthModal('login'); }, 2200);
   }
+
+  function _start(){
+    var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+    if (!tok) return;
+    _lastTick = Date.now();
+    _timer = setTimeout(_logout, _remaining);
+  }
+
+  function _pause(){
+    if (_timer) {
+      clearTimeout(_timer);
+      _timer = null;
+      if (_lastTick) {
+        _remaining = Math.max(0, _remaining - (Date.now() - _lastTick));
+        _lastTick = null;
+      }
+    }
+  }
+
   function _reset(){
     clearTimeout(_timer);
-    var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
-    if (tok) _timer = setTimeout(_logout, TIMEOUT);
+    _timer = null;
+    _remaining = TIMEOUT;
+    _lastTick = null;
+    _start();
   }
+
+  // Pausa cuando el usuario sale de la pestaña, reanuda al volver
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) { _pause(); }
+    else                 { _start(); }
+  });
+
+  // Reinicia el contador al detectar actividad dentro de TextOnFlow
   ['mousemove','keydown','click','touchstart','scroll'].forEach(function(ev){
     document.addEventListener(ev, _reset, { passive: true });
   });
-  _reset();
+
+  _start();
 })();
 // Cargar estado en inicio
 (async function _authInit(){
