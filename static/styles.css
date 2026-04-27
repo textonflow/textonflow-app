@@ -1144,7 +1144,7 @@
             margin-bottom: 36px;
         }
         .splash-title {
-            font-size: clamp(20px, 3.2vw, 38px);
+            font-size: 32px;
             font-weight: 900;
             color: #fff;
             line-height: 1.1;
