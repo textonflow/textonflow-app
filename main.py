@@ -131,11 +131,30 @@ def init_db():
                 );
             """)
             cur.execute("""
+                CREATE TABLE IF NOT EXISTS password_resets (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    token TEXT UNIQUE NOT NULL,
+                    expires_at TIMESTAMPTZ NOT NULL,
+                    used BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+            cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_renders_user_id ON renders(user_id);
             """)
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
             """)
+            # Columnas opcionales — se agregan si no existen (idempotente)
+            for _col_sql in [
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS watermark_exempt BOOLEAN NOT NULL DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_exports_used INTEGER NOT NULL DEFAULT 0",
+            ]:
+                try:
+                    cur.execute(_col_sql)
+                except Exception:
+                    pass
         logger.info("✅ Base de datos inicializada correctamente")
     except Exception as e:
         logger.error(f"Error inicializando BD: {e}")
@@ -2163,11 +2182,12 @@ async def favicon():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 USER_PLAN_LIMITS = {
-    "trial":   20,
+    "trial":   5,
     "starter": 1000,
     "agency":  10000,
     "admin":   999999,
 }
+JSON_EXPORT_PLANS = {"starter", "agency", "admin"}  # planes que permiten export JSON
 
 class _UserRegisterBody(BaseModel):
     email: str
@@ -2322,7 +2342,7 @@ async def user_me(request: Request):
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
                 SELECT id, email, plan, renders_used, renders_limit, gemini_api_key,
-                       stripe_customer_id, created_at
+                       stripe_customer_id, watermark_exempt, is_active, created_at
                 FROM users WHERE id = %s
             """, (payload["sub"],))
             user = cur.fetchone()
@@ -2331,14 +2351,23 @@ async def user_me(request: Request):
         raise HTTPException(status_code=500, detail="Error interno.")
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    plan = user["plan"]
+    limit = USER_PLAN_LIMITS.get(plan, user["renders_limit"])
+    watermark_active = plan not in JSON_EXPORT_PLANS and not user.get("watermark_exempt", False)
+    can_export_json = plan in JSON_EXPORT_PLANS
     return {
         "id": str(user["id"]),
         "email": user["email"],
-        "plan": user["plan"],
+        "plan": plan,
         "renders_used": user["renders_used"],
-        "renders_limit": user["renders_limit"],
+        "renders_limit": limit,
+        "renders_remaining": max(0, limit - user["renders_used"]),
         "has_gemini_key": bool(user["gemini_api_key"]),
         "has_stripe": bool(user["stripe_customer_id"]),
+        "watermark_active": watermark_active,
+        "watermark_exempt": bool(user.get("watermark_exempt", False)),
+        "can_export_json": can_export_json,
+        "is_active": user.get("is_active", True),
         "created_at": user["created_at"].isoformat() if user["created_at"] else None,
     }
 
@@ -2389,6 +2418,282 @@ async def user_usage(request: Request):
         "pct": min(100, round(user["renders_used"] / limit * 100)) if limit else 0,
     }
 
+
+# ─── Recuperación de contraseña ───────────────────────────────────────────────
+
+class _ForgotPasswordBody(BaseModel):
+    email: str
+
+class _ResetPasswordBody(BaseModel):
+    token: str
+    new_password: str
+
+@app.post("/user/forgot-password")
+async def user_forgot_password(body: _ForgotPasswordBody):
+    """Genera token de reset y envía email. Siempre responde OK (no revela si email existe)."""
+    email = body.email.strip().lower()
+    conn = get_db()
+    if not conn:
+        return {"ok": True}
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT id, email FROM users WHERE email = %s AND is_active = TRUE", (email,))
+            user = cur.fetchone()
+        if not user:
+            return {"ok": True}  # silencioso por seguridad
+        reset_token = secrets.token_urlsafe(32)
+        with conn.cursor() as cur:
+            # Invalida tokens anteriores del mismo usuario
+            cur.execute("UPDATE password_resets SET used = TRUE WHERE user_id = %s AND used = FALSE", (user["id"],))
+            cur.execute("""
+                INSERT INTO password_resets (user_id, token, expires_at)
+                VALUES (%s, %s, NOW() + INTERVAL '1 hour')
+            """, (user["id"], reset_token))
+    except Exception as e:
+        logger.error(f"Error en forgot-password: {e}")
+        return {"ok": True}
+
+    base = os.environ.get("BASE_URL", "https://www.textonflow.com").rstrip("/")
+    reset_url = f"{base}/reset-password?token={reset_token}"
+    em_key = os.getenv("ENGINEMAILER_API_KEY", "")
+    if em_key:
+        def _send_reset():
+            try:
+                import requests as _req
+                _req.post(
+                    "https://api.enginemailer.com/RESTAPI/V2/Submission/SendEmail",
+                    json={
+                        "UserKey": em_key,
+                        "ToEmail": email,
+                        "ToName": email.split("@")[0],
+                        "SenderEmail": "noreply@textonflow.com",
+                        "SenderName": "TextOnFlow",
+                        "Subject": "Recupera tu contraseña — TextOnFlow",
+                        "HTMLContent": f"""<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto">
+<h2 style="color:#7c3aed">Recuperar contraseña</h2>
+<p>Hola, recibimos una solicitud para restablecer tu contraseña de TextOnFlow.</p>
+<p><a href="{reset_url}" style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Restablecer contraseña</a></p>
+<p style="color:#888;font-size:12px">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este email.</p>
+</div>""",
+                    }, timeout=10
+                )
+            except Exception as _e:
+                logger.warning(f"Email reset no enviado: {_e}")
+        import threading as _thr
+        _thr.Thread(target=_send_reset, daemon=True).start()
+    logger.info(f"🔑 Reset solicitado para {email}")
+    return {"ok": True}
+
+@app.post("/user/reset-password")
+async def user_reset_password(body: _ResetPasswordBody):
+    """Valida el token y actualiza la contraseña."""
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT pr.id, pr.user_id, pr.expires_at, pr.used
+                FROM password_resets pr
+                WHERE pr.token = %s
+            """, (body.token,))
+            rec = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en reset-password: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not rec:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado.")
+    if rec["used"]:
+        raise HTTPException(status_code=400, detail="Este enlace ya fue usado.")
+    if rec["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="El enlace expiró. Solicita uno nuevo.")
+    new_hash = hash_password(body.new_password)
+    try:
+        with conn.cursor() as cur:
+            cur.execute("UPDATE users SET password_hash = %s, updated_at = NOW() WHERE id = %s",
+                        (new_hash, rec["user_id"]))
+            cur.execute("UPDATE password_resets SET used = TRUE WHERE id = %s", (rec["id"],))
+    except Exception as e:
+        logger.error(f"Error actualizando contraseña: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    logger.info(f"✅ Contraseña actualizada para user_id={rec['user_id']}")
+    return {"ok": True, "message": "Contraseña actualizada correctamente."}
+
+@app.get("/user/can-export")
+async def user_can_export(request: Request):
+    """Indica si el usuario puede exportar JSON (solo planes pagados)."""
+    payload = _get_current_user(request)
+    if not payload:
+        return {"can_export": False, "reason": "auth_required"}
+    plan = payload.get("plan", "trial")
+    if plan in JSON_EXPORT_PLANS:
+        return {"can_export": True, "plan": plan}
+    return {"can_export": False, "reason": "upgrade_required", "plan": plan}
+
+# ─── Admin: gestión de usuarios ───────────────────────────────────────────────
+
+@app.get("/api/admin/users")
+async def admin_list_users(request: Request, page: int = 1, limit: int = 50):
+    """Lista todos los usuarios (solo superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    offset = (page - 1) * limit
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT id, email, plan, renders_used, renders_limit, is_active,
+                       watermark_exempt, created_at, updated_at
+                FROM users ORDER BY created_at DESC LIMIT %s OFFSET %s
+            """, (limit, offset))
+            users = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT COUNT(*) as total FROM users")
+            total = cur.fetchone()["total"]
+    except Exception as e:
+        logger.error(f"Error en admin/users: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    for u in users:
+        u["created_at"] = u["created_at"].isoformat() if u.get("created_at") else None
+        u["updated_at"] = u["updated_at"].isoformat() if u.get("updated_at") else None
+    return {"users": users, "total": total, "page": page, "limit": limit}
+
+class _AdminUserActionBody(BaseModel):
+    user_id: str
+
+@app.post("/api/admin/users/toggle-active")
+async def admin_toggle_active(body: _AdminUserActionBody, request: Request):
+    """Activa o desactiva la cuenta de un usuario (superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "UPDATE users SET is_active = NOT is_active, updated_at = NOW() WHERE id = %s "
+                "RETURNING id, email, is_active", (body.user_id,)
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en toggle-active: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not row:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    action = "activado" if row["is_active"] else "desactivado"
+    logger.info(f"👤 Admin {action} usuario {row['email']}")
+    return {"ok": True, "user_id": str(row["id"]), "email": row["email"], "is_active": row["is_active"]}
+
+@app.post("/api/admin/users/toggle-watermark")
+async def admin_toggle_watermark(body: _AdminUserActionBody, request: Request):
+    """Otorga o revoca la exención de watermark a un usuario (superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "UPDATE users SET watermark_exempt = NOT watermark_exempt, updated_at = NOW() "
+                "WHERE id = %s RETURNING id, email, watermark_exempt, plan", (body.user_id,)
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en toggle-watermark: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not row:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    status = "exento" if row["watermark_exempt"] else "con marca"
+    logger.info(f"🖼️ Admin watermark {status} → {row['email']}")
+    return {"ok": True, "user_id": str(row["id"]), "email": row["email"],
+            "watermark_exempt": row["watermark_exempt"], "plan": row["plan"]}
+
+@app.post("/api/admin/users/reset-renders")
+async def admin_reset_renders(body: _AdminUserActionBody, request: Request):
+    """Reinicia el contador de renders de un usuario (superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "UPDATE users SET renders_used = 0, updated_at = NOW() WHERE id = %s "
+                "RETURNING id, email", (body.user_id,)
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en reset-renders: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not row:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    logger.info(f"🔄 Admin reinició renders de {row['email']}")
+    return {"ok": True, "user_id": str(row["id"]), "email": row["email"], "renders_used": 0}
+
+@app.get("/reset-password", include_in_schema=False)
+async def reset_password_page():
+    """Página para restablecer la contraseña vía token."""
+    from fastapi.responses import HTMLResponse
+    html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restablecer contraseña — TextOnFlow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f0f17;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#1a1a2e;border:1px solid #2d2d44;border-radius:16px;padding:40px;width:100%;max-width:420px}
+h2{color:#a78bfa;margin-bottom:8px;font-size:1.5rem}
+p{color:#94a3b8;font-size:.875rem;margin-bottom:24px}
+label{display:block;font-size:.8rem;color:#94a3b8;margin-bottom:6px}
+input{width:100%;background:#0f0f17;border:1px solid #374151;border-radius:8px;padding:10px 14px;color:#e2e8f0;font-size:.9rem;margin-bottom:16px}
+button{width:100%;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:12px;font-size:.95rem;cursor:pointer;font-weight:600}
+button:hover{background:#6d28d9}
+.msg{margin-top:16px;padding:12px;border-radius:8px;font-size:.85rem;text-align:center}
+.msg.ok{background:#064e3b;color:#6ee7b7}
+.msg.err{background:#7f1d1d;color:#fca5a5}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🔑 Nueva contraseña</h2>
+  <p>Ingresa tu nueva contraseña para TextOnFlow.</p>
+  <form id="form">
+    <label>Nueva contraseña</label>
+    <input type="password" id="pw1" placeholder="Mínimo 8 caracteres" required minlength="8">
+    <label>Confirmar contraseña</label>
+    <input type="password" id="pw2" placeholder="Repite la contraseña" required minlength="8">
+    <button type="submit" id="btn">Restablecer contraseña</button>
+  </form>
+  <div id="msg" class="msg" style="display:none"></div>
+</div>
+<script>
+const token = new URLSearchParams(location.search).get('token');
+if(!token){document.getElementById('form').innerHTML='<p style="color:#f87171">Enlace inválido. Solicita uno nuevo.</p>';}
+document.getElementById('form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const pw1=document.getElementById('pw1').value;
+  const pw2=document.getElementById('pw2').value;
+  if(pw1!==pw2){show('Las contraseñas no coinciden.','err');return;}
+  document.getElementById('btn').disabled=true;
+  document.getElementById('btn').textContent='Guardando...';
+  try{
+    const r=await fetch('/user/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,new_password:pw1})});
+    const d=await r.json();
+    if(r.ok){show('✅ Contraseña actualizada. Redirigiendo...','ok');setTimeout(()=>location.href='/',2500);}
+    else{show(d.detail||'Error al restablecer.','err');document.getElementById('btn').disabled=false;document.getElementById('btn').textContent='Restablecer contraseña';}
+  }catch(err){show('Error de conexión.','err');document.getElementById('btn').disabled=false;document.getElementById('btn').textContent='Restablecer contraseña';}
+});
+function show(txt,type){const m=document.getElementById('msg');m.textContent=txt;m.className='msg '+type;m.style.display='block';}
+</script>
+</body></html>"""
+    return HTMLResponse(content=html)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  STRIPE CHECKOUT (Phase 4)
@@ -2583,6 +2888,35 @@ async def stripe_config():
 
 
 # ─── Helpers de rate limit por usuario (Phase 3) ─────────────────────────────
+
+def _get_user_profile(user_id: str) -> dict:
+    """Devuelve {plan, renders_used, renders_limit, watermark_exempt, json_exports_used, is_active}."""
+    conn = get_db()
+    if not conn:
+        return {"plan": "unknown", "renders_used": 0, "renders_limit": 999999,
+                "watermark_exempt": False, "json_exports_used": 0, "is_active": True}
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT plan, renders_used, renders_limit, watermark_exempt, json_exports_used, is_active "
+                "FROM users WHERE id = %s", (user_id,)
+            )
+            row = cur.fetchone()
+        return dict(row) if row else {"plan": "unknown", "renders_used": 0, "renders_limit": 999999,
+                                      "watermark_exempt": False, "json_exports_used": 0, "is_active": True}
+    except Exception as e:
+        logger.error(f"Error en _get_user_profile: {e}")
+        return {"plan": "unknown", "renders_used": 0, "renders_limit": 999999,
+                "watermark_exempt": False, "json_exports_used": 0, "is_active": True}
+
+def _should_apply_watermark(user_id: Optional[str]) -> bool:
+    """True si el render debe llevar sello TextOnFlow (plan trial sin exención)."""
+    if not user_id:
+        return True  # sin cuenta → watermark
+    profile = _get_user_profile(user_id)
+    if profile["plan"] in JSON_EXPORT_PLANS or profile["plan"] == "admin":
+        return False  # pagado → sin marca
+    return not profile.get("watermark_exempt", False)
 
 def _check_user_render_limit(user_id: str) -> tuple:
     """(used, limit, exceeded, plan) — lee desde BD."""
@@ -3116,7 +3450,9 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 logger.warning(f"⚠️ Error aplicando overlay: {e}")
 
         # ── Sello TextOnFlow (watermark) ─────────────────────────────────────
-        if request.watermark:
+        # Se aplica si: (a) el request lo pide, (b) plan trial sin exención admin
+        _apply_wm = request.watermark or _should_apply_watermark(_user_id)
+        if _apply_wm:
             try:
                 if image.mode != "RGBA":
                     image = image.convert("RGBA")
