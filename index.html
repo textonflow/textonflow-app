@@ -2600,40 +2600,55 @@ function iacApplyVariant(idx) {
 var _OB_KEY = 'tof_onboarding_done';
 var _obStep = 0;
 
+var _obIcons = {
+  palette: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
+  smartphone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>',
+  zap: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  layers: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  image: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  type: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+  eye: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  plug: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  clipboard: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+  link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  target: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+};
+
 var _obSteps = [
   {
-    icon: '🎨',
+    icon: 'palette',
     badge: 'Paso 1 de 3',
     title: 'Bienvenido a TextOnFlow',
     subtitle: 'Imágenes personalizadas para cada usuario de ManyChat — en segundos.',
     content: [
-      { icon: '📲', label: 'Para agencias ManyChat', text: 'Convierte variables como <code>{{nombre}}</code> o <code>{{ciudad}}</code> en imágenes únicas para cada contacto. Sin programar.' },
-      { icon: '⚡', label: 'API + Editor visual', text: 'Diseña en el editor visual, genera el JSON, conéctalo a tu flujo de ManyChat. Tu imagen se crea automáticamente al activar el mensaje.' },
-      { icon: '🚀', label: '7 días de trial ilimitado', text: 'Renders ilimitados durante 7 días. Sin tarjeta de crédito. Puedes pasarte a Starter ($29/mes) o Agency ($79/mes) cuando estés listo.' }
+      { icon: 'smartphone', label: 'Para agencias ManyChat', text: 'Convierte variables como <code>{{nombre}}</code> o <code>{{ciudad}}</code> en imágenes únicas para cada contacto. Sin programar.' },
+      { icon: 'zap', label: 'API + Editor visual', text: 'Diseña en el editor visual, genera el JSON, conéctalo a tu flujo de ManyChat. Tu imagen se crea automáticamente al activar el mensaje.' },
+      { icon: 'star', label: '7 días de trial ilimitado', text: 'Renders ilimitados durante 7 días. Sin tarjeta de crédito. Puedes pasarte a Starter ($29/mes) o Agency ($79/mes) cuando estés listo.' }
     ],
     cta: 'Empezar el tour →'
   },
   {
-    icon: '🖼️',
+    icon: 'layers',
     badge: 'Paso 2 de 3',
     title: 'Diseña tu primera imagen',
     subtitle: 'El editor tiene todo lo que necesitas en el panel derecho.',
     content: [
-      { icon: '1️⃣', label: 'Imagen de fondo', text: 'Pega la URL de una imagen o sube una. Puede ser el logo de tu cliente, un banner o una plantilla.' },
-      { icon: '2️⃣', label: 'Añade capas de texto', text: 'Haz clic en <strong>+ Añadir texto</strong>. Escribe el texto con variables: <code>Hola, {{nombre}}!</code> — cada usuario verá su nombre.' },
-      { icon: '3️⃣', label: 'Visualizar', text: 'Haz clic en <strong>Visualizar</strong>. Verás la imagen generada y el JSON listo para ManyChat. Puedes probar con valores reales.' }
+      { icon: 'image', label: 'Imagen de fondo', text: 'Pega la URL de una imagen o sube una. Puede ser el logo de tu cliente, un banner o una plantilla.' },
+      { icon: 'type', label: 'Añade capas de texto', text: 'Haz clic en <strong>+ Añadir texto</strong>. Escribe el texto con variables: <code>Hola, {{nombre}}!</code> — cada usuario verá su nombre.' },
+      { icon: 'eye', label: 'Visualizar', text: 'Haz clic en <strong>Visualizar</strong>. Verás la imagen generada y el JSON listo para ManyChat. Puedes probar con valores reales.' }
     ],
     cta: 'Siguiente →'
   },
   {
-    icon: '⚡',
+    icon: 'plug',
     badge: 'Paso 3 de 3',
     title: 'Conecta con ManyChat',
     subtitle: 'Copia el JSON y activa tu flujo. 5 minutos de integración.',
     content: [
-      { icon: '📋', label: 'Copia el JSON', text: 'Después de visualizar, haz clic en <strong>Copiar JSON</strong>. Ese JSON contiene toda la configuración de tu imagen.' },
-      { icon: '🔗', label: 'En ManyChat: HTTP Request', text: 'Crea un bloque <strong>HTTP Request → POST</strong> con URL: <code>https://www.textonflow.com/generate-multi</code>. Header: <code>Authorization: Bearer [tu token]</code>.' },
-      { icon: '🎯', label: 'Pega y activa variables', text: 'Pega el JSON en el body. Reemplaza los valores fijos por las variables de ManyChat de tu flujo. ¡Listo! Cada usuario recibirá su imagen personalizada.' }
+      { icon: 'clipboard', label: 'Copia el JSON', text: 'Después de visualizar, haz clic en <strong>Copiar JSON</strong>. Ese JSON contiene toda la configuración de tu imagen.' },
+      { icon: 'link', label: 'En ManyChat: HTTP Request', text: 'Crea un bloque <strong>HTTP Request → POST</strong> con URL: <code>https://www.textonflow.com/generate-multi</code>. Header: <code>Authorization: Bearer [tu token]</code>.' },
+      { icon: 'target', label: 'Pega y activa variables', text: 'Pega el JSON en el body. Reemplaza los valores fijos por las variables de ManyChat de tu flujo. ¡Listo! Cada usuario recibirá su imagen personalizada.' }
     ],
     cta: '¡Empezar a diseñar!'
   }
@@ -2659,15 +2674,17 @@ function _renderObStep() {
 
   // Content items
   var items = s.content.map(function(c) {
+    var itemSvg = (_obIcons[c.icon] || '').replace('stroke="currentColor"', 'stroke="#a5b4fc"');
     return '<div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;background:#0d0d1e;border:1px solid #1e1e38;border-radius:10px;">' +
-      '<div style="font-size:20px;flex-shrink:0;margin-top:1px;">' + c.icon + '</div>' +
+      '<div style="flex-shrink:0;width:32px;height:32px;border-radius:8px;background:rgba(124,110,255,.12);border:1px solid rgba(124,110,255,.2);display:flex;align-items:center;justify-content:center;margin-top:1px;">' + itemSvg + '</div>' +
       '<div><div style="font-size:.82rem;font-weight:700;color:#a5b4fc;margin-bottom:3px;">' + c.label + '</div>' +
       '<div style="font-size:.88rem;color:#9090b8;line-height:1.6;">' + c.text + '</div></div></div>';
   }).join('');
 
+  var mainSvg = (_obIcons[s.icon] || '').replace('stroke="currentColor"', 'stroke="#a5b4fc"');
   document.getElementById('ob-content').innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
-      '<div style="font-size:36px;">' + s.icon + '</div>' +
+      '<div style="width:48px;height:48px;border-radius:12px;background:rgba(124,110,255,.15);border:1px solid rgba(124,110,255,.25);display:flex;align-items:center;justify-content:center;">' + mainSvg + '</div>' +
       '<div style="display:flex;gap:6px;align-items:center;">' + dots + '</div>' +
     '</div>' +
     '<div style="font-size:.75rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7c6eff;margin-bottom:6px;">' + s.badge + '</div>' +
