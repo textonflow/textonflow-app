@@ -2427,7 +2427,7 @@ async def stripe_checkout(body: _CheckoutBody, request: Request):
     if plan not in _PLAN_PRICE_MAP:
         raise HTTPException(status_code=400, detail="Plan inválido. Usa 'starter' o 'agency'.")
     price_id = _PLAN_PRICE_MAP[plan]
-    base = body.success_url or "https://web-production-98b55.up.railway.app"
+    base = body.success_url or os.environ.get("BASE_URL", "https://www.textonflow.com").rstrip("/")
     success_url = body.success_url or f"{base}/stripe/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url  = body.cancel_url  or f"{base}/precios"
 
