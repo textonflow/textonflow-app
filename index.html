@@ -1828,11 +1828,29 @@
       </button>
     </div>
     <div id="auth-login-footer" style="margin-top:14px;text-align:center;font-size:11px;color:#555577;">
-      ¿No tienes cuenta? <a href="#" onclick="authSwitchTab('register')" style="color:#a5b4fc;text-decoration:none;">Crear cuenta gratis →</a>
+      ¿No tienes cuenta? <a href="#" onclick="authSwitchTab('register')" style="color:#a5b4fc;text-decoration:none;">Crear cuenta gratis →</a><br>
+      <a href="#" onclick="authSwitchTab('forgot')" style="color:#888;text-decoration:none;margin-top:6px;display:inline-block;">¿Olvidaste tu contraseña?</a>
     </div>
     <div id="auth-register-footer" style="display:none;margin-top:14px;text-align:center;font-size:11px;color:#555577;">
       Al registrarte aceptas los <a href="/terminos" target="_blank" style="color:#a5b4fc;">Términos de uso</a>.<br>
       ¿Ya tienes cuenta? <a href="#" onclick="authSwitchTab('login')" style="color:#a5b4fc;text-decoration:none;">Iniciar sesión →</a>
+    </div>
+    <!-- Panel recuperar contraseña -->
+    <div id="auth-forgot-panel" style="display:none;">
+      <p style="color:#94a3b8;font-size:12px;margin-bottom:12px;text-align:center;">Te enviamos un enlace para restablecer tu contraseña.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <input id="auth-forgot-email" type="email" placeholder="tu@email.com"
+          style="background:#0a0a12;border:1px solid #1e1e38;border-radius:8px;padding:11px 13px;color:#d0d0e8;font-size:13px;outline:none;width:100%;"
+          onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'"
+          onkeydown="if(event.key==='Enter')authForgotSubmit()">
+        <button onclick="authForgotSubmit()" id="auth-forgot-btn"
+          style="background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">
+          Enviar enlace
+        </button>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:11px;">
+        <a href="#" onclick="authSwitchTab('login')" style="color:#888;text-decoration:none;">← Volver al login</a>
+      </div>
     </div>
   </div>
 </div>
@@ -1862,17 +1880,52 @@ function authSwitchTab(tab) {
   var sb = document.getElementById('auth-submit-btn');
   var lf = document.getElementById('auth-login-footer');
   var rf = document.getElementById('auth-register-footer');
-  if (tab === 'login') {
+  var fp = document.getElementById('auth-forgot-panel');
+  var mainFields = document.querySelector('#auth-modal .modal-main-fields');
+  // Mostrar/ocultar panel de recuperación
+  var isForgot = (tab === 'forgot');
+  if (fp) fp.style.display = isForgot ? 'block' : 'none';
+  // Ocultar campos principales en modo forgot
+  var emailInput = document.getElementById('auth-email');
+  var pwInput = document.getElementById('auth-password');
+  var submitBtn = document.getElementById('auth-submit-btn');
+  if (emailInput) emailInput.style.display = isForgot ? 'none' : '';
+  if (pwInput) pwInput.style.display = isForgot ? 'none' : '';
+  if (submitBtn) submitBtn.style.display = isForgot ? 'none' : '';
+  if (isForgot) {
+    tl.style.background = '#1a1a2e'; tl.style.color = '#8888aa';
+    tr.style.background = '#1a1a2e'; tr.style.color = '#8888aa';
+    lf.style.display = 'none'; rf.style.display = 'none';
+    setTimeout(function(){ var fe=document.getElementById('auth-forgot-email'); if(fe) fe.focus(); }, 100);
+  } else if (tab === 'login') {
     tl.style.background = '#252545'; tl.style.color = '#d0d0e8';
     tr.style.background = '#1a1a2e'; tr.style.color = '#8888aa';
-    sb.textContent = 'Iniciar sesión'; lf.style.display='block'; rf.style.display='none';
+    if(sb) sb.textContent = 'Iniciar sesión'; lf.style.display='block'; rf.style.display='none';
   } else {
     tr.style.background = '#252545'; tr.style.color = '#d0d0e8';
     tl.style.background = '#1a1a2e'; tl.style.color = '#8888aa';
-    sb.textContent = 'Crear cuenta gratuita'; lf.style.display='none'; rf.style.display='block';
+    if(sb) sb.textContent = 'Crear cuenta gratuita'; lf.style.display='none'; rf.style.display='block';
   }
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-success').style.display = 'none';
+}
+async function authForgotSubmit() {
+  var email = document.getElementById('auth-forgot-email').value.trim();
+  var btn = document.getElementById('auth-forgot-btn');
+  if (!email) { _authShowErr('Ingresa tu email.'); return; }
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    await fetch('/user/forgot-password', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email: email})
+    });
+    _authShowOk('Si ese email existe, te enviamos un enlace de recuperación.');
+    document.getElementById('auth-forgot-email').value = '';
+  } catch(e) {
+    _authShowErr('Error de conexión.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enviar enlace';
+  }
 }
 function _authShowErr(msg) {
   var el = document.getElementById('auth-error');
@@ -1903,7 +1956,7 @@ async function authSubmit() {
     var plan = (data.user && data.user.plan) || 'trial';
     var planLabel = { trial: 'Prueba', starter: 'Starter', agency: 'Agency', admin: 'Admin' };
     if (_authTab === 'register') {
-      _authShowOk('¡Cuenta creada! Plan gratuito activo — 20 renders disponibles.');
+      _authShowOk('¡Cuenta creada! Plan gratuito activo — 5 renders disponibles.');
     } else {
       _authShowOk('¡Sesión iniciada!');
     }
