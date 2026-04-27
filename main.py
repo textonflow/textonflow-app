@@ -2854,6 +2854,32 @@ async def admin_toggle_paused(body: _AdminUserActionBody, request: Request):
     logger.info(f"⏸ Admin {action} usuario {row['email']}")
     return {"ok": True, "user_id": str(row["id"]), "email": row["email"], "is_paused": row["is_paused"]}
 
+@app.delete("/api/admin/users/delete")
+async def admin_delete_user(body: _AdminUserActionBody, request: Request):
+    """Elimina permanentemente un usuario (superadmin). El propio superadmin no puede eliminarse."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT id, email, plan FROM users WHERE id = %s", (body.user_id,))
+            target = cur.fetchone()
+            if not target:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+            if target["email"].lower() == "ruben@textonflow.com" or target["plan"] == "admin":
+                raise HTTPException(status_code=403, detail="No se puede eliminar al superadministrador.")
+            cur.execute("DELETE FROM users WHERE id = %s RETURNING id, email", (body.user_id,))
+            deleted = cur.fetchone()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error en admin/delete-user: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    logger.info(f"🗑 Admin eliminó usuario {deleted['email']}")
+    return {"ok": True, "deleted_email": deleted["email"]}
+
 @app.post("/api/admin/users/toggle-watermark")
 async def admin_toggle_watermark(body: _AdminUserActionBody, request: Request):
     """Otorga o revoca la exención de watermark a un usuario (superadmin)."""
