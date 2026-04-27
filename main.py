@@ -2013,6 +2013,10 @@ def _format_countdown(seconds: float, fmt: str, expired_text: str) -> str:
 async def root():
     return FileResponse("index.html", media_type="text/html")
 
+@app.get("/dashboard")
+async def dashboard():
+    return FileResponse("static/dashboard.html", media_type="text/html")
+
 @app.get("/status")
 async def status():
     noto_path = get_noto_emoji_font()
@@ -2427,18 +2431,9 @@ async def stripe_checkout(body: _CheckoutBody, request: Request):
 
 @app.get("/stripe/success")
 async def stripe_success(session_id: str = ""):
-    """Página de confirmación post-pago (redirige al dashboard)."""
-    from fastapi.responses import HTMLResponse
-    html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Pago exitoso — TextOnFlow</title>
-<style>body{{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#fff}}
-.box{{text-align:center;padding:40px;border-radius:16px;background:#1e293b}}
-h1{{color:#22c55e;font-size:2rem;margin-bottom:8px}}p{{color:#94a3b8;margin-bottom:24px}}
-a{{background:#6366f1;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600}}</style></head>
-<body><div class="box"><h1>¡Pago exitoso! 🎉</h1>
-<p>Tu plan se activará en los próximos segundos.<br>Puedes cerrar esta ventana o volver al editor.</p>
-<a href="/">Ir al editor</a></div></body></html>"""
-    return HTMLResponse(html)
+    """Redirige al dashboard con flag de éxito."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/dashboard?success=1", status_code=302)
 
 @app.post("/stripe/webhook")
 async def stripe_webhook(request: Request):
