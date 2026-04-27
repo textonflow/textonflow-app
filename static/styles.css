@@ -53,7 +53,184 @@
             --accent:       #7c6eff;
             --accent-glow:  rgba(124,110,255,0.15);
             --accent-border:rgba(124,110,255,0.4);
+        /* ── Tokens extendidos — Sistema de diseño TextOnFlow ────────────────
+           Actualizar solo aquí para cambiar toda la UI del editor.           */
+
+        /* Espaciado */
+        --space-1:  4px;
+        --space-2:  6px;
+        --space-3:  8px;
+        --space-4:  12px;
+        --space-5:  16px;
+        --space-6:  20px;
+        --space-7:  24px;
+        --space-8:  28px;
+
+        /* Radio */
+        --radius-xs:   3px;
+        --radius-sm:   4px;
+        --radius-md:   8px;
+        --radius-lg:   12px;
+        --radius-xl:   16px;
+        --radius-pill: 20px;
+
+        /* Tipografía */
+        --font-xs:    9px;
+        --font-sm:   10px;
+        --font-base: 12px;
+        --font-md:   13px;
+        --font-lg:   15px;
+
+        /* Colores de acento adicionales */
+        --accent-2:         #9ca3ff;   /* azul-lavanda más suave */
+        --accent-3:         #a5b4fc;   /* indigo claro */
+        --accent-green:     #34d399;
+        --accent-green-dim: rgba(52,211,153,.15);
+        --accent-red:       #f87171;
+        --accent-red-dim:   rgba(248,113,113,.12);
+        --accent-amber:     #fbbf24;
+
+        /* Superficies */
+        --surface-overlay:  rgba(0,0,0,.7);
+        --surface-code:     #2a2a2a;
+        --surface-code-border: #444444;
+
+        /* Sombras */
+        --shadow-sm:    0 2px 8px rgba(0,0,0,.3);
+        --shadow-md:    0 4px 20px rgba(0,0,0,.4);
+        --shadow-panel: 0 8px 40px rgba(0,0,0,.55);
         }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   UTILIDADES DE DISEÑO — TextOnFlow Design System v1.0
+   Usar estas clases en index.html en lugar de estilos inline repetidos.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tipografía de panel ──────────────────────────────────────────────────── */
+.tof-label {
+    font-weight: 700;
+    color: var(--accent-3);
+    margin-bottom: var(--space-2);
+    font-size: var(--font-sm);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: block;
+}
+
+.tof-section-title {
+    color: var(--accent-2);
+    font-weight: 700;
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-1);
+}
+
+.tof-field-label {
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 3px;
+}
+
+/* ── Badge de código / teclado ───────────────────────────────────────────── */
+.tof-code {
+    font-family: monospace;
+    background: var(--surface-code);
+    border: 1px solid var(--surface-code-border);
+    border-radius: var(--radius-sm);
+    padding: 1px 6px;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* ── Botón mini (icono de acción pequeña) ────────────────────────────────── */
+.tof-btn-mini {
+    font-size: var(--font-xs);
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--surface-code-border);
+    background: var(--surface-code);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+.tof-btn-mini:hover { background: var(--bg-surface-3); color: var(--text-secondary); }
+
+/* ── Input de color ──────────────────────────────────────────────────────── */
+.tof-color-input {
+    width: 100%;
+    height: 30px;
+    border: 1px solid var(--border-light);
+    padding: 0;
+    cursor: pointer;
+    border-radius: 5px;
+    background: none;
+}
+
+/* ── Layout helpers ──────────────────────────────────────────────────────── */
+.tof-row            { display: flex; align-items: center; gap: var(--space-2); }
+.tof-row-gap-sm     { display: flex; align-items: center; gap: var(--space-1); }
+.tof-kv-grid        { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin-bottom: 11px; }
+.tof-grow           { flex: 1; }
+.tof-shrink-0       { flex-shrink: 0; }
+.tof-w-full         { width: 100%; }
+
+/* ── Espaciado ───────────────────────────────────────────────────────────── */
+.tof-mt-1  { margin-top: var(--space-1); }
+.tof-mt-2  { margin-top: var(--space-2); }
+.tof-mt-3  { margin-top: var(--space-3); }
+.tof-mt-4  { margin-top: var(--space-4); }
+.tof-mt-5  { margin-top: var(--space-5); }
+.tof-mt-7  { margin-top: var(--space-8); }
+.tof-mb-2  { margin-bottom: var(--space-2); }
+.tof-mb-3  { margin-bottom: var(--space-4); }
+.tof-mb-4  { margin-bottom: var(--space-5); }
+
+/* ── Iconos SVG inline ───────────────────────────────────────────────────── */
+.tof-icon  { vertical-align: -1px; margin-right: 5px; flex-shrink: 0; }
+.tof-icon2 { vertical-align: -2px; margin-right: 5px; flex-shrink: 0; }
+
+/* ── Colores de texto ────────────────────────────────────────────────────── */
+.tof-accent   { color: var(--accent); }
+.tof-accent-2 { color: var(--accent-2); }
+.tof-accent-3 { color: var(--accent-3); }
+.tof-muted    { color: var(--text-muted); }
+.tof-secondary{ color: var(--text-secondary); }
+
+/* ── Toolbar del editor (barra superior) ─────────────────────────────────── */
+.tof-toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    border: 1px solid var(--accent-border);
+    background: rgba(20,20,36,0.8);
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--accent-3);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s, border-color 0.2s;
+    text-decoration: none;
+}
+.tof-toolbar-btn:hover {
+    background: rgba(124,110,255,0.15);
+    border-color: var(--accent);
+}
+.tof-toolbar-btn.green {
+    color: #6ee7b7;
+    border-color: rgba(52,211,153,.3);
+}
+.tof-toolbar-btn.green:hover {
+    background: rgba(52,211,153,.12);
+    border-color: var(--accent-green);
+}
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
