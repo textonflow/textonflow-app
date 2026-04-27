@@ -1150,6 +1150,77 @@
                         </div>
                     </div>
 
+                    <!-- ══ IA CORE: Diseño desde descripción + Copy + Brand Kit + A/B ══ -->
+                    <div class="acc-section" id="acc-ia-core">
+                        <div class="acc-header" onclick="toggleAccordion('ia-core')" style="background:linear-gradient(90deg,#130d2a 0%,#1a1040 100%);">
+                            <div class="acc-title">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon" style="color:#a78bfa;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                IA Core
+                                <span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border-radius:4px;padding:1px 5px;letter-spacing:.5px;margin-left:4px;">NUEVO</span>
+                            </div>
+                            <div class="acc-actions"><span class="acc-chevron" id="acc-chev-ia-core">▾</span></div>
+                        </div>
+                        <div class="acc-body" id="acc-body-ia-core">
+                            <div style="padding:8px 4px 4px;">
+
+                                <!-- Sub-tabs -->
+                                <div style="display:flex;gap:0;margin-bottom:12px;border-radius:7px;overflow:hidden;border:1px solid #2a2a50;">
+                                    <button id="iac-tab-btn-design" onclick="iacSetTab('design')" style="flex:1;padding:7px 6px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#7c6eff;color:#fff;transition:.2s;">✦ Diseñar</button>
+                                    <button id="iac-tab-btn-copy" onclick="iacSetTab('copy')" style="flex:1;padding:7px 6px;font-size:11px;font-weight:700;border:none;border-left:1px solid #2a2a50;cursor:pointer;background:#1a1a30;color:#888;transition:.2s;">✎ Copy</button>
+                                </div>
+
+                                <!-- TAB: Diseñar desde descripción -->
+                                <div id="iac-tab-design">
+                                    <div style="font-size:11px;color:#9090c0;margin-bottom:8px;line-height:1.5;">Describe el diseño que necesitas y la IA genera las capas de texto posicionadas automáticamente.</div>
+                                    <textarea id="iac-design-input" rows="3" style="width:100%;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px;color:#d0d0e8;font-size:12px;padding:9px;resize:vertical;outline:none;font-family:inherit;" placeholder="Ej: Imagen de cumpleaños para mi botiga, colores azul y dorado, nombre del cliente en grande arriba y fecha abajo"></textarea>
+                                    <div style="display:flex;gap:6px;margin-top:8px;align-items:center;">
+                                        <button id="iac-design-btn" onclick="iacGenerateDesign()" style="flex:1;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border:none;border-radius:7px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s;">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            Generar layout
+                                        </button>
+                                        <button onclick="openIacBrandKit()" title="Brand Kit — Extrae colores de tu logo con IA" style="background:#1a1a30;border:1px solid #3a2a70;border-radius:7px;padding:9px 10px;color:#a78bfa;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                            Brand
+                                        </button>
+                                    </div>
+                                    <div id="iac-design-status" style="display:none;margin-top:8px;font-size:12px;padding:8px 10px;border-radius:6px;"></div>
+                                    <div id="iac-design-result" style="display:none;margin-top:10px;">
+                                        <div style="font-size:11px;font-weight:700;color:#7c6eff;margin-bottom:6px;">✓ Layout generado — elige acción:</div>
+                                        <div style="display:flex;gap:6px;">
+                                            <button onclick="iacApplyDesign('replace')" style="flex:1;background:#27ae60;color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;">Reemplazar capas</button>
+                                            <button onclick="iacApplyDesign('add')" style="flex:1;background:#2a2a50;color:#d0d0e8;border:1px solid #3a3a70;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;">Añadir capas</button>
+                                        </div>
+                                        <div id="iac-bg-suggestion" style="margin-top:8px;font-size:11px;color:#9090c0;padding:7px 9px;background:#0d0d1f;border-radius:6px;border-left:3px solid #7c6eff;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB: Copy Suggestions -->
+                                <div id="iac-tab-copy" style="display:none;">
+                                    <div style="font-size:11px;color:#9090c0;margin-bottom:8px;line-height:1.5;">La IA genera 3 variaciones del texto activo basadas en el contexto del diseño.</div>
+                                    <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:4px;">Texto actual de la capa activa</div>
+                                    <div id="iac-copy-current" style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:6px;padding:8px;font-size:12px;color:#d0d0e8;min-height:36px;margin-bottom:8px;font-style:italic;"></div>
+                                    <input id="iac-copy-context" type="text" placeholder="Contexto (opcional): ej. botiga de cumpleaños, tono alegre" style="width:100%;background:#0d0d1f;border:1px solid #2a2a50;border-radius:6px;color:#d0d0e8;font-size:12px;padding:7px 9px;outline:none;margin-bottom:8px;font-family:inherit;">
+                                    <button id="iac-copy-btn" onclick="iacGetCopySuggestions()" style="width:100%;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        Sugerir variaciones
+                                    </button>
+                                    <div id="iac-copy-status" style="display:none;margin-top:8px;font-size:12px;padding:8px 10px;border-radius:6px;"></div>
+                                    <div id="iac-copy-suggestions" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+                                    <!-- A/B Variants trigger -->
+                                    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #1e1e38;">
+                                        <div style="font-size:11px;color:#9090c0;margin-bottom:8px;line-height:1.5;">Genera 3 variantes del diseño completo con diferentes paletas de color para A/B testing.</div>
+                                        <button onclick="iacGenerateVariants()" style="width:100%;background:#1a1040;border:1px solid #4a2a80;color:#c4b5fd;border-radius:7px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                            ⚡ Generar 3 variantes A/B
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /IA CORE -->
+
                     <!-- ── SELLO TEXTONFLOW ─────────────────────────── -->
                     <div class="tof-mt-3">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px 7px 0 0;" id="tof-sello-hdr" title="Agrega el sello textonflow.com sobre la imagen">
@@ -2240,6 +2311,285 @@ async function deleteProject(id, name){
 document.getElementById('projects-modal').addEventListener('click',function(e){
   if(e.target===this) closeProjectsModal();
 });
+</script>
+
+<!-- ══ BRAND KIT MODAL ══ -->
+<div id="iac-brand-modal" onclick="if(event.target===this)closeIacBrandKit()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#13132a;border:1px solid #7c6eff;border-radius:16px;padding:24px;width:min(96vw,440px);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="color:#fff;font-size:15px;font-weight:800;">🎨 Brand Kit IA</span>
+      <button onclick="closeIacBrandKit()" style="background:transparent;border:1px solid #444;color:#999;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+    </div>
+    <p style="color:#9090c0;font-size:12px;margin-bottom:16px;line-height:1.5;">Pega la URL del logo de tu cliente. La IA extrae la paleta de colores y la aplica automáticamente a tu editor.</p>
+    <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">URL del Logo</div>
+    <input id="iac-brand-url" type="url" placeholder="https://ejemplo.com/logo.png" style="width:100%;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px;color:#d0d0e8;font-size:13px;padding:10px 12px;outline:none;margin-bottom:12px;font-family:inherit;">
+    <button onclick="iacExtractBrandKit()" id="iac-brand-btn" style="width:100%;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;">Analizar logo con IA</button>
+    <div id="iac-brand-status" style="display:none;margin-top:10px;font-size:12px;padding:9px 11px;border-radius:6px;"></div>
+    <div id="iac-brand-result" style="display:none;margin-top:14px;">
+      <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Paleta extraída</div>
+      <div id="iac-brand-swatches" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="iac-brand-info" style="font-size:12px;color:#9090c0;margin-bottom:14px;line-height:1.5;"></div>
+      <button onclick="iacApplyBrandKit()" style="width:100%;background:#27ae60;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">✓ Aplicar paleta al editor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ A/B VARIANTS MODAL ══ -->
+<div id="iac-ab-modal" onclick="if(event.target===this)closeIacAB()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#13132a;border:1px solid #3a2a70;border-radius:16px;padding:24px;width:min(96vw,580px);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="color:#fff;font-size:15px;font-weight:800;">⚡ Variantes A/B</span>
+      <button onclick="closeIacAB()" style="background:transparent;border:1px solid #444;color:#999;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+    </div>
+    <p style="color:#9090c0;font-size:12px;margin-bottom:16px;line-height:1.5;">3 variaciones del diseño actual con diferentes paletas de color. Elige la que mejor convierta.</p>
+    <div id="iac-ab-loading" style="text-align:center;padding:32px;color:#7c6eff;font-size:13px;">
+      <div style="width:32px;height:32px;border:3px solid #2a2a50;border-top-color:#7c6eff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;"></div>
+      Generando 3 variantes con IA…
+    </div>
+    <div id="iac-ab-variants" style="display:none;flex-direction:column;gap:12px;"></div>
+  </div>
+</div>
+
+<script>
+/* ══ IA CORE — JavaScript ══ */
+
+let _iacLastDesignLayout = null;
+let _iacLastVariants = null;
+let _iacLastBrandKit = null;
+
+function iacSetTab(tab) {
+  document.getElementById('iac-tab-design').style.display = tab === 'design' ? '' : 'none';
+  document.getElementById('iac-tab-copy').style.display   = tab === 'copy'   ? '' : 'none';
+  const btnD = document.getElementById('iac-tab-btn-design');
+  const btnC = document.getElementById('iac-tab-btn-copy');
+  btnD.style.background = tab === 'design' ? '#7c6eff' : '#1a1a30';
+  btnD.style.color      = tab === 'design' ? '#fff'    : '#888';
+  btnC.style.background = tab === 'copy'   ? '#7c6eff' : '#1a1a30';
+  btnC.style.color      = tab === 'copy'   ? '#fff'    : '#888';
+  if (tab === 'copy') _iacRefreshCopyText();
+}
+
+function _iacStatus(elId, msg, type) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.style.display = msg ? '' : 'none';
+  el.textContent = msg || '';
+  const colors = {info:'rgba(124,110,255,.15)',error:'rgba(239,68,68,.15)',success:'rgba(34,197,94,.15)'};
+  const texts  = {info:'#a5b4fc',error:'#fca5a5',success:'#86efac'};
+  el.style.background = colors[type] || colors.info;
+  el.style.color = texts[type] || texts.info;
+}
+
+/* ─── FEATURE 1: Diseñar desde descripción ─── */
+async function iacGenerateDesign() {
+  const desc = (document.getElementById('iac-design-input').value || '').trim();
+  if (!desc) { _iacStatus('iac-design-status','Escribe una descripción primero','error'); return; }
+  const btn = document.getElementById('iac-design-btn');
+  btn.disabled = true;
+  document.getElementById('iac-design-result').style.display = 'none';
+  _iacStatus('iac-design-status','⏳ Generando layout…','info');
+  try {
+    const r = await fetch('/api/ai/design-layout', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+_tofToken()},
+      body: JSON.stringify({description: desc, canvas_width: (typeof imageData!=='undefined'&&imageData.width)||1080, canvas_height: (typeof imageData!=='undefined'&&imageData.height)||1080})
+    });
+    const d = await r.json();
+    if (!r.ok) { _iacStatus('iac-design-status', d.detail || 'Error IA','error'); return; }
+    _iacLastDesignLayout = d;
+    document.getElementById('iac-design-result').style.display = '';
+    const bgEl = document.getElementById('iac-bg-suggestion');
+    if (d.background_suggestion) bgEl.textContent = '💡 Fondo sugerido: ' + d.background_suggestion;
+    else bgEl.textContent = '';
+    _iacStatus('iac-design-status', `✓ ${(d.texts||[]).length} capas generadas`, 'success');
+  } catch(e) { _iacStatus('iac-design-status','Error de red: '+e.message,'error');
+  } finally { btn.disabled = false; }
+}
+
+function iacApplyDesign(mode) {
+  if (!_iacLastDesignLayout) return;
+  const newTexts = _iacLastDesignLayout.texts || [];
+  if (!newTexts.length) return;
+  try {
+    if (mode === 'replace') {
+      texts = JSON.parse(JSON.stringify(newTexts));
+    } else {
+      texts = [...texts, ...JSON.parse(JSON.stringify(newTexts))];
+    }
+    activeTextIndex = 0; selectedTexts = [];
+    saveHistory(); updateControls(); updatePreview(); updateJSON();
+    if (typeof renderFormasPanel === 'function') renderFormasPanel();
+    showToast && showToast('✓ Layout IA aplicado — ' + newTexts.length + ' capas', 1800);
+    document.getElementById('iac-design-result').style.display = 'none';
+    _iacStatus('iac-design-status','','info');
+    if (typeof _openAccordion === 'function') _openAccordion('textos');
+  } catch(e) { _iacStatus('iac-design-status','Error al aplicar: '+e.message,'error'); }
+}
+
+/* ─── FEATURE 2: Copy Suggestions ─── */
+function _iacRefreshCopyText() {
+  const el = document.getElementById('iac-copy-current');
+  if (!el) return;
+  if (typeof texts !== 'undefined' && texts.length > 0 && activeTextIndex >= 0) {
+    el.textContent = texts[activeTextIndex]?.text || '(capa vacía)';
+  } else {
+    el.textContent = '(selecciona una capa de texto primero)';
+  }
+}
+
+async function iacGetCopySuggestions() {
+  _iacRefreshCopyText();
+  const currentText = (typeof texts !== 'undefined' && texts[activeTextIndex]?.text) || '';
+  if (!currentText.trim()) { _iacStatus('iac-copy-status','Selecciona una capa de texto activa','error'); return; }
+  const context = (document.getElementById('iac-copy-context').value || '').trim();
+  const btn = document.getElementById('iac-copy-btn');
+  btn.disabled = true;
+  document.getElementById('iac-copy-suggestions').style.display = 'none';
+  _iacStatus('iac-copy-status','⏳ Generando sugerencias…','info');
+  try {
+    const r = await fetch('/api/ai/copy-suggestions', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({current_text: currentText, context: context || null})
+    });
+    const d = await r.json();
+    if (!r.ok) { _iacStatus('iac-copy-status', d.detail || 'Error IA','error'); return; }
+    const container = document.getElementById('iac-copy-suggestions');
+    container.innerHTML = '';
+    (d.suggestions || []).forEach((s, i) => {
+      const pill = document.createElement('div');
+      pill.style.cssText = 'background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px;padding:9px 11px;cursor:pointer;font-size:12px;color:#d0d0e8;transition:border-color .2s;position:relative;';
+      pill.innerHTML = `<div style="font-size:10px;font-weight:700;color:#7c6eff;margin-bottom:3px;">Variante ${String.fromCharCode(65+i)}</div>${s}<div style="font-size:10px;color:#555;margin-top:6px;">Clic para aplicar →</div>`;
+      pill.onmouseover = () => pill.style.borderColor = '#7c6eff';
+      pill.onmouseout  = () => pill.style.borderColor = '#2a2a50';
+      pill.onclick = () => iacApplyCopy(s);
+      container.appendChild(pill);
+    });
+    container.style.display = 'flex';
+    _iacStatus('iac-copy-status','','info');
+  } catch(e) { _iacStatus('iac-copy-status','Error: '+e.message,'error');
+  } finally { btn.disabled = false; }
+}
+
+function iacApplyCopy(text) {
+  if (typeof texts==='undefined' || activeTextIndex < 0 || activeTextIndex >= texts.length) return;
+  texts[activeTextIndex].text = text;
+  saveHistory(); updateControls(); updatePreview(); updateJSON();
+  showToast && showToast('✓ Copy aplicado', 1200);
+}
+
+/* ─── FEATURE 3: Brand Kit ─── */
+function openIacBrandKit() {
+  const m = document.getElementById('iac-brand-modal');
+  m.style.display = 'flex';
+  document.getElementById('iac-brand-result').style.display = 'none';
+  _iacStatus('iac-brand-status','','info');
+}
+function closeIacBrandKit() {
+  document.getElementById('iac-brand-modal').style.display = 'none';
+}
+
+async function iacExtractBrandKit() {
+  const url = (document.getElementById('iac-brand-url').value || '').trim();
+  if (!url) { _iacStatus('iac-brand-status','Pega la URL del logo primero','error'); return; }
+  const btn = document.getElementById('iac-brand-btn');
+  btn.disabled = true;
+  document.getElementById('iac-brand-result').style.display = 'none';
+  _iacStatus('iac-brand-status','⏳ Analizando logo con IA…','info');
+  try {
+    const r = await fetch('/api/ai/brand-kit', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({image_url: url})
+    });
+    const d = await r.json();
+    if (!r.ok) { _iacStatus('iac-brand-status', d.detail || 'Error IA','error'); return; }
+    _iacLastBrandKit = d;
+    // Render swatches
+    const sw = document.getElementById('iac-brand-swatches');
+    sw.innerHTML = '';
+    (d.colors || []).forEach(hex => {
+      const s = document.createElement('div');
+      s.title = hex;
+      s.style.cssText = `width:36px;height:36px;border-radius:8px;background:${hex};border:2px solid #2a2a50;cursor:pointer;flex-shrink:0;`;
+      s.onclick = () => navigator.clipboard && navigator.clipboard.writeText(hex);
+      sw.appendChild(s);
+    });
+    const info = document.getElementById('iac-brand-info');
+    info.innerHTML = `<strong style="color:#d0d0e8">Estilo:</strong> ${d.style || '—'}<br><strong style="color:#d0d0e8">Fuente sugerida:</strong> ${d.font_suggestion || '—'}<br><em>${d.description || ''}</em>`;
+    document.getElementById('iac-brand-result').style.display = '';
+    _iacStatus('iac-brand-status','✓ Paleta extraída — Copia los colores o aplica al editor','success');
+  } catch(e) { _iacStatus('iac-brand-status','Error: '+e.message,'error');
+  } finally { btn.disabled = false; }
+}
+
+function iacApplyBrandKit() {
+  if (!_iacLastBrandKit || !_iacLastBrandKit.colors) return;
+  if (typeof brandColors !== 'undefined') {
+    brandColors = [..._iacLastBrandKit.colors];
+    try { localStorage.setItem('textonflow_brand_colors', JSON.stringify(brandColors)); } catch(_){}
+  }
+  closeIacBrandKit();
+  showToast && showToast('🎨 Brand Kit aplicado — ' + (_iacLastBrandKit.colors.length) + ' colores cargados', 2200);
+}
+
+/* ─── FEATURE 4: A/B Variant Generator ─── */
+function closeIacAB() {
+  document.getElementById('iac-ab-modal').style.display = 'none';
+}
+
+async function iacGenerateVariants() {
+  if (typeof texts === 'undefined' || !texts.length) {
+    showToast && showToast('❌ Agrega al menos una capa de texto primero', 1800); return;
+  }
+  const modal = document.getElementById('iac-ab-modal');
+  modal.style.display = 'flex';
+  document.getElementById('iac-ab-loading').style.display = '';
+  document.getElementById('iac-ab-variants').style.display = 'none';
+  try {
+    const r = await fetch('/api/ai/ab-variants', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({texts: JSON.parse(JSON.stringify(texts)), context: null})
+    });
+    const d = await r.json();
+    if (!r.ok) { showToast && showToast('❌ '+(d.detail||'Error IA'),'error'); modal.style.display='none'; return; }
+    _iacLastVariants = d.variants || [];
+    const container = document.getElementById('iac-ab-variants');
+    container.innerHTML = '';
+    _iacLastVariants.forEach((v, i) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#0d0d1f;border:1px solid #2a2a50;border-radius:10px;padding:14px;';
+      const swatchesHtml = (v.color_overrides ? Object.values(v.color_overrides) : []).filter(c=>c&&c.startsWith('#')).map(c=>`<div style="display:inline-block;width:18px;height:18px;border-radius:4px;background:${c};margin-right:4px;vertical-align:middle;"></div>`).join('');
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="color:#c4b5fd;font-size:13px;font-weight:800;">${v.label||'Variante '+(i+1)}</span>
+          <div>${swatchesHtml}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+          ${(v.texts||[]).slice(0,3).map(t=>`<div style="font-size:11px;color:#888;background:#131325;border-radius:5px;padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.text||''}</div>`).join('')}
+        </div>
+        <button onclick="iacApplyVariant(${i})" style="width:100%;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;">✓ Usar esta variante</button>
+      `;
+      container.appendChild(card);
+    });
+    document.getElementById('iac-ab-loading').style.display = 'none';
+    container.style.display = 'flex';
+  } catch(e) {
+    showToast && showToast('❌ Error: '+e.message, 1800);
+    modal.style.display = 'none';
+  }
+}
+
+function iacApplyVariant(idx) {
+  if (!_iacLastVariants || !_iacLastVariants[idx]) return;
+  const variant = _iacLastVariants[idx];
+  if (variant.texts && variant.texts.length) {
+    texts = JSON.parse(JSON.stringify(variant.texts));
+    activeTextIndex = 0; selectedTexts = [];
+    saveHistory(); updateControls(); updatePreview(); updateJSON();
+    if (typeof renderFormasPanel === 'function') renderFormasPanel();
+  }
+  closeIacAB();
+  showToast && showToast('✓ Variante "'+variant.label+'" aplicada', 2000);
+}
 </script>
 </body>
 </html>
