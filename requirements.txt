@@ -9,6 +9,6 @@ pilmoji==2.0.5
 urllib3==2.2.3
 numpy==1.26.4
 rjsmin>=1.2.2
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.10
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
