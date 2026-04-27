@@ -2215,8 +2215,9 @@ async def user_register(body: _UserRegisterBody):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error en registro: {e}")
-        raise HTTPException(status_code=500, detail="Error interno al crear la cuenta.")
+        import traceback
+        logger.error(f"Error en registro: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)[:200]}")
     token = create_jwt(str(user["id"]), user["email"], user["plan"])
     logger.info(f"✅ Nuevo usuario registrado: {email}")
     return {
