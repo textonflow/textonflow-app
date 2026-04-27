@@ -170,6 +170,7 @@ tr:hover td{background:rgba(124,110,255,.03)}
   <div class="tabs">
     <div class="tab active" onclick="switchTab('overview',this)">📊 Resumen</div>
     <div class="tab" onclick="switchTab('users',this)">👤 Usuarios</div>
+    <div class="tab" onclick="switchTab('sessions',this)">🖼️ Sesiones</div>
   </div>
 
   <div class="content">
@@ -250,6 +251,42 @@ tr:hover td{background:rgba(124,110,255,.03)}
       <div class="pagination" id="pagination"></div>
     </div>
 
+    <!-- ── TAB: Sesiones ── -->
+    <div id="tab-sessions" style="display:none">
+      <!-- KPIs sesiones -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi accent"><div class="kpi-label">Total sesiones</div><div class="kpi-val" id="sk-total">—</div><div class="kpi-sub">todas</div></div>
+        <div class="kpi green"><div class="kpi-label">Hoy</div><div class="kpi-val" id="sk-today">—</div><div class="kpi-sub">últimas 24h</div></div>
+        <div class="kpi blue"><div class="kpi-label">Esta semana</div><div class="kpi-val" id="sk-week">—</div><div class="kpi-sub">últimos 7 días</div></div>
+        <div class="kpi gold"><div class="kpi-label">Imágenes únicas</div><div class="kpi-val" id="sk-unique">—</div><div class="kpi-sub">distintas</div></div>
+        <div class="kpi"><div class="kpi-label">Duración media</div><div class="kpi-val" id="sk-dur">—</div><div class="kpi-sub">seg por sesión</div></div>
+      </div>
+
+      <!-- Gráfica aperturas/día -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title">Aperturas por día — últimos 30 días</div>
+        <div class="chart-wrap"><canvas id="chart-sessions"></canvas></div>
+      </div>
+
+      <!-- Top imágenes -->
+      <div class="top-users" style="margin-bottom:20px">
+        <div class="section-title">🏆 Top imágenes por aperturas</div>
+        <div style="display:grid;grid-template-columns:28px 1fr 70px 70px 80px 70px 110px;gap:10px;padding:6px 4px;font-size:.67rem;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:.4px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div>#</div><div>Imagen</div><div>Tipo</div><div>Total</div><div>Hoy</div><div>Dur. media</div><div>Última apertura</div>
+        </div>
+        <div id="top-images-list"><div class="loading">Cargando...</div></div>
+      </div>
+
+      <!-- Últimas sesiones -->
+      <div class="top-users">
+        <div class="section-title">🕐 Últimas 100 sesiones</div>
+        <div style="display:grid;grid-template-columns:1fr 60px 80px 120px 120px 70px;gap:10px;padding:6px 4px;font-size:.67rem;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:.4px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div>Imagen</div><div>Tipo</div><div>Usuario</div><div>Apertura</div><div>Cierre</div><div>Duración</div>
+        </div>
+        <div id="recent-sessions-list"><div class="loading">Cargando...</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -309,8 +346,10 @@ function switchTab(name, el) {
   _activeTab = name;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tab-overview').style.display = name === 'overview' ? '' : 'none';
-  document.getElementById('tab-users').style.display    = name === 'users'    ? '' : 'none';
+  document.getElementById('tab-overview').style.display  = name === 'overview'  ? '' : 'none';
+  document.getElementById('tab-users').style.display     = name === 'users'     ? '' : 'none';
+  document.getElementById('tab-sessions').style.display  = name === 'sessions'  ? '' : 'none';
+  if (name === 'sessions') loadSessions();
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -553,6 +592,57 @@ async function resetRenders(id, email) {
   if (u) u.renders_used = 0;
   toast(`✓ Renders reiniciados — ${email}`, 'ok');
   applyFilters(); await loadStats();
+}
+
+// ── Sesiones ─────────────────────────────────────────────────────────────────
+async function loadSessions() {
+  try {
+    const r = await fetch('/api/admin/image-sessions', {headers: aHeaders()});
+    if (r.status === 403) { doLogout(); return; }
+    const d = await r.json();
+    const k = d.kpis || {};
+    document.getElementById('sk-total').textContent  = k.total_sessions  ?? '—';
+    document.getElementById('sk-today').textContent  = k.sessions_today  ?? '—';
+    document.getElementById('sk-week').textContent   = k.sessions_week   ?? '—';
+    document.getElementById('sk-unique').textContent = k.unique_images   ?? '—';
+    document.getElementById('sk-dur').textContent    = k.avg_duration_sec != null ? k.avg_duration_sec + 's' : '—';
+    // Gráfica
+    const byDay = d.by_day || [];
+    if (_charts['sessions']) { _charts['sessions'].destroy(); delete _charts['sessions']; }
+    const ctx = document.getElementById('chart-sessions').getContext('2d');
+    _charts['sessions'] = new Chart(ctx, makeChartConfig(byDay.map(x=>x.day.slice(5)), byDay.map(x=>x.opens), '#38bdf8', 'Aperturas'));
+    // Top imágenes
+    const imgs = d.top_images || [];
+    const typeColors = {url:'#7c6eff', upload:'#f59e0b', template:'#4ade80'};
+    document.getElementById('top-images-list').innerHTML = imgs.length === 0
+      ? '<div class="empty">Sin datos aún</div>'
+      : imgs.map((img, i) => `
+        <div style="display:grid;grid-template-columns:28px 1fr 70px 70px 80px 70px 110px;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.03);font-size:.78rem">
+          <div style="color:var(--text3);font-size:.7rem;font-weight:700">${i+1}</div>
+          <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" title="${img.image_name}">${img.image_name.length>50?img.image_name.slice(-50)+'…':img.image_name}</div>
+          <div><span style="font-size:.68rem;padding:2px 7px;border-radius:20px;background:${typeColors[img.image_type]||'#555'}22;color:${typeColors[img.image_type]||'#aaa'};font-weight:700">${img.image_type}</span></div>
+          <div style="color:var(--accent2);font-weight:800">${img.total_opens}</div>
+          <div style="color:var(--green)">${img.opens_today}</div>
+          <div style="color:var(--text2)">${img.avg_duration_sec != null ? img.avg_duration_sec + 's' : '—'}</div>
+          <div style="color:var(--text3);font-size:.7rem">${fmtDate(img.last_opened)}</div>
+        </div>`).join('');
+    // Últimas sesiones
+    const recent = d.recent || [];
+    document.getElementById('recent-sessions-list').innerHTML = recent.length === 0
+      ? '<div class="empty">Sin sesiones registradas</div>'
+      : recent.map(s => {
+          const dur = s.duration_seconds != null ? s.duration_seconds + 's' : (s.closed_at ? '—' : '<span style="color:var(--green);font-size:.68rem">activa</span>');
+          const name = s.image_name.length > 45 ? s.image_name.slice(-45) + '…' : s.image_name;
+          return `<div style="display:grid;grid-template-columns:1fr 60px 80px 120px 120px 70px;gap:10px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.025);font-size:.75rem">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" title="${s.image_name}">${name}</div>
+            <div><span style="font-size:.66rem;padding:1px 5px;border-radius:20px;background:${typeColors[s.image_type]||'#555'}22;color:${typeColors[s.image_type]||'#aaa'}">${s.image_type}</span></div>
+            <div style="color:var(--text2);font-size:.7rem">${s.user_email ? s.user_email.split('@')[0] : 'anónimo'}</div>
+            <div style="color:var(--text3);font-size:.68rem">${s.opened_at ? new Date(s.opened_at).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</div>
+            <div style="color:var(--text3);font-size:.68rem">${s.closed_at ? new Date(s.closed_at).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</div>
+            <div>${dur}</div>
+          </div>`;
+        }).join('');
+  } catch(e) { console.error('sessions error', e); }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
