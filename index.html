@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="google-site-verification" content="yswz02_5nuqTXpNaUk-k5x_D5LO-3NauE0Srf-GAnwY" />
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
@@ -76,10 +76,24 @@
       Por favor gira tu pantalla para continuar.
     </div>
   </div>
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2a2a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);opacity:.4;">
-    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-  </svg>
 </div>
+<script>
+// Fix iOS Safari: reset scroll + scale tras cambio de orientación
+(function(){
+  function fixIOSZoom() {
+    setTimeout(function(){
+      window.scrollTo(0, 1);
+      setTimeout(function(){ window.scrollTo(0, 0); }, 50);
+    }, 300);
+  }
+  window.addEventListener('orientationchange', fixIOSZoom);
+  window.addEventListener('resize', function(){
+    var w = document.documentElement.clientWidth;
+    if (w !== window._lastW) { window._lastW = w; fixIOSZoom(); }
+  });
+  window._lastW = document.documentElement.clientWidth;
+})();
+</script>
 
     <!-- ══ TERMS OF USE MODAL (primera visita) ══ -->
     <div id="tof-terms-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
