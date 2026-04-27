@@ -1273,11 +1273,19 @@
                                 <button onclick="wmSetColor('#e91e8c',this)" class="wm-color-swatch" title="Rosa" style="width:20px;height:20px;border-radius:50%;background:#e91e8c;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
                                 <button onclick="wmSetColor('#ffd700',this)" class="wm-color-swatch" title="Dorado" style="width:20px;height:20px;border-radius:50%;background:#ffd700;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
                                 <button onclick="wmSetColor('#00e5ff',this)" class="wm-color-swatch" title="Cyan" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <label title="Color personalizado" style="width:22px;height:22px;border-radius:4px;overflow:hidden;border:2px solid #444;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;">
-                                    <input type="color" id="wm-color-picker" value="#ffffff" oninput="wmSetColor(this.value,null)"
-                                        style="width:30px;height:30px;border:none;padding:0;background:none;cursor:pointer;opacity:0;position:absolute;">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
-                                </label>
+                                <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;margin-left:2px;">
+                                    <span style="font-size:11px;color:#555;font-family:monospace;">#</span>
+                                    <input type="text" id="wm-hex-input" maxlength="6" value="ffffff"
+                                        style="width:62px;padding:3px 5px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;color:#c0b8ff;font-size:11px;font-family:monospace;letter-spacing:.5px;outline:none;"
+                                        oninput="if(this.value.length===6&&/^[0-9a-fA-F]{6}$/.test(this.value)){wmSetColor('#'+this.value,null);}"
+                                        onkeydown="if(event.key==='Enter'){this.blur();}"
+                                        placeholder="ffffff">
+                                    <label title="Abrir selector de color" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
+                                        <input type="color" id="wm-color-picker" value="#ffffff" oninput="wmSetColor(this.value,null)"
+                                            style="width:34px;height:34px;border:none;padding:0;background:none;cursor:pointer;opacity:0;position:absolute;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
