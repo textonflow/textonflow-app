@@ -2343,6 +2343,207 @@ async def user_usage(request: Request):
     }
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  STRIPE CHECKOUT (Phase 4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+try:
+    import stripe as _stripe
+    _stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+    _STRIPE_OK = bool(_stripe.api_key)
+except ImportError:
+    _stripe      = None
+    _STRIPE_OK   = False
+
+STRIPE_PUBLISHABLE_KEY   = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_WEBHOOK_SECRET    = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_STARTER_PRICE_ID  = os.environ.get("STRIPE_STARTER_PRICE_ID", "price_1TQd5CDWKdKa9ZRQxabnfqla")
+STRIPE_AGENCY_PRICE_ID   = os.environ.get("STRIPE_AGENCY_PRICE_ID",  "price_1TQd5DDWKdKa9ZRQ1KdEkA2U")
+
+_PLAN_PRICE_MAP = {
+    "starter": STRIPE_STARTER_PRICE_ID,
+    "agency":  STRIPE_AGENCY_PRICE_ID,
+}
+
+class _CheckoutBody(BaseModel):
+    plan: str          # "starter" | "agency"
+    success_url: Optional[str] = None
+    cancel_url:  Optional[str] = None
+
+@app.post("/stripe/checkout")
+async def stripe_checkout(body: _CheckoutBody, request: Request):
+    """Crea una Stripe Checkout Session y devuelve la URL de pago."""
+    if not _STRIPE_OK:
+        raise HTTPException(status_code=503, detail="Stripe no configurado.")
+    payload = _require_user(request)
+    plan = body.plan.lower()
+    if plan not in _PLAN_PRICE_MAP:
+        raise HTTPException(status_code=400, detail="Plan inválido. Usa 'starter' o 'agency'.")
+    price_id = _PLAN_PRICE_MAP[plan]
+    base = body.success_url or "https://web-production-98b55.up.railway.app"
+    success_url = body.success_url or f"{base}/stripe/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url  = body.cancel_url  or f"{base}/precios"
+
+    # Buscar o crear customer de Stripe
+    customer_id = None
+    conn = get_db()
+    if conn:
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT stripe_customer_id, email FROM users WHERE id = %s", (payload["sub"],))
+                row = cur.fetchone()
+            if row:
+                customer_id = row["stripe_customer_id"]
+                if not customer_id:
+                    customer = _stripe.Customer.create(
+                        email=row["email"],
+                        metadata={"user_id": payload["sub"]},
+                    )
+                    customer_id = customer.id
+                    with conn.cursor() as cur:
+                        cur.execute("UPDATE users SET stripe_customer_id = %s, updated_at = NOW() WHERE id = %s",
+                                    (customer_id, payload["sub"]))
+        except Exception as e:
+            logger.error(f"Error Stripe customer: {e}")
+
+    try:
+        session_params = dict(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"user_id": payload["sub"], "plan": plan},
+            subscription_data={"metadata": {"user_id": payload["sub"], "plan": plan}},
+        )
+        if customer_id:
+            session_params["customer"] = customer_id
+        else:
+            session_params["customer_email"] = payload["email"]
+        session = _stripe.checkout.Session.create(**session_params)
+        return {"checkout_url": session.url, "session_id": session.id}
+    except Exception as e:
+        logger.error(f"Error creando Stripe session: {e}")
+        raise HTTPException(status_code=500, detail=f"Error Stripe: {str(e)[:200]}")
+
+@app.get("/stripe/success")
+async def stripe_success(session_id: str = ""):
+    """Página de confirmación post-pago (redirige al dashboard)."""
+    from fastapi.responses import HTMLResponse
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Pago exitoso — TextOnFlow</title>
+<style>body{{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#fff}}
+.box{{text-align:center;padding:40px;border-radius:16px;background:#1e293b}}
+h1{{color:#22c55e;font-size:2rem;margin-bottom:8px}}p{{color:#94a3b8;margin-bottom:24px}}
+a{{background:#6366f1;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600}}</style></head>
+<body><div class="box"><h1>¡Pago exitoso! 🎉</h1>
+<p>Tu plan se activará en los próximos segundos.<br>Puedes cerrar esta ventana o volver al editor.</p>
+<a href="/">Ir al editor</a></div></body></html>"""
+    return HTMLResponse(html)
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """Recibe eventos de Stripe y actualiza el plan del usuario en BD."""
+    payload_bytes = await request.body()
+    sig_header    = request.headers.get("stripe-signature", "")
+
+    try:
+        if STRIPE_WEBHOOK_SECRET and sig_header:
+            event = _stripe.Webhook.construct_event(payload_bytes, sig_header, STRIPE_WEBHOOK_SECRET)
+        else:
+            event = _stripe.Event.construct_from(
+                json.loads(payload_bytes.decode()), _stripe.api_key
+            )
+    except Exception as e:
+        logger.error(f"Webhook signature error: {e}")
+        raise HTTPException(status_code=400, detail="Webhook inválido.")
+
+    etype = event["type"]
+    logger.info(f"📨 Stripe webhook: {etype}")
+
+    def _update_user_plan(user_id: str, new_plan: str):
+        conn = get_db()
+        if not conn or not user_id:
+            return
+        limit = USER_PLAN_LIMITS.get(new_plan, 20)
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE users SET plan = %s, renders_limit = %s, updated_at = NOW()
+                    WHERE id = %s
+                """, (new_plan, limit, user_id))
+            logger.info(f"✅ Usuario {user_id} actualizado a plan {new_plan}")
+        except Exception as e:
+            logger.error(f"Error actualizando plan en BD: {e}")
+
+    def _upsert_subscription(user_id: str, sub_id: str, plan: str, status: str,
+                              period_start=None, period_end=None):
+        conn = get_db()
+        if not conn or not user_id:
+            return
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO subscriptions
+                        (user_id, stripe_subscription_id, plan, status, current_period_start, current_period_end)
+                    VALUES (%s, %s, %s, %s,
+                        to_timestamp(%s), to_timestamp(%s))
+                    ON CONFLICT (stripe_subscription_id) DO UPDATE SET
+                        plan = EXCLUDED.plan, status = EXCLUDED.status,
+                        current_period_start = EXCLUDED.current_period_start,
+                        current_period_end   = EXCLUDED.current_period_end,
+                        updated_at           = NOW()
+                """, (user_id, sub_id, plan, status, period_start, period_end))
+        except Exception as e:
+            logger.error(f"Error upsert subscription: {e}")
+
+    if etype == "checkout.session.completed":
+        obj     = event["data"]["object"]
+        user_id = obj.get("metadata", {}).get("user_id", "")
+        plan    = obj.get("metadata", {}).get("plan", "starter")
+        sub_id  = obj.get("subscription", "")
+        _update_user_plan(user_id, plan)
+        if sub_id:
+            _upsert_subscription(user_id, sub_id, plan, "active")
+
+    elif etype in ("customer.subscription.updated", "customer.subscription.created"):
+        obj     = event["data"]["object"]
+        user_id = obj.get("metadata", {}).get("user_id", "")
+        status  = obj.get("status", "active")
+        sub_id  = obj.get("id", "")
+        period_start = obj.get("current_period_start")
+        period_end   = obj.get("current_period_end")
+        # Inferir plan desde price ID
+        items = obj.get("items", {}).get("data", [])
+        plan  = "starter"
+        if items:
+            pid = items[0].get("price", {}).get("id", "")
+            if pid == STRIPE_AGENCY_PRICE_ID:
+                plan = "agency"
+        if user_id and status == "active":
+            _update_user_plan(user_id, plan)
+        _upsert_subscription(user_id, sub_id, plan, status, period_start, period_end)
+
+    elif etype == "customer.subscription.deleted":
+        obj     = event["data"]["object"]
+        user_id = obj.get("metadata", {}).get("user_id", "")
+        sub_id  = obj.get("id", "")
+        _update_user_plan(user_id, "trial")
+        _upsert_subscription(user_id, sub_id, "trial", "canceled")
+
+    return {"received": True}
+
+@app.get("/stripe/config")
+async def stripe_config():
+    """Devuelve la clave pública y los price IDs (para el frontend)."""
+    return {
+        "publishable_key": STRIPE_PUBLISHABLE_KEY,
+        "plans": {
+            "starter": {"price_id": STRIPE_STARTER_PRICE_ID, "amount": 29, "renders": 1000},
+            "agency":  {"price_id": STRIPE_AGENCY_PRICE_ID,  "amount": 79, "renders": 10000},
+        }
+    }
+
+
 # ─── Helpers de rate limit por usuario (Phase 3) ─────────────────────────────
 
 def _check_user_render_limit(user_id: str) -> tuple:
