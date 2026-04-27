@@ -6019,3 +6019,324 @@ async def submit_assistant_rating(req: RatingRequest):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# ══════════════════════════════════════════════════════════════
+# AI PRODUCT FEATURES — v1.0
+# 1. Design from description  2. Copy suggestions
+# 3. Brand kit extraction     4. A/B variant generator
+# ══════════════════════════════════════════════════════════════
+
+_DESIGN_LAYOUT_SYSTEM = """Eres un experto diseñador de imágenes de marketing para ManyChat.
+El usuario te describe el diseño que necesita y tú generas el layout de texto en formato JSON.
+
+Devuelve ÚNICAMENTE un JSON válido con esta estructura (sin markdown, sin explicaciones):
+{
+  "texts": [
+    {
+      "text": "Texto aquí",
+      "auto_alignment": "center",
+      "alignment": "auto",
+      "font_size": 72,
+      "font_color": "#FFFFFF",
+      "font_value": "Roboto",
+      "font_backend": "Roboto",
+      "text_align": "center",
+      "line_spacing": 4,
+      "background_enabled": false,
+      "background_color": "#000000",
+      "background_opacity": 70,
+      "bg_pad_top": 10,
+      "bg_pad_right": 20,
+      "bg_pad_bottom": 10,
+      "bg_pad_left": 20,
+      "bg_box_radius": 8,
+      "stroke_enabled": false,
+      "stroke_color": "#000000",
+      "stroke_width": 2,
+      "stroke_opacity": 100
+    }
+  ],
+  "background_suggestion": "Descripción breve del fondo ideal en español",
+  "color_palette": ["#HEX1", "#HEX2", "#HEX3"]
+}
+
+REGLAS:
+- auto_alignment puede ser: center, top-center, bottom-center, top-left, top-right, bottom-left, bottom-right, middle-left, middle-right
+- Usa máximo 4 capas de texto para no saturar la imagen
+- font_value y font_backend deben ser nombres de fuentes Google Fonts comunes
+- Adapta tamaños: título grande (60-120px), subtítulo (36-60px), detalle (24-40px), CTA (44-64px)
+- Colores vibrantes y contrastantes para marketing
+- Si el contexto menciona colores específicos úsalos
+- Para CTAs usa background_enabled: true con bg_box_radius: 10
+- Responde SOLO con el JSON, nada más"""
+
+class DesignLayoutRequest(BaseModel):
+    description: str
+    canvas_width: int = 1080
+    canvas_height: int = 1080
+    context: Optional[str] = None
+
+@app.post("/api/ai/design-layout")
+async def ai_design_layout(req: DesignLayoutRequest, request: Request):
+    user = await _get_optional_user(request)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
+    if len(req.description.strip()) < 5:
+        raise HTTPException(status_code=400, detail="La descripción es muy corta")
+    user_msg = f"Descripción del diseño: {req.description.strip()}"
+    if req.context:
+        user_msg += f"\nContexto adicional: {req.context.strip()}"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": user_msg}]}],
+        "systemInstruction": {"parts": [{"text": _DESIGN_LAYOUT_SYSTEM}]},
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1200, "candidateCount": 1,
+                             "responseMimeType": "application/json"}
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+        data = resp.json()
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "\n".join(p.get("text", "") for p in parts if "text" in p).strip()
+        # Strip markdown fences if present
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        layout = json.loads(raw)
+        # Fill mandatory fields with defaults for each text object
+        defaults = {
+            "x": req.canvas_width // 2, "y": req.canvas_height // 2,
+            "padding_x": 40, "padding_y": 30,
+            "rotation": 0, "skew_x": 0, "skew_y": 0, "opacity": 1.0,
+            "bg_color_type": "solid", "bg_gradient_color2": "#FFFFFF", "bg_gradient_angle": 135,
+            "bg_stroke_color": "#FFFFFF", "bg_stroke_width": 0, "bg_stroke_opacity": 100,
+            "bg_brd_pad_top": 10, "bg_brd_pad_right": 20, "bg_brd_pad_bottom": 10, "bg_brd_pad_left": 20,
+            "bg_brd_pad_linked": True, "bg_pad_linked": True,
+            "warp_style": "none", "warp_bend": 0,
+            "canvas_padding_enabled": False, "canvas_padding_value": 40, "canvas_padding_side": "left",
+            "text_wrap_enabled": False, "text_wrap_padding": 60,
+            "stroke_type": "solid", "stroke_gradient_color2": "#FFFFFF", "stroke_gradient_angle": 135,
+            "stroke_dash": "solid", "bg_border_enabled": False,
+            "has_background_layer": False, "back_color": "#000000",
+            "back_opacity": 0.3, "offset_x": 10, "offset_y": 10,
+            "back_blur": 5, "back_blend_mode": "multiply",
+        }
+        for t in layout.get("texts", []):
+            for k, v in defaults.items():
+                t.setdefault(k, v)
+        return layout
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"La IA devolvió JSON inválido: {e}")
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+# ─── Copy Suggestions ───────────────────────────────────────
+_COPY_SYSTEM = """Eres un copywriter experto en marketing para ManyChat y redes sociales.
+Devuelve ÚNICAMENTE un JSON con 3 variaciones creativas del texto dado.
+Formato: {"suggestions": ["variación 1", "variación 2", "variación 3"]}
+- Mantén un tono similar al original pero varía el enfoque (urgencia, emoción, beneficio)
+- Máximo 2 líneas por variación
+- Sin comillas anidadas en las variaciones
+- Responde SOLO el JSON"""
+
+class CopySuggestionsRequest(BaseModel):
+    current_text: str
+    context: Optional[str] = None
+
+@app.post("/api/ai/copy-suggestions")
+async def ai_copy_suggestions(req: CopySuggestionsRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
+    if not req.current_text.strip():
+        raise HTTPException(status_code=400, detail="El texto no puede estar vacío")
+    user_msg = f"Texto actual: {req.current_text.strip()}"
+    if req.context:
+        user_msg += f"\nContexto del diseño: {req.context.strip()}"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": user_msg}]}],
+        "systemInstruction": {"parts": [{"text": _COPY_SYSTEM}]},
+        "generationConfig": {"temperature": 0.85, "maxOutputTokens": 300,
+                             "responseMimeType": "application/json"}
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=20)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+        data = resp.json()
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "\n".join(p.get("text","") for p in parts if "text" in p).strip()
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        result = json.loads(raw)
+        return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="La IA devolvió JSON inválido")
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+# ─── Brand Kit Extraction ────────────────────────────────────
+_BRAND_KIT_SYSTEM = """Eres un experto en identidad visual y branding.
+Analiza el logo o imagen proporcionada y extrae la paleta de colores de marca.
+Devuelve ÚNICAMENTE un JSON con este formato:
+{
+  "colors": ["#HEX1","#HEX2","#HEX3","#HEX4","#HEX5"],
+  "background_color": "#HEX",
+  "font_suggestion": "Nombre de fuente Google Fonts que combine con la marca",
+  "style": "moderno|elegante|divertido|minimalista|corporativo",
+  "description": "Descripción breve del estilo de marca en español (1 oración)"
+}
+- Extrae exactamente 5 colores representativos (de más a menos prominente)
+- background_color: el color más claro / fondo ideal
+- Responde SOLO el JSON"""
+
+class BrandKitRequest(BaseModel):
+    image_url: str
+
+@app.post("/api/ai/brand-kit")
+async def ai_brand_kit(req: BrandKitRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
+    # Download the image and convert to base64
+    try:
+        img_resp = requests.get(req.image_url, timeout=15)
+        img_resp.raise_for_status()
+        img_data = base64.b64encode(img_resp.content).decode()
+        content_type = img_resp.headers.get("content-type", "image/png").split(";")[0].strip()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo cargar la imagen: {e}")
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [
+            {"text": "Analiza este logo y extrae la paleta de colores de marca."},
+            {"inlineData": {"mimeType": content_type, "data": img_data}}
+        ]}],
+        "systemInstruction": {"parts": [{"text": _BRAND_KIT_SYSTEM}]},
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 400,
+                             "responseMimeType": "application/json"}
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+        data = resp.json()
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "\n".join(p.get("text","") for p in parts if "text" in p).strip()
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        result = json.loads(raw)
+        return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="La IA devolvió JSON inválido")
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+# ─── A/B Variant Generator ───────────────────────────────────
+_AB_VARIANTS_SYSTEM = """Eres un experto en diseño de marketing y optimización de conversión.
+Tomas un layout de texto y generas 3 variantes visuales con diferentes paletas de color y estilos.
+Devuelve ÚNICAMENTE un JSON con este formato:
+{
+  "variants": [
+    {
+      "label": "Variante A — Alta Energía",
+      "theme": "bold",
+      "color_overrides": {"font_color": "#HEX", "background_color": "#HEX"},
+      "texts": [ ...array of text objects with modified colors and/or font_size... ]
+    },
+    { "label": "Variante B — Elegante", "theme": "elegant", "color_overrides": {...}, "texts": [...] },
+    { "label": "Variante C — Minimalista", "theme": "minimal", "color_overrides": {...}, "texts": [...] }
+  ]
+}
+REGLAS:
+- Mantén exactamente la misma estructura y posición de texto de cada capa
+- Solo cambia: font_color, background_color, background_opacity, stroke_color, stroke_width, font_size (±10%)
+- Cada variante debe tener una paleta de color claramente diferente
+- Variante A: colores vibrantes y contrastantes
+- Variante B: colores elegantes y sofisticados (dorado, gris oscuro, blanco)
+- Variante C: colores mínimos, fondo oscuro, texto limpio
+- Responde SOLO el JSON"""
+
+class ABVariantsRequest(BaseModel):
+    texts: list
+    context: Optional[str] = None
+
+@app.post("/api/ai/ab-variants")
+async def ai_ab_variants(req: ABVariantsRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
+    if not req.texts:
+        raise HTTPException(status_code=400, detail="No hay capas de texto para generar variantes")
+    # Send only relevant fields to Gemini (not the full heavy object)
+    slim_texts = []
+    for t in req.texts:
+        slim_texts.append({
+            "text": t.get("text",""),
+            "font_color": t.get("font_color","#FFFFFF"),
+            "font_size": t.get("font_size", 60),
+            "background_enabled": t.get("background_enabled", False),
+            "background_color": t.get("background_color","#000000"),
+            "background_opacity": t.get("background_opacity",70),
+            "stroke_enabled": t.get("stroke_enabled",False),
+            "stroke_color": t.get("stroke_color","#000000"),
+            "stroke_width": t.get("stroke_width",2),
+            "auto_alignment": t.get("auto_alignment","center"),
+            "alignment": t.get("alignment","auto"),
+            "font_value": t.get("font_value","Roboto"),
+            "font_backend": t.get("font_backend","Roboto"),
+            "text_align": t.get("text_align","center"),
+            "line_spacing": t.get("line_spacing", 4),
+        })
+    user_msg = f"Layout actual con {len(slim_texts)} capas:\n{json.dumps(slim_texts, ensure_ascii=False)}"
+    if req.context:
+        user_msg += f"\nContexto del diseño: {req.context}"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": user_msg}]}],
+        "systemInstruction": {"parts": [{"text": _AB_VARIANTS_SYSTEM}]},
+        "generationConfig": {"temperature": 0.75, "maxOutputTokens": 1500,
+                             "responseMimeType": "application/json"}
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=35)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+        data = resp.json()
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "\n".join(p.get("text","") for p in parts if "text" in p).strip()
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        result = json.loads(raw)
+        # Merge back full original text objects with AI overrides
+        full_texts = req.texts
+        for variant in result.get("variants", []):
+            merged = []
+            for i, ai_t in enumerate(variant.get("texts", [])):
+                if i < len(full_texts):
+                    base = dict(full_texts[i])
+                    base.update({k: v for k, v in ai_t.items()})
+                    merged.append(base)
+                else:
+                    merged.append(ai_t)
+            variant["texts"] = merged
+        return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="La IA devolvió JSON inválido")
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
