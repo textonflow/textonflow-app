@@ -416,17 +416,11 @@ style="width:24px;height:24px;display:flex;align-items:center;justify-content:ce
                         </div>
 
                         `;}
-function _renderSkewSection(index,text){const ws=text.warp_style||'none';const STYLES=[{v:'none',l:'— Ninguno'},{v:'arc',l:'⌢ Arco'},{v:'arc_lower',l:'⌣ Arco inferior'},{v:'arc_upper',l:'⌢ Arco superior'},{v:'arch',l:'⋂ Bóveda'},{v:'bulge',l:'◉ Abombar'},{v:'shell_lower',l:'⌣ Caparazón abajo'},{v:'shell_upper',l:'⌢ Caparazón arriba'},{v:'flag',l:'⌇ Bandera'},{v:'wave',l:'∿ Onda'},{v:'fish',l:'⊃ Pez'},{v:'rise',l:'/ Elevar'},{v:'fisheye',l:'◎ Ojo de pez'},{v:'inflate',l:'◯ Inflar'},{v:'squeeze',l:'⋈ Estrechar'},{v:'twist',l:'↻ Torcer'},];const opts=STYLES.map(s=>'<option value="'+s.v+'"'+(ws===s.v?' selected':'')+'>'+s.l+'</option>').join('');const isActive=ws!=='none';const sliderStyle='flex:1;min-width:0;height:3px;accent-color:#667eea;cursor:pointer;';const nbStyle='width:24px;padding:1px 2px;font-size:10px;text-align:center;border:1px solid #ddd;border-radius:3px;flex-shrink:0;';const rstStyle='background:#f0f0f0;border:1px solid #ccc;border-radius:4px;padding:0 4px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:18px;';const cellStyle='display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden;';const lblStyle='font-size:9px;color:#667eea;font-weight:700;flex-shrink:0;';return`<div style="margin-top:8px;padding:10px 10px 10px;background:#f5f5ff;border-radius:8px;border:1px solid #d0d0f0;">
-                            <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:8px;">↗ Distorsionar Texto${isActive ? ' <span style="font-size:9px;background:#667eea;color:#fff;border-radius:3px;padding:1px 5px;font-weight:700;">ACTIVO</span>' : ''}</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:center;">
+function _renderSkewSection(index,text){const sliderStyle='flex:1;min-width:0;height:3px;accent-color:#667eea;cursor:pointer;';const nbStyle='width:24px;padding:1px 2px;font-size:10px;text-align:center;border:1px solid #ddd;border-radius:3px;flex-shrink:0;';const rstStyle='background:#f0f0f0;border:1px solid #ccc;border-radius:4px;padding:0 4px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:18px;';const cellStyle='display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden;';const lblStyle='font-size:9px;color:#667eea;font-weight:700;flex-shrink:0;';return`<div style="margin-top:8px;padding:10px 10px 10px;background:#f5f5ff;border-radius:8px;border:1px solid #d0d0f0;">
+                            <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:8px;">↗ Distorsionar Texto</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center;">
 
-                                <!-- Columna 1: Estilo warp -->
-                                <div style="${cellStyle}">
-                                    <select onchange="setWarpStyle(${index},this.value);" style="flex:1;min-width:0;font-size:10px;padding:2px 3px;border:1px solid #c5d0f5;border-radius:4px;background:#fff;">${opts}</select>
-                                    <button onclick="updateTextProp(${index},'warp_style','none');updateTextProp(${index},'warp_bend',0);updateControls();" title="Quitar" style="${rstStyle}">✕</button>
-                                </div>
-
-                                <!-- Columna 2: Inclinación X -->
+                                <!-- Columna 1: Inclinación X -->
                                 <div style="${cellStyle}">
                                     <span style="${lblStyle}">↗X</span>
                                     <input type="range" id="skx-sl-${index}" min="-60" max="60" step="1" value="${text.skew_x||0}"
