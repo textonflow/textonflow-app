@@ -2155,6 +2155,14 @@ async def admin_set_settings(body: _AdminSettingsBody, request: Request):
     logger.info(f"⚙️ Superadmin actualizó límite Free → {body.free_limit}")
     return {"ok": True, "free_limit": PLAN_LIMITS["free"]}
 
+@app.get("/admin-panel", include_in_schema=False)
+async def admin_panel_page():
+    """Panel de administración con gestión visual de usuarios."""
+    panel_path = os.path.join("static", "admin-panel.html")
+    if os.path.exists(panel_path):
+        return FileResponse(panel_path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Panel no encontrado.")
+
 @app.get("/superadministrador", include_in_schema=False)
 async def superadmin_page():
     """Ruta secreta que sirve la app con flag para abrir el login admin."""
