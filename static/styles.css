@@ -3924,3 +3924,104 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     background: rgba(102,126,234,0.15);
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   TEXTONFLOW — Mobile Responsive v2.0  (dashboard + editor)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── 640 px: toolbar del editor en 2 filas ─── */
+@media (max-width: 640px) {
+
+    /* Fila título + botones se apila */
+    .tof-toolbar-row {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Contenedor de botones: ocupa toda la línea, alineado a la izquierda */
+    .tof-toolbar-btns {
+        margin-left: 0 !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+
+    /* Ocultar bg-cycle (desktop-only) */
+    #bg-cycle-btn { display: none !important; }
+}
+
+/* ─── 480 px: ajustes finos del editor ─── */
+@media (max-width: 480px) {
+
+    /* Ocultar zoom A+/A− (desktop-only) — es el div justo después de bg-cycle-btn */
+    #bg-cycle-btn + div { display: none !important; }
+
+    /* Botones toolbar más compactos */
+    .tof-toolbar-btn {
+        padding: 3px 7px !important;
+        font-size: 10px !important;
+    }
+
+    /* Modal de resultado: ancho pleno en móvil */
+    .result-modal-box {
+        width: 96vw !important;
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Imagen resultado: menos alto para dejar espacio a los botones */
+    #result-image {
+        max-height: 32vh !important;
+    }
+
+    /* Botones de acción del resultado: centrado multi-línea */
+    .result-modal-box > div:nth-child(2) {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+
+    /* Controls panel: padding lateral mínimo */
+    .controls-panel { padding-left: 8px !important; padding-right: 8px !important; }
+
+    /* Splash: ocultar hint largo */
+    #canvas-gen-hint { font-size: 11px; }
+}
+
+/* ─── 360 px: pantallas muy pequeñas ─── */
+@media (max-width: 360px) {
+    .tof-toolbar-btn { padding: 3px 5px !important; font-size: 9px !important; }
+    .result-modal-box { padding: 10px !important; }
+    #result-image { max-height: 28vh !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CANVAS-GEN-BAR sticky en móvil
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Botón Visualizar: sticky al fondo de la pantalla en móvil */
+    #canvas-gen-bar {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 200 !important;
+        background: var(--bg-surface, #0d0d1a) !important;
+        border-top: 1px solid var(--border, #1e2035) !important;
+        margin: 0 -10px !important;
+        padding: 10px 14px 14px !important;
+        border-radius: 0 !important;
+    }
+
+    #canvas-gen-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        padding: 14px 20px !important;
+    }
+
+    /* Panel de controles: extra bottom padding para que el sticky bar no tape nada */
+    .controls-panel {
+        padding-bottom: 16px !important;
+    }
+}
