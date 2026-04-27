@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Cuenta — TextOnFlow</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a12;--surface:#13132a;--surface2:#1a1a2e;--border:#1e1e38;
+  --accent:#7c6eff;--accent2:#a5b4fc;--green:#22c55e;--orange:#f97316;
+  --gold:#f59e0b;--red:#ef4444;--text:#d0d0e8;--text2:#8888aa;--text3:#555577;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+/* Top bar */
+.top-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.top-bar img{height:22px;width:auto;opacity:.9}
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#9090b8;text-decoration:none;padding:6px 13px;font-size:12px;font-weight:600;transition:all .2s;white-space:nowrap}
+.back-btn:hover{background:#252545;color:#fff;border-color:var(--accent)}
+.logout-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border);border-radius:8px;color:#9090b8;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* Layout */
+.main{flex:1;max-width:900px;margin:0 auto;padding:40px 24px;width:100%}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Header */
+.dash-header{margin-bottom:32px}
+.dash-header h1{font-size:1.7rem;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.dash-header p{font-size:14px;color:var(--text2)}
+
+/* Grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:640px){.dash-grid{grid-template-columns:1fr}}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
+.card-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.card-value{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.2}
+.card-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.card.full{grid-column:1/-1}
+.card.accent-border{border-color:var(--accent)}
+
+/* Plan badge */
+.plan-badge{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:8px}
+.plan-badge.trial{background:rgba(136,136,170,.12);color:var(--text2);border:1px solid rgba(136,136,170,.2)}
+.plan-badge.starter{background:rgba(124,110,255,.15);color:var(--accent2);border:1px solid rgba(124,110,255,.25)}
+.plan-badge.agency{background:rgba(245,158,11,.12);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.plan-badge.admin{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+
+/* Progress bar */
+.progress-wrap{margin-top:16px}
+.progress-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:8px}
+.progress-bar{background:var(--surface2);border-radius:8px;height:10px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;border-radius:8px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.progress-fill.warn{background:linear-gradient(90deg,var(--orange),#fbbf24)}
+.progress-fill.danger{background:linear-gradient(90deg,var(--red),#f97316)}
+.progress-note{font-size:12px;color:var(--text2);margin-top:8px}
+
+/* Account info */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{font-size:13px;color:var(--text2)}
+.info-val{font-size:13px;color:#fff;font-weight:600;text-align:right}
+
+/* Upgrade section */
+.upgrade-section{background:linear-gradient(135deg,#13132a,#16143a);border:1px solid var(--accent);border-radius:16px;padding:28px 24px;margin-top:20px}
+.upgrade-section h2{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:6px}
+.upgrade-section p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.upgrade-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:500px){.upgrade-cards{grid-template-columns:1fr}}
+
+.plan-option{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s}
+.plan-option:hover{border-color:var(--accent)}
+.plan-option h3{font-size:1rem;font-weight:800;color:#fff}
+.plan-option .price{font-size:1.5rem;font-weight:900;color:var(--accent)}
+.plan-option .price span{font-size:12px;font-weight:400;color:var(--text2)}
+.plan-option .renders{font-size:12px;color:var(--text2)}
+.upgrade-btn{margin-top:auto;background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;width:100%}
+.upgrade-btn:hover{opacity:.9;transform:translateY(-1px)}
+.upgrade-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.upgrade-btn.agency-btn{background:linear-gradient(135deg,#d97706,#f59e0b)}
+
+/* Portal btn */
+.portal-section{margin-top:16px;text-align:center}
+.portal-link{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;background:none;border:none}
+.portal-link:hover{color:var(--text2)}
+
+/* Alert */
+.alert{border-radius:10px;padding:14px 16px;font-size:13px;margin-bottom:20px;display:none}
+.alert.info{background:rgba(124,110,255,.1);border:1px solid rgba(124,110,255,.2);color:var(--accent2)}
+.alert.success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.alert.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+
+/* Not logged in */
+.not-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center}
+.not-auth h2{font-size:1.4rem;font-weight:800;color:#fff}
+.not-auth p{color:var(--text2);font-size:14px;max-width:340px}
+.cta-btn{background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.cta-btn:hover{opacity:.9}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <a href="/"><img src="/static/logo-blanco-new.png" alt="TextOnFlow" onerror="this.src='/static/logo-blanco.webp'"></a>
+  <div class="top-bar-right">
+    <a href="/" class="back-btn">← Volver al editor</a>
+    <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- Alert -->
+<div style="max-width:900px;margin:16px auto 0;padding:0 24px">
+  <div class="alert" id="alert"></div>
+</div>
+
+<!-- Main -->
+<div class="main" id="main-content" style="display:none">
+
+  <div class="dash-header">
+    <h1>Mi cuenta</h1>
+    <p id="user-email-sub">Cargando...</p>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="dash-grid">
+
+    <!-- Renders usados -->
+    <div class="card">
+      <div class="card-label">Renders este mes</div>
+      <div class="card-value" id="stat-used">—</div>
+      <div class="card-sub" id="stat-remaining">—</div>
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <span id="prog-used-lbl">0 usados</span>
+          <span id="prog-limit-lbl">— límite</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-note" id="prog-note"></div>
+      </div>
+    </div>
+
+    <!-- Plan actual -->
+    <div class="card">
+      <div class="card-label">Plan actual</div>
+      <div class="card-value" id="stat-plan">—</div>
+      <div id="plan-badge-wrap"></div>
+      <div class="card-sub" style="margin-top:12px" id="plan-desc">—</div>
+    </div>
+
+  </div>
+
+  <!-- Info cuenta -->
+  <div class="card" id="account-info">
+    <div class="card-label">Información de cuenta</div>
+    <div class="info-row">
+      <span class="info-key">Email</span>
+      <span class="info-val" id="info-email">—</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Miembro desde</span>
+      <span class="info-val" id="info-created">—</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Estado de cuenta</span>
+      <span class="info-val" id="info-status">—</span>
+    </div>
+  </div>
+
+  <!-- Upgrade (oculto si ya es agency o admin) -->
+  <div class="upgrade-section" id="upgrade-section">
+    <h2>Amplía tu plan</h2>
+    <p>Más renders, más clientes, más resultados. Sin límites de branding — tus clientes ven solo tus imágenes.</p>
+    <div class="upgrade-cards">
+      <div class="plan-option">
+        <h3>Starter</h3>
+        <div class="price">$29<span>/mes</span></div>
+        <div class="renders">1,000 renders / mes</div>
+        <button class="upgrade-btn" id="btn-starter" onclick="upgrade('starter')">
+          Elegir Starter
+        </button>
+      </div>
+      <div class="plan-option">
+        <h3>Agency</h3>
+        <div class="price" style="color:var(--gold)">$79<span>/mes</span></div>
+        <div class="renders">10,000 renders / mes</div>
+        <button class="upgrade-btn agency-btn" id="btn-agency" onclick="upgrade('agency')">
+          Elegir Agency
+        </button>
+      </div>
+    </div>
+    <div class="portal-section" id="portal-wrap" style="display:none">
+      <button class="portal-link" onclick="openPortal()">Gestionar suscripción / cancelar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Not authenticated -->
+<div class="not-auth" id="not-auth" style="display:none">
+  <h2>Necesitas iniciar sesión</h2>
+  <p>Accede a tu cuenta para ver tu uso y gestionar tu plan.</p>
+  <a href="/" class="cta-btn">Ir al editor</a>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div style="color:var(--text2);font-size:14px">Cargando tu cuenta...</div>
+</div>
+
+<script>
+const API = '';  // misma origin
+const TOKEN_KEY = 'tof_token';
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || '';
+}
+
+function logout() {
+  localStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  window.location.href = '/';
+}
+
+function showAlert(msg, type = 'info') {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = `alert ${type}`;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch { return iso; }
+}
+
+function planLabel(plan) {
+  const map = { trial: 'Prueba gratuita', starter: 'Starter', agency: 'Agency', admin: 'Admin' };
+  return map[plan] || plan;
+}
+
+function planDesc(plan, used, limit) {
+  const remaining = Math.max(0, limit - used);
+  if (plan === 'admin') return 'Acceso ilimitado.';
+  if (plan === 'trial') return `${remaining} renders disponibles en tu periodo de prueba.`;
+  if (plan === 'starter') return `${remaining.toLocaleString()} renders disponibles este mes.`;
+  if (plan === 'agency') return `${remaining.toLocaleString()} renders disponibles este mes.`;
+  return '';
+}
+
+async function loadDashboard() {
+  const token = getToken();
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('not-auth').style.display = 'none';
+
+  if (!token) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-auth').style.display = 'flex';
+    return;
+  }
+
+  try {
+    const [meRes, usageRes] = await Promise.all([
+      fetch(`${API}/user/me`,    { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${API}/user/usage`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+
+    if (meRes.status === 401 || meRes.status === 403) {
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('not-auth').style.display = 'flex';
+      return;
+    }
+
+    const me    = await meRes.json();
+    const usage = await usageRes.json();
+
+    // Rellenar datos
+    const plan    = usage.plan || 'trial';
+    const used    = usage.renders_used || 0;
+    const limit   = usage.renders_limit || 20;
+    const pct     = usage.pct || 0;
+    const email   = me.email || '—';
+
+    document.getElementById('user-email-sub').textContent = email;
+    document.getElementById('info-email').textContent = email;
+    document.getElementById('info-created').textContent = fmtDate(me.created_at);
+    document.getElementById('info-status').textContent = me.is_active ? '✓ Activa' : '✗ Inactiva';
+
+    document.getElementById('stat-used').textContent = used.toLocaleString();
+    document.getElementById('stat-remaining').textContent = `de ${limit.toLocaleString()} renders`;
+    document.getElementById('stat-plan').textContent = planLabel(plan);
+    document.getElementById('plan-desc').textContent = planDesc(plan, used, limit);
+
+    document.getElementById('prog-used-lbl').textContent  = `${used.toLocaleString()} usados`;
+    document.getElementById('prog-limit-lbl').textContent = `${limit.toLocaleString()} límite`;
+
+    const fill = document.getElementById('prog-fill');
+    fill.style.width = `${Math.min(100, pct)}%`;
+    fill.className = 'progress-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+
+    const note = document.getElementById('prog-note');
+    if (pct >= 90) note.textContent = '⚠ Casi al límite — considera actualizar tu plan.';
+    else if (pct >= 70) note.textContent = `Usando el ${pct}% de tu cuota mensual.`;
+    else note.textContent = '';
+
+    // Plan badge
+    const badgeWrap = document.getElementById('plan-badge-wrap');
+    badgeWrap.innerHTML = `<span class="plan-badge ${plan}">${planLabel(plan)}</span>`;
+
+    // Sección upgrade
+    const upgradeSection = document.getElementById('upgrade-section');
+    const btnStarter     = document.getElementById('btn-starter');
+    const btnAgency      = document.getElementById('btn-agency');
+
+    if (plan === 'admin') {
+      upgradeSection.style.display = 'none';
+    } else if (plan === 'agency') {
+      upgradeSection.style.display = 'none';
+      document.getElementById('portal-wrap').style.display = 'block';
+    } else if (plan === 'starter') {
+      btnStarter.textContent = '✓ Plan actual';
+      btnStarter.disabled = true;
+      document.getElementById('portal-wrap').style.display = 'block';
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-auth').style.display = 'flex';
+  }
+}
+
+async function upgrade(plan) {
+  const token = getToken();
+  if (!token) { window.location.href = '/'; return; }
+
+  const btn = document.getElementById(plan === 'starter' ? 'btn-starter' : 'btn-agency');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Redirigiendo...';
+
+  try {
+    const res  = await fetch(`${API}/stripe/checkout`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body:    JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      showAlert(data.detail || 'Error al crear sesión de pago.', 'error');
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  } catch (err) {
+    showAlert('Error de conexión. Intenta de nuevo.', 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+async function openPortal() {
+  showAlert('Próximamente: portal de gestión de suscripción.', 'info');
+}
+
+// Leer parámetro ?success=1 tras pago
+const params = new URLSearchParams(window.location.search);
+if (params.get('success') === '1') {
+  showAlert('¡Pago exitoso! Tu plan se actualizará en unos segundos.', 'success');
+}
+if (params.get('canceled') === '1') {
+  showAlert('Pago cancelado. Puedes intentarlo de nuevo cuando quieras.', 'info');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
