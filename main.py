@@ -2490,6 +2490,72 @@ async def user_update(body: _UserUpdateBody, request: Request):
         raise HTTPException(status_code=500, detail="Error interno.")
     return {"ok": True}
 
+@app.delete("/api/user/me", tags=["Usuarios"], summary="Eliminar cuenta (GDPR)")
+async def delete_user_me(request: Request):
+    """
+    Elimina permanentemente la cuenta del usuario autenticado y todos sus datos asociados.
+    Cancela la suscripción activa en Stripe si existe.
+    Cumplimiento GDPR Art. 17 — Derecho de supresión.
+    """
+    payload = _require_user(request)
+    user_id = payload["sub"]
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+
+    # Obtener datos del usuario antes de eliminar
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT id, email, stripe_customer_id, plan FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error leyendo usuario para DELETE /api/user/me: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+    # Cancelar suscripción Stripe si existe
+    stripe_customer_id = user.get("stripe_customer_id")
+    if stripe_customer_id and _STRIPE_OK:
+        try:
+            import stripe as _s
+            _s.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+            subs = _s.Subscription.list(customer=stripe_customer_id, status="active", limit=5)
+            for sub in subs.get("data", []):
+                try:
+                    _s.Subscription.cancel(sub["id"])
+                    logger.info(f"Stripe subscription {sub['id']} cancelada para usuario {user_id}")
+                except Exception as stripe_err:
+                    logger.warning(f"No se pudo cancelar suscripción Stripe {sub['id']}: {stripe_err}")
+        except Exception as e:
+            logger.warning(f"Error al consultar Stripe para DELETE /api/user/me user {user_id}: {e}")
+
+    # Eliminar todos los datos del usuario de la base de datos
+    try:
+        with conn.cursor() as cur:
+            # Eliminar proyectos
+            cur.execute("DELETE FROM projects WHERE user_id = %s", (user_id,))
+            # Eliminar suscripciones registradas localmente
+            cur.execute("DELETE FROM subscriptions WHERE user_id = %s", (user_id,))
+            # Eliminar usuario
+            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        logger.error(f"Error eliminando usuario {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al eliminar la cuenta. Contacta a hola@textonflow.com.")
+
+    logger.info(f"Cuenta eliminada por solicitud del usuario: {user.get('email', user_id)} (GDPR Art.17)")
+    return {"ok": True, "message": "Cuenta eliminada permanentemente."}
+
+
 @app.get("/user/usage")
 async def user_usage(request: Request):
     """Devuelve el uso actual de renders del usuario autenticado."""
