@@ -30,8 +30,56 @@
     </style>
     <!-- Google Identity Services para Drive OAuth -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+      #tof-rotate-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background: #080812;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 32px;
+        text-align: center;
+        font-family: -apple-system, 'Segoe UI', sans-serif;
+      }
+      @media (max-width: 1024px) and (orientation: landscape) {
+        #tof-rotate-overlay { display: flex; }
+      }
+      #tof-rotate-overlay .rot-icon {
+        animation: tof-rot-anim 2s ease-in-out infinite;
+      }
+      @keyframes tof-rot-anim {
+        0%   { transform: rotate(0deg);   }
+        30%  { transform: rotate(90deg);  }
+        70%  { transform: rotate(90deg);  }
+        100% { transform: rotate(0deg);   }
+      }
+    </style>
 </head>
 <body>
+
+<!-- ══ PANTALLA DE ORIENTACIÓN (solo móvil en horizontal) ══ -->
+<div id="tof-rotate-overlay" role="alert" aria-live="polite">
+  <div class="rot-icon">
+    <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#7c6eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"/>
+      <line x1="12" y1="18" x2="12.01" y2="18"/>
+    </svg>
+  </div>
+  <div>
+    <div style="font-size:1.15rem;font-weight:700;color:#e2e8ff;margin-bottom:8px;">Gira tu dispositivo</div>
+    <div style="font-size:.9rem;color:#7070a0;line-height:1.6;max-width:260px;">
+      TextOnFlow funciona en modo <strong style="color:#a5a0ff;">vertical</strong>.<br>
+      Por favor gira tu pantalla para continuar.
+    </div>
+  </div>
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2a2a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);opacity:.4;">
+    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+  </svg>
+</div>
 
     <!-- ══ TERMS OF USE MODAL (primera visita) ══ -->
     <div id="tof-terms-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
