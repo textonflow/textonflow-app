@@ -2135,6 +2135,194 @@ async def favicon():
     return Response(status_code=204)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  AUTH DE USUARIOS (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+USER_PLAN_LIMITS = {
+    "trial":   20,
+    "starter": 1000,
+    "agency":  10000,
+    "admin":   999999,
+}
+
+class _UserRegisterBody(BaseModel):
+    email: str
+    password: str
+
+class _UserLoginBody(BaseModel):
+    email: str
+    password: str
+
+class _UserUpdateBody(BaseModel):
+    gemini_api_key: Optional[str] = None
+
+def _get_current_user(request: Request) -> Optional[dict]:
+    """Lee el JWT del header Authorization: Bearer <token> y devuelve el payload."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    token = auth[7:]
+    return decode_jwt(token)
+
+def _require_user(request: Request) -> dict:
+    user = _get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado.")
+    return user
+
+@app.post("/user/register")
+async def user_register(body: _UserRegisterBody):
+    """Registra un usuario nuevo con plan trial (20 renders)."""
+    email = body.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Email inválido.")
+    if len(body.password) < 8:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            if cur.fetchone():
+                raise HTTPException(status_code=409, detail="Ya existe una cuenta con ese email.")
+            pwd_hash = hash_password(body.password)
+            cur.execute("""
+                INSERT INTO users (email, password_hash, plan, renders_limit)
+                VALUES (%s, %s, 'trial', %s)
+                RETURNING id, email, plan, renders_used, renders_limit, created_at
+            """, (email, pwd_hash, USER_PLAN_LIMITS["trial"]))
+            user = dict(cur.fetchone())
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error en registro: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al crear la cuenta.")
+    token = create_jwt(str(user["id"]), user["email"], user["plan"])
+    logger.info(f"✅ Nuevo usuario registrado: {email}")
+    return {
+        "token": token,
+        "user": {
+            "id": str(user["id"]),
+            "email": user["email"],
+            "plan": user["plan"],
+            "renders_used": user["renders_used"],
+            "renders_limit": user["renders_limit"],
+        }
+    }
+
+@app.post("/user/login")
+async def user_login(body: _UserLoginBody):
+    """Login de usuario — devuelve JWT válido por 7 días."""
+    email = body.email.strip().lower()
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT id, email, password_hash, plan, renders_used, renders_limit, is_active, gemini_api_key
+                FROM users WHERE email = %s
+            """, (email,))
+            user = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en login: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not user or not verify_password(body.password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos.")
+    if not user["is_active"]:
+        raise HTTPException(status_code=403, detail="Cuenta desactivada.")
+    token = create_jwt(str(user["id"]), user["email"], user["plan"])
+    return {
+        "token": token,
+        "user": {
+            "id": str(user["id"]),
+            "email": user["email"],
+            "plan": user["plan"],
+            "renders_used": user["renders_used"],
+            "renders_limit": user["renders_limit"],
+            "has_gemini_key": bool(user["gemini_api_key"]),
+        }
+    }
+
+@app.get("/user/me")
+async def user_me(request: Request):
+    """Devuelve los datos del usuario autenticado."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT id, email, plan, renders_used, renders_limit, gemini_api_key,
+                       stripe_customer_id, created_at
+                FROM users WHERE id = %s
+            """, (payload["sub"],))
+            user = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en /user/me: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    return {
+        "id": str(user["id"]),
+        "email": user["email"],
+        "plan": user["plan"],
+        "renders_used": user["renders_used"],
+        "renders_limit": user["renders_limit"],
+        "has_gemini_key": bool(user["gemini_api_key"]),
+        "has_stripe": bool(user["stripe_customer_id"]),
+        "created_at": user["created_at"].isoformat() if user["created_at"] else None,
+    }
+
+@app.put("/user/me")
+async def user_update(body: _UserUpdateBody, request: Request):
+    """Actualiza datos del usuario (gemini_api_key, etc.)."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor() as cur:
+            if body.gemini_api_key is not None:
+                key = body.gemini_api_key.strip() or None
+                cur.execute("""
+                    UPDATE users SET gemini_api_key = %s, updated_at = NOW()
+                    WHERE id = %s
+                """, (key, payload["sub"]))
+    except Exception as e:
+        logger.error(f"Error en PUT /user/me: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    return {"ok": True}
+
+@app.get("/user/usage")
+async def user_usage(request: Request):
+    """Devuelve el uso actual de renders del usuario autenticado."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT plan, renders_used, renders_limit FROM users WHERE id = %s
+            """, (payload["sub"],))
+            user = cur.fetchone()
+    except Exception as e:
+        logger.error(f"Error en /user/usage: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    limit = USER_PLAN_LIMITS.get(user["plan"], 20)
+    return {
+        "plan": user["plan"],
+        "renders_used": user["renders_used"],
+        "renders_limit": limit,
+        "renders_remaining": max(0, limit - user["renders_used"]),
+        "pct": min(100, round(user["renders_used"] / limit * 100)) if limit else 0,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
