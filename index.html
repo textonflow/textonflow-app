@@ -2097,8 +2097,8 @@ async function authSubmit() {
     _authUpdateBtn(email, plan);
     setTimeout(function(){
       closeAuthModal();
-      // Onboarding para nuevos registros
-      if (_wasRegister && typeof showOnboarding === 'function') {
+      // Onboarding: siempre al registrar; al iniciar sesión si no lo ocultó
+      if (typeof showOnboarding === 'function' && !localStorage.getItem('tof_ob_hidden')) {
         setTimeout(showOnboarding, 400);
       }
       // Ejecutar acción pendiente (ej: copiar JSON)
