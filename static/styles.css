@@ -2859,8 +2859,18 @@
     .controls-panel { padding: 10px 10px 80px 10px; }
 
     /* Splash */
-    .splash-title { font-size: clamp(18px, 8.5vw, 26px); }
-    .splash-inner { padding: 0 12px; }
+    .splash-title {
+        white-space: nowrap;
+        font-size: min(4.8vw, 20px);
+        letter-spacing: -0.3px;
+    }
+    .splash-inner {
+        padding: 0 12px;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+    #splash-screen { overflow-x: hidden; }
     .splash-tab { padding: 8px 14px; font-size: 12px; }
     .splash-subtitle { font-size: 13px; margin-bottom: 24px; }
     .splash-logo { margin-bottom: 22px; }
