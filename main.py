@@ -2223,6 +2223,49 @@ async def user_register(body: _UserRegisterBody):
         raise HTTPException(status_code=500, detail="Error interno al crear la cuenta.")
     token = create_jwt(str(user["id"]), user["email"], user["plan"])
     logger.info(f"✅ Nuevo usuario registrado: {email}")
+
+    # ── Email de bienvenida (EngineMailer) — async, no bloquea ───────────────
+    _em_key = os.environ.get("ENGINEMAILER_API_KEY", "")
+    if _em_key:
+        async def _send_welcome():
+            try:
+                import asyncio as _aio
+                import functools
+                _body = {
+                    "CampaignName": "TextOnFlow Bienvenida",
+                    "ToEmail": email,
+                    "SenderEmail": "hola@textonflow.com",
+                    "SenderName": "TextOnFlow",
+                    "Subject": "¡Bienvenido a TextOnFlow! Tus 20 renders gratis te esperan",
+                    "SubmittedContent": (
+                        f"<h2>¡Hola! 👋</h2>"
+                        f"<p>Tu cuenta <strong>{email}</strong> ya está activa con el <strong>Plan Trial</strong> — 20 renders gratuitos para empezar.</p>"
+                        f"<p>Entra al editor y crea tu primera imagen personalizada:</p>"
+                        f"<p><a href='https://www.textonflow.com' style='background:#7c6eff;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;'>Abrir editor →</a></p>"
+                        f"<hr style='margin:24px 0;border:none;border-top:1px solid #eee'>"
+                        f"<p style='font-size:12px;color:#888'>Cuando quieras más renders, elige tu plan en: "
+                        f"<a href='https://www.textonflow.com/dashboard'>textonflow.com/dashboard</a></p>"
+                    ),
+                }
+                loop = _aio.get_event_loop()
+                resp = await loop.run_in_executor(
+                    None,
+                    functools.partial(
+                        requests.post,
+                        "https://api.enginemailer.com/RESTAPI/V2/Submission/SendEmail",
+                        headers={"APIKey": _em_key, "Content-Type": "application/json"},
+                        json=_body,
+                        timeout=15,
+                    )
+                )
+                if resp.status_code in (200, 201):
+                    logger.info(f"📧 Email de bienvenida enviado a {email}")
+                else:
+                    logger.warning(f"EngineMailer bienvenida {resp.status_code}: {resp.text[:120]}")
+            except Exception as _e:
+                logger.warning(f"Error enviando bienvenida: {_e}")
+        asyncio.create_task(_send_welcome())
+
     return {
         "token": token,
         "user": {
