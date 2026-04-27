@@ -584,8 +584,8 @@ if (saved) {
   document.getElementById('app').style.display = 'flex';
   refresh();
 }
-// Auto-refresh cada 60 s
-setInterval(() => { if (_tok) refresh(); }, 60000);
+// Auto-refresh cada 5 min
+setInterval(() => { if (_tok) refresh(); }, 300000);
 </script>
 </body>
 </html>
