@@ -2261,11 +2261,12 @@ async def favicon():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 USER_PLAN_LIMITS = {
-    "trial":   5,
+    "trial":   99999,   # ilimitado — la restricción es de 7 días desde registro
     "starter": 1000,
     "agency":  10000,
     "admin":   999999,
 }
+TRIAL_DAYS = 7   # duración del trial en días
 JSON_EXPORT_PLANS = {"starter", "agency", "admin"}  # planes que permiten export JSON
 
 class _UserRegisterBody(BaseModel):
@@ -2434,6 +2435,22 @@ async def user_me(request: Request):
     limit = USER_PLAN_LIMITS.get(plan, user["renders_limit"])
     watermark_active = plan not in JSON_EXPORT_PLANS and not user.get("watermark_exempt", False)
     can_export_json = plan in JSON_EXPORT_PLANS
+
+    # ── Info de trial basado en tiempo ────────────────────────────────────────
+    trial_expires_at = None
+    trial_days_remaining = None
+    trial_expired = False
+    if plan == "trial" and user["created_at"]:
+        from datetime import timezone as _tz
+        created = user["created_at"]
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=_tz.utc)
+        expires = created + timedelta(days=TRIAL_DAYS)
+        trial_expires_at = expires.isoformat()
+        remaining = (expires - datetime.now(_tz.utc)).days
+        trial_days_remaining = max(0, remaining)
+        trial_expired = remaining < 0
+
     return {
         "id": str(user["id"]),
         "email": user["email"],
@@ -2448,6 +2465,9 @@ async def user_me(request: Request):
         "can_export_json": can_export_json,
         "is_active": user.get("is_active", True),
         "created_at": user["created_at"].isoformat() if user["created_at"] else None,
+        "trial_expires_at": trial_expires_at,
+        "trial_days_remaining": trial_days_remaining,
+        "trial_expired": trial_expired,
     }
 
 @app.put("/user/me")
@@ -2480,7 +2500,7 @@ async def user_usage(request: Request):
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
-                SELECT plan, renders_used, renders_limit FROM users WHERE id = %s
+                SELECT plan, renders_used, renders_limit, created_at FROM users WHERE id = %s
             """, (payload["sub"],))
             user = cur.fetchone()
     except Exception as e:
@@ -2488,13 +2508,30 @@ async def user_usage(request: Request):
         raise HTTPException(status_code=500, detail="Error interno.")
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    limit = USER_PLAN_LIMITS.get(user["plan"], 20)
+    plan  = user["plan"]
+    limit = USER_PLAN_LIMITS.get(plan, 20)
+
+    # ── Trial basado en tiempo ─────────────────────────────────────────────────
+    trial_days_remaining = None
+    trial_expired = False
+    if plan == "trial" and user["created_at"]:
+        from datetime import timezone as _tz
+        created = user["created_at"]
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=_tz.utc)
+        expires = created + timedelta(days=TRIAL_DAYS)
+        remaining = (expires - datetime.now(_tz.utc)).days
+        trial_days_remaining = max(0, remaining)
+        trial_expired = remaining < 0
+
     return {
-        "plan": user["plan"],
+        "plan": plan,
         "renders_used": user["renders_used"],
         "renders_limit": limit,
-        "renders_remaining": max(0, limit - user["renders_used"]),
-        "pct": min(100, round(user["renders_used"] / limit * 100)) if limit else 0,
+        "renders_remaining": None if plan == "trial" else max(0, limit - user["renders_used"]),
+        "pct": 0 if plan == "trial" else (min(100, round(user["renders_used"] / limit * 100)) if limit else 0),
+        "trial_days_remaining": trial_days_remaining,
+        "trial_expired": trial_expired,
     }
 
 
@@ -3424,22 +3461,42 @@ def _should_apply_watermark(user_id: Optional[str]) -> bool:
     return not profile.get("watermark_exempt", False)
 
 def _check_user_render_limit(user_id: str) -> tuple:
-    """(used, limit, exceeded, plan) — lee desde BD."""
+    """(used, limit, exceeded, plan) — lee desde BD.
+    Para plan trial: el límite es temporal (TRIAL_DAYS días desde created_at),
+    no de conteo. Si el trial expiró, exceeded=True independientemente del conteo.
+    """
     conn = get_db()
     if not conn:
         return 0, 999999, False, "unknown"
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
-                "SELECT plan, renders_used, renders_limit FROM users WHERE id = %s",
+                "SELECT plan, renders_used, renders_limit, created_at FROM users WHERE id = %s",
                 (user_id,)
             )
             row = cur.fetchone()
         if not row:
             return 0, 999999, False, "unknown"
-        used  = row["renders_used"]
-        limit = USER_PLAN_LIMITS.get(row["plan"], row["renders_limit"])
-        return used, limit, used >= limit, row["plan"]
+        plan = row["plan"]
+        used = row["renders_used"]
+
+        # ── Trial basado en tiempo ────────────────────────────────────────────
+        if plan == "trial":
+            if row["created_at"]:
+                from datetime import timezone as _tz
+                created = row["created_at"]
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=_tz.utc)
+                elapsed_days = (datetime.now(_tz.utc) - created).days
+                expired = elapsed_days >= TRIAL_DAYS
+            else:
+                expired = False
+            limit  = USER_PLAN_LIMITS["trial"]
+            return used, limit, expired, plan
+
+        # ── Planes de pago: límite de conteo normal ───────────────────────────
+        limit = USER_PLAN_LIMITS.get(plan, row["renders_limit"])
+        return used, limit, used >= limit, plan
     except Exception as e:
         logger.error(f"Error en _check_user_render_limit: {e}")
         return 0, 999999, False, "unknown"
@@ -3774,7 +3831,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         if _exceeded:
             raise HTTPException(
                 status_code=429,
-                detail=f"Límite de renders alcanzado ({_used}/{_limit} · Plan {_plan.capitalize()}). Actualiza tu plan en textonflow.com/precios",
+                detail=f"Tu periodo de prueba de {TRIAL_DAYS} días ha expirado. Activa tu plan en textonflow.com/precios para seguir generando imágenes." if _plan == "trial" else f"Límite de renders alcanzado ({_used}/{_limit} · Plan {_plan.capitalize()}). Actualiza tu plan en textonflow.com/precios",
                 headers={"X-RateLimit-Used": str(_used), "X-RateLimit-Limit": str(_limit), "X-Plan": _plan},
             )
         # ── Rate limit por minuto ───────────────────────────────────────────
