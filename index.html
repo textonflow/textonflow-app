@@ -973,6 +973,27 @@
                         </div>
                     </div>
 
+                    <!-- ══ LOGOS DE CLIENTES ════════════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-logos" data-panel="logos">
+                        <div class="acc-header acc-logos-hdr" onclick="toggleAccordion('logos')" style="background:linear-gradient(135deg,rgba(124,110,255,0.06),rgba(233,30,140,0.04));">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="3"/></svg></span>
+                                <span class="acc-name">Logos clientes</span>
+                                <span class="acc-badge" id="acc-badge-logos" style="background:#7c6eff;color:#fff;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:4px;">0</span>
+                                <button onclick="event.stopPropagation();document.getElementById('logo-file-input').click();" class="acc-add-btn" title="Subir logo de cliente" style="margin-left:auto;">＋</button>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-logos">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-logos" style="display:none;">
+                            <div style="font-size:10px;color:#555;margin-bottom:8px;line-height:1.5;">Guarda logos de tus clientes. Al subir un logo se extraen automáticamente los colores de su marca.</div>
+                            <div id="logos-grid"></div>
+                        </div>
+                    </div>
+                    <input type="file" id="logo-file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none;" onchange="addClientLogo(this)">
+
                     <!-- ══ ACORDEÓN 3: MARCOS ══════════════════════════════ -->
                     <div class="acc-section sortable-panel" id="acc-marcos" data-panel="marcos">
                         <div class="acc-header acc-marcos-hdr" onclick="toggleAccordion('marcos')">
