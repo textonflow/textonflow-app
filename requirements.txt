@@ -13,3 +13,4 @@ psycopg2-binary>=2.9.10
 bcrypt==4.0.1
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
+stripe==10.5.0
