@@ -1806,7 +1806,6 @@
 <!-- ══ MODAL DE AUTENTICACIÓN ══════════════════════════════════════════════ -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
   <div style="background:#13132a;border:1px solid #1e1e38;border-radius:20px;padding:32px 28px;width:100%;max-width:380px;margin:16px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
-    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555577;font-size:20px;cursor:pointer;line-height:1;">×</button>
     <div style="display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #1e1e38;">
       <button id="auth-tab-login"    onclick="authSwitchTab('login')"    style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Iniciar sesión</button>
       <button id="auth-tab-register" onclick="authSwitchTab('register')" style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Crear cuenta</button>
@@ -1867,6 +1866,8 @@ function openAuthModal(tab) {
   setTimeout(function(){ document.getElementById('auth-email').focus(); }, 100);
 }
 function closeAuthModal() {
+  var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+  if (!logged) return; // ── Bloqueado: debe iniciar sesión primero
   document.getElementById('auth-modal').style.display = 'none';
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-success').style.display = 'none';
@@ -1990,8 +1991,49 @@ function handleAuthBtn() {
   if (tok) { window.location.href = '/dashboard'; }
   else { openAuthModal('login'); }
 }
-// Cerrar modal con Escape
-document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAuthModal(); });
+// Cerrar modal con Escape — solo si hay sesión activa
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+    if (logged) closeAuthModal();
+  }
+});
+// Bloquear clic en fondo del modal si no hay sesión
+document.getElementById('auth-modal').addEventListener('click', function(e){
+  if (e.target === this) {
+    var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+    if (!logged) e.stopPropagation();
+  }
+});
+// ── Timer de inactividad: 30 minutos → cierra sesión ─────────────────────────
+(function _inactivityTimer(){
+  var TIMEOUT = 30 * 60 * 1000; // 30 min en ms
+  var _timer = null;
+  function _logout(){
+    localStorage.removeItem('tof_token');
+    sessionStorage.removeItem('tof_token');
+    // Actualizar UI toolbar
+    var lbl = document.getElementById('auth-btn-label');
+    if (lbl) lbl.textContent = 'Iniciar sesión';
+    var dash = document.getElementById('auth-btn');
+    if (dash) { dash.onclick = function(){ openAuthModal('login'); }; }
+    // Mostrar aviso
+    var note = document.createElement('div');
+    note.textContent = 'Sesión cerrada por inactividad de 30 minutos.';
+    note.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#13132a;border:1px solid #7c6eff;color:#a5b4fc;padding:11px 20px;border-radius:10px;font-size:13px;z-index:999999;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;';
+    document.body.appendChild(note);
+    setTimeout(function(){ note.remove(); openAuthModal('login'); }, 2200);
+  }
+  function _reset(){
+    clearTimeout(_timer);
+    var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+    if (tok) _timer = setTimeout(_logout, TIMEOUT);
+  }
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(function(ev){
+    document.addEventListener(ev, _reset, { passive: true });
+  });
+  _reset();
+})();
 // Cargar estado en inicio
 (async function _authInit(){
   var tok = localStorage.getItem(_TOF_TOKEN_KEY) || sessionStorage.getItem(_TOF_TOKEN_KEY);
