@@ -150,6 +150,8 @@ def init_db():
             for _col_sql in [
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS watermark_exempt BOOLEAN NOT NULL DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_exports_used INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_copies INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ",
             ]:
                 try:
                     cur.execute(_col_sql)
@@ -414,8 +416,8 @@ _IP_USAGE: dict   = {}                    # {ip: {"date": "YYYY-MM-DD", "count":
 _IP_LOCK          = threading.Lock()
 
 # ─── Superadmin ────────────────────────────────────────────────────────────────
-_SUPERADMIN_EMAIL    = "admin@textonflow.com"
-_SUPERADMIN_PWD_HASH = "a68f0deab7b3d957997af7469716925cdf8d64eb20d4e127c15a68a48e3d8ffa"
+_SUPERADMIN_EMAIL    = "ruben@textonflow.com"
+_SUPERADMIN_PWD_HASH = "8634d3c5b1865bc470198ac121dd36bc01cdb653f7bdff56e4e5273ee6df1ae1"
 _ADMIN_SESSIONS: dict = {}               # {token: {"email": str, "expires": datetime}}
 _ADMIN_LOCK           = threading.Lock()
 _SESSION_TTL          = timedelta(days=30)
@@ -2540,11 +2542,32 @@ async def user_can_export(request: Request):
         return {"can_export": True, "plan": plan}
     return {"can_export": False, "reason": "upgrade_required", "plan": plan}
 
+@app.post("/user/track-copy")
+async def user_track_copy(request: Request):
+    """Registra que el usuario dio clic en 'Copiar JSON'. Requiere JWT."""
+    payload = _get_current_user(request)
+    if not payload:
+        return {"ok": False}
+    user_id = payload.get("sub") or payload.get("user_id")
+    conn = get_db()
+    if not conn:
+        return {"ok": False}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET json_copies = COALESCE(json_copies,0) + 1, "
+                "last_active_at = NOW(), updated_at = NOW() WHERE id = %s",
+                (user_id,)
+            )
+    except Exception as e:
+        logger.warning(f"track-copy error: {e}")
+    return {"ok": True}
+
 # ─── Admin: gestión de usuarios ───────────────────────────────────────────────
 
 @app.get("/api/admin/users")
-async def admin_list_users(request: Request, page: int = 1, limit: int = 50):
-    """Lista todos los usuarios (solo superadmin)."""
+async def admin_list_users(request: Request, page: int = 1, limit: int = 200):
+    """Lista todos los usuarios con stats completas (solo superadmin)."""
     if not _is_superadmin(request):
         raise HTTPException(status_code=403, detail="Acceso denegado.")
     conn = get_db()
@@ -2555,7 +2578,9 @@ async def admin_list_users(request: Request, page: int = 1, limit: int = 50):
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
                 SELECT id, email, plan, renders_used, renders_limit, is_active,
-                       watermark_exempt, created_at, updated_at
+                       watermark_exempt, json_exports_used,
+                       COALESCE(json_copies, 0) AS json_copies,
+                       last_active_at, created_at, updated_at
                 FROM users ORDER BY created_at DESC LIMIT %s OFFSET %s
             """, (limit, offset))
             users = [dict(r) for r in cur.fetchall()]
@@ -2565,9 +2590,77 @@ async def admin_list_users(request: Request, page: int = 1, limit: int = 50):
         logger.error(f"Error en admin/users: {e}")
         raise HTTPException(status_code=500, detail="Error interno.")
     for u in users:
-        u["created_at"] = u["created_at"].isoformat() if u.get("created_at") else None
-        u["updated_at"] = u["updated_at"].isoformat() if u.get("updated_at") else None
+        u["id"]             = str(u["id"])
+        u["created_at"]     = u["created_at"].isoformat() if u.get("created_at") else None
+        u["updated_at"]     = u["updated_at"].isoformat() if u.get("updated_at") else None
+        u["last_active_at"] = u["last_active_at"].isoformat() if u.get("last_active_at") else None
     return {"users": users, "total": total, "page": page, "limit": limit}
+
+@app.get("/api/admin/stats")
+async def admin_global_stats(request: Request):
+    """Estadísticas globales del sistema (solo superadmin)."""
+    if not _is_superadmin(request):
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT
+                  COUNT(*) AS total_users,
+                  COUNT(*) FILTER (WHERE is_active) AS active_users,
+                  COUNT(*) FILTER (WHERE NOT is_active) AS inactive_users,
+                  COUNT(*) FILTER (WHERE plan = 'trial') AS trial_users,
+                  COUNT(*) FILTER (WHERE plan = 'starter') AS starter_users,
+                  COUNT(*) FILTER (WHERE plan = 'agency') AS agency_users,
+                  COUNT(*) FILTER (WHERE plan = 'admin') AS admin_users,
+                  COALESCE(SUM(renders_used), 0) AS total_renders,
+                  COALESCE(SUM(json_copies), 0) AS total_json_copies,
+                  COALESCE(SUM(json_exports_used), 0) AS total_json_exports,
+                  COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS new_this_week,
+                  COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS new_this_month,
+                  COUNT(*) FILTER (WHERE last_active_at >= NOW() - INTERVAL '7 days') AS active_this_week
+                FROM users
+            """)
+            stats = dict(cur.fetchone())
+            # Renders por día (últimos 30 días)
+            cur.execute("""
+                SELECT DATE(created_at) AS day, COUNT(*) AS renders
+                FROM renders
+                WHERE created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(created_at) ORDER BY day
+            """)
+            renders_by_day = [{"day": str(r["day"]), "renders": r["renders"]} for r in cur.fetchall()]
+            # Nuevos usuarios por día (últimos 30 días)
+            cur.execute("""
+                SELECT DATE(created_at) AS day, COUNT(*) AS users
+                FROM users
+                WHERE created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(created_at) ORDER BY day
+            """)
+            users_by_day = [{"day": str(r["day"]), "users": r["users"]} for r in cur.fetchall()]
+            # Top usuarios por renders
+            cur.execute("""
+                SELECT email, plan, renders_used,
+                       COALESCE(json_copies, 0) AS json_copies,
+                       last_active_at
+                FROM users ORDER BY renders_used DESC LIMIT 10
+            """)
+            top_users = []
+            for r in cur.fetchall():
+                row = dict(r)
+                row["last_active_at"] = row["last_active_at"].isoformat() if row.get("last_active_at") else None
+                top_users.append(row)
+    except Exception as e:
+        logger.error(f"Error en admin/stats: {e}")
+        raise HTTPException(status_code=500, detail="Error interno.")
+    return {
+        "stats": {k: int(v) for k, v in stats.items()},
+        "renders_by_day": renders_by_day,
+        "users_by_day": users_by_day,
+        "top_users": top_users,
+    }
 
 class _AdminUserActionBody(BaseModel):
     user_id: str
@@ -2955,7 +3048,8 @@ def _increment_user_renders(user_id: str) -> None:
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE users SET renders_used = renders_used + 1, updated_at = NOW() WHERE id = %s",
+                "UPDATE users SET renders_used = renders_used + 1, "
+                "last_active_at = NOW(), updated_at = NOW() WHERE id = %s",
                 (user_id,)
             )
     except Exception as e:
