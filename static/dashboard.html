@@ -106,6 +106,67 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .not-auth p{color:var(--text2);font-size:14px;max-width:340px}
 .cta-btn{background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
 .cta-btn:hover{opacity:.9}
+
+/* ──────────────────────────────────────────────
+   MOBILE RESPONSIVE — Dashboard (v2.0)
+   ────────────────────────────────────────────── */
+
+/* info-val: evitar overflow en emails largos */
+.info-val{max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info-key{flex-shrink:0}
+
+/* Botones del top-bar: siempre icono, texto solo en ≥480px */
+.btn-text{display:inline}
+
+@media(max-width:640px){
+  /* Top bar más compacto */
+  .top-bar{padding:10px 16px}
+  /* Layout: menos padding en móvil */
+  .main{padding:24px 14px}
+  /* Header más compacto */
+  .dash-header{margin-bottom:20px}
+  .dash-header h1{font-size:1.35rem}
+  /* Cards: padding reducido */
+  .card{padding:18px 16px}
+  /* Stat values: fuente más pequeña */
+  .card-value{font-size:1.6rem}
+  /* Upgrade section */
+  .upgrade-section{padding:20px 16px}
+}
+
+@media(max-width:480px){
+  /* Top-bar: ocultar texto de los botones, solo iconos */
+  .btn-text{display:none}
+  /* Back y logout solo iconos */
+  .back-btn,.logout-btn{padding:7px 10px;gap:0}
+  /* Información de cuenta: email más corto */
+  .info-val{max-width:52%}
+  /* Cards */
+  .card{padding:14px 12px;border-radius:12px}
+  .card-value{font-size:1.35rem}
+  .card-label{font-size:10px}
+  /* Progress */
+  .progress-labels{font-size:11px}
+  /* Upgrade */
+  .upgrade-section{padding:16px 12px;border-radius:12px}
+  .upgrade-section h2{font-size:1rem}
+  .upgrade-section p{font-size:12px;margin-bottom:14px}
+  .upgrade-cards{gap:10px}
+  .plan-option{padding:14px 12px}
+  .plan-option h3{font-size:.95rem}
+  .plan-option .price{font-size:1.3rem}
+  /* Alert */
+  .alert{font-size:12px;padding:10px 12px}
+}
+
+@media(max-width:360px){
+  .top-bar{padding:8px 10px}
+  .main{padding:16px 10px}
+  .dash-header h1{font-size:1.15rem}
+  .card-value{font-size:1.2rem}
+  .info-val{max-width:46%;font-size:11px}
+  .info-key{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -114,8 +175,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 <div class="top-bar">
   <a href="/"><img src="/static/logo-blanco-new.png" alt="TextOnFlow" onerror="this.src='/static/logo-blanco.webp'"></a>
   <div class="top-bar-right">
-    <a href="/" class="back-btn">← Volver al editor</a>
-    <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+    <a href="/" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="btn-text">Volver al editor</span>
+    </a>
+    <button class="logout-btn" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span class="btn-text">Cerrar sesión</span>
+    </button>
   </div>
 </div>
 
