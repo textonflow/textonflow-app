@@ -2738,6 +2738,9 @@
     #chrome-ext-fab { display: none !important; }
     #rec-wrapper    { display: none !important; }
 
+    /* ── Tab de feedback: ocultar en móvil (no queda sobre el input) ── */
+    #fb-tab { display: none !important; }
+
     /* ── Burbuja de chat: subirla para que no quede bajo el footer ── */
     #fb-bubble { bottom: 72px !important; right: 14px !important; }
     #fb-panel  { bottom: 132px !important; right: 14px !important; width: calc(100vw - 28px) !important; }
@@ -2880,8 +2883,10 @@
     }
     #splash-screen { overflow-x: hidden; }
     .splash-tab { padding: 8px 14px; font-size: 12px; }
-    .splash-subtitle { font-size: 13px; margin-bottom: 24px; }
-    .splash-logo { margin-bottom: 22px; }
+    .splash-subtitle { font-size: 13px; margin-bottom: 10px; }
+    .splash-logo { margin-bottom: 10px; }
+    .splash-title { margin-bottom: 8px !important; }
+    #fb-tab { display: none !important; }
 
     /* Acc header */
     .acc-header { padding: 11px 12px; }
@@ -4042,4 +4047,44 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     .controls-panel {
         padding-bottom: 16px !important;
     }
+}
+
+/* ══ TEMAS DE FONDO (Oscuro / Gris / Blanco) — toda la pantalla ══ */
+body.tof-bg-white {
+    background: #f0f0f5 !important;
+}
+body.tof-bg-white .container,
+body.tof-bg-white .main-content {
+    background: #f0f0f5 !important;
+}
+body.tof-bg-white .canvas-area {
+    background: #f0f0f5 !important;
+    background-image: radial-gradient(circle, #c8c8d8 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
+}
+
+body.tof-bg-grey {
+    background: #d2d2dc !important;
+}
+body.tof-bg-grey .container,
+body.tof-bg-grey .main-content {
+    background: #d2d2dc !important;
+}
+body.tof-bg-grey .canvas-area {
+    background: #d2d2dc !important;
+    background-image: radial-gradient(circle, #b0b0c0 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
+}
+
+body.tof-bg-dark {
+    background: #0f0f1a !important;
+}
+body.tof-bg-dark .container,
+body.tof-bg-dark .main-content {
+    background: #0f0f1a !important;
+}
+body.tof-bg-dark .canvas-area {
+    background: #141414 !important;
+    background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
 }
