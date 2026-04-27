@@ -276,6 +276,31 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 
 </div>
 
+<!-- Zona peligrosa -->
+<div class="upgrade-section" id="danger-zone" style="border-color:#7f1d1d;background:rgba(127,29,29,0.06);display:none">
+  <h2 style="color:#fca5a5">Zona peligrosa</h2>
+  <p style="color:#c0a0a0;margin-bottom:18px">Eliminar tu cuenta es una acción <strong style="color:#fca5a5">permanente e irreversible</strong>. Se borrarán todos tus proyectos, datos de perfil y tu suscripción activa se cancelará. Los registros de facturación se conservan 7 años por obligación legal.</p>
+  <button onclick="confirmDeleteAccount()" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,0.22)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">
+    Eliminar mi cuenta
+  </button>
+  <p style="font-size:12px;color:#6b4040;margin-top:12px">Para cancelar solo la suscripción sin eliminar tu cuenta, usa el botón <strong>Gestionar suscripción</strong> arriba.</p>
+</div>
+
+<!-- Modal confirmación eliminación de cuenta -->
+<div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#0d0d1a;border:1px solid #7f1d1d;border-radius:14px;padding:32px;max-width:420px;width:90%;text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px">⚠️</div>
+    <h3 style="color:#fca5a5;font-size:1.2rem;margin-bottom:12px">¿Eliminar tu cuenta?</h3>
+    <p style="color:#c0a0a0;font-size:.9rem;line-height:1.7;margin-bottom:20px">Esta acción eliminará permanentemente tu cuenta, proyectos y datos. No se puede deshacer.</p>
+    <p style="color:#b0b0c8;font-size:.88rem;margin-bottom:6px">Escribe <strong style="color:#fca5a5">ELIMINAR</strong> para confirmar:</p>
+    <input id="delete-confirm-input" type="text" placeholder="ELIMINAR" style="width:100%;padding:10px 14px;background:#1a1a2e;border:1px solid #3a1a1a;border-radius:8px;color:#fff;font-size:14px;text-align:center;margin-bottom:20px;outline:none;transition:border .2s" oninput="checkDeleteInput()">
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button onclick="closeDeleteModal()" style="flex:1;padding:10px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#a0a0c0;font-size:14px;cursor:pointer">Cancelar</button>
+      <button id="delete-confirm-btn" onclick="executeDeleteAccount()" disabled style="flex:1;padding:10px;background:#7f1d1d;border:1px solid #991b1b;border-radius:8px;color:#fca5a5;font-size:14px;font-weight:700;cursor:not-allowed;opacity:.5;transition:all .2s">Eliminar para siempre</button>
+    </div>
+  </div>
+</div>
+
 <!-- Not authenticated -->
 <div class="not-auth" id="not-auth" style="display:none">
   <h2>Necesitas iniciar sesión</h2>
@@ -452,6 +477,11 @@ async function loadDashboard() {
       document.getElementById('portal-wrap').style.display = 'block';
     }
 
+    // Zona peligrosa: visible para todos los usuarios autenticados (no admin)
+    if (plan !== 'admin') {
+      document.getElementById('danger-zone').style.display = 'block';
+    }
+
     document.getElementById('loading').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 
@@ -506,6 +536,58 @@ if (params.get('canceled') === '1') {
 }
 
 loadDashboard();
+
+function confirmDeleteAccount() {
+  const modal = document.getElementById('delete-modal');
+  modal.style.display = 'flex';
+  document.getElementById('delete-confirm-input').value = '';
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.style.cursor = 'not-allowed';
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
+}
+
+function checkDeleteInput() {
+  const val = document.getElementById('delete-confirm-input').value.trim();
+  const btn = document.getElementById('delete-confirm-btn');
+  const matches = val === 'ELIMINAR';
+  btn.disabled = !matches;
+  btn.style.opacity = matches ? '1' : '0.5';
+  btn.style.cursor = matches ? 'pointer' : 'not-allowed';
+  document.getElementById('delete-confirm-input').style.borderColor = matches ? '#ef4444' : '#3a1a1a';
+}
+
+async function executeDeleteAccount() {
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Eliminando...';
+  try {
+    const res = await fetch('/api/user/me', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    if (res.ok) {
+      localStorage.clear();
+      sessionStorage.clear();
+      closeDeleteModal();
+      document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#0d0d14;color:#d0d0e8;text-align:center;padding:32px"><div style="font-size:48px;margin-bottom:20px">✓</div><h2 style="color:#4ade80;font-size:1.4rem;margin-bottom:12px">Cuenta eliminada</h2><p style="color:#888;margin-bottom:24px">Tus datos han sido eliminados. Gracias por usar TextOnFlow.</p><a href="/" style="color:#a5b4fc;text-decoration:none;font-size:14px">Volver al inicio →</a></div>';
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showAlert(data.detail || 'Error al eliminar la cuenta. Contacta a hola@textonflow.com', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Eliminar para siempre';
+      closeDeleteModal();
+    }
+  } catch (e) {
+    showAlert('Error de conexión. Inténtalo de nuevo.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Eliminar para siempre';
+  }
+}
 </script>
 </body>
 </html>
