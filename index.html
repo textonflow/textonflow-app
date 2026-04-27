@@ -2045,9 +2045,14 @@ async function authSubmit() {
     } else {
       _authShowOk('¡Sesión iniciada!');
     }
+    var _wasRegister = (_authTab === 'register');
     _authUpdateBtn(email, plan);
     setTimeout(function(){
       closeAuthModal();
+      // Onboarding para nuevos registros
+      if (_wasRegister && typeof showOnboarding === 'function') {
+        setTimeout(showOnboarding, 400);
+      }
       // Ejecutar acción pendiente (ej: copiar JSON)
       if (window._tof_pending) {
         var pending = window._tof_pending;
@@ -2590,6 +2595,133 @@ function iacApplyVariant(idx) {
   closeIacAB();
   showToast && showToast('✓ Variante "'+variant.label+'" aplicada', 2000);
 }
+
+// ── ONBOARDING GUIADO 3 PASOS ─────────────────────────────────────────────────
+var _OB_KEY = 'tof_onboarding_done';
+var _obStep = 0;
+
+var _obSteps = [
+  {
+    icon: '🎨',
+    badge: 'Paso 1 de 3',
+    title: 'Bienvenido a TextOnFlow',
+    subtitle: 'Imágenes personalizadas para cada usuario de ManyChat — en segundos.',
+    content: [
+      { icon: '📲', label: 'Para agencias ManyChat', text: 'Convierte variables como <code>{{nombre}}</code> o <code>{{ciudad}}</code> en imágenes únicas para cada contacto. Sin programar.' },
+      { icon: '⚡', label: 'API + Editor visual', text: 'Diseña en el editor visual, genera el JSON, conéctalo a tu flujo de ManyChat. Tu imagen se crea automáticamente al activar el mensaje.' },
+      { icon: '🚀', label: '7 días de trial ilimitado', text: 'Renders ilimitados durante 7 días. Sin tarjeta de crédito. Puedes pasarte a Starter ($29/mes) o Agency ($79/mes) cuando estés listo.' }
+    ],
+    cta: 'Empezar el tour →'
+  },
+  {
+    icon: '🖼️',
+    badge: 'Paso 2 de 3',
+    title: 'Diseña tu primera imagen',
+    subtitle: 'El editor tiene todo lo que necesitas en el panel derecho.',
+    content: [
+      { icon: '1️⃣', label: 'Imagen de fondo', text: 'Pega la URL de una imagen o sube una. Puede ser el logo de tu cliente, un banner o una plantilla.' },
+      { icon: '2️⃣', label: 'Añade capas de texto', text: 'Haz clic en <strong>+ Añadir texto</strong>. Escribe el texto con variables: <code>Hola, {{nombre}}!</code> — cada usuario verá su nombre.' },
+      { icon: '3️⃣', label: 'Visualizar', text: 'Haz clic en <strong>Visualizar</strong>. Verás la imagen generada y el JSON listo para ManyChat. Puedes probar con valores reales.' }
+    ],
+    cta: 'Siguiente →'
+  },
+  {
+    icon: '⚡',
+    badge: 'Paso 3 de 3',
+    title: 'Conecta con ManyChat',
+    subtitle: 'Copia el JSON y activa tu flujo. 5 minutos de integración.',
+    content: [
+      { icon: '📋', label: 'Copia el JSON', text: 'Después de visualizar, haz clic en <strong>Copiar JSON</strong>. Ese JSON contiene toda la configuración de tu imagen.' },
+      { icon: '🔗', label: 'En ManyChat: HTTP Request', text: 'Crea un bloque <strong>HTTP Request → POST</strong> con URL: <code>https://www.textonflow.com/generate-multi</code>. Header: <code>Authorization: Bearer [tu token]</code>.' },
+      { icon: '🎯', label: 'Pega y activa variables', text: 'Pega el JSON en el body. Reemplaza los valores fijos por las variables de ManyChat de tu flujo. ¡Listo! Cada usuario recibirá su imagen personalizada.' }
+    ],
+    cta: '¡Empezar a diseñar!'
+  }
+];
+
+function showOnboarding() {
+  if (localStorage.getItem(_OB_KEY)) return;
+  _obStep = 0;
+  _renderObStep();
+  document.getElementById('ob-modal').style.display = 'flex';
+}
+
+function _renderObStep() {
+  var s = _obSteps[_obStep];
+  var el = document.getElementById('ob-modal');
+  if (!el) return;
+
+  // Dots
+  var dots = '';
+  for (var i = 0; i < _obSteps.length; i++) {
+    dots += '<div style="width:' + (i===_obStep?24:8) + 'px;height:8px;border-radius:4px;background:' + (i===_obStep?'#7c6eff':'#2a2a3e') + ';transition:all .3s;"></div>';
+  }
+
+  // Content items
+  var items = s.content.map(function(c) {
+    return '<div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;background:#0d0d1e;border:1px solid #1e1e38;border-radius:10px;">' +
+      '<div style="font-size:20px;flex-shrink:0;margin-top:1px;">' + c.icon + '</div>' +
+      '<div><div style="font-size:.82rem;font-weight:700;color:#a5b4fc;margin-bottom:3px;">' + c.label + '</div>' +
+      '<div style="font-size:.88rem;color:#9090b8;line-height:1.6;">' + c.text + '</div></div></div>';
+  }).join('');
+
+  document.getElementById('ob-content').innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+      '<div style="font-size:36px;">' + s.icon + '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' + dots + '</div>' +
+    '</div>' +
+    '<div style="font-size:.75rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7c6eff;margin-bottom:6px;">' + s.badge + '</div>' +
+    '<h2 style="font-size:1.35rem;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">' + s.title + '</h2>' +
+    '<p style="font-size:.88rem;color:#8080a0;margin-bottom:18px;line-height:1.6;">' + s.subtitle + '</p>' +
+    '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">' + items + '</div>' +
+    '<div style="display:flex;gap:10px;align-items:center;">' +
+      (_obStep > 0 ? '<button onclick="_obPrev()" style="flex:0 0 auto;padding:10px 16px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#8080a0;font-size:13px;cursor:pointer;">← Atrás</button>' : '') +
+      '<button onclick="_obNext()" style="flex:1;padding:12px 20px;background:linear-gradient(135deg,#6d28d9,#4f46e5);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity=\'.88\'" onmouseout="this.style.opacity=\'1\'">' + s.cta + '</button>' +
+      '<button onclick="_obSkip()" style="flex:0 0 auto;padding:10px 12px;background:none;border:none;color:#454560;font-size:12px;cursor:pointer;text-decoration:underline;">Saltar</button>' +
+    '</div>';
+}
+
+function _obNext() {
+  if (_obStep < _obSteps.length - 1) {
+    _obStep++;
+    _renderObStep();
+  } else {
+    _obFinish();
+  }
+}
+
+function _obPrev() {
+  if (_obStep > 0) {
+    _obStep--;
+    _renderObStep();
+  }
+}
+
+function _obSkip() { _obFinish(); }
+
+function _obFinish() {
+  localStorage.setItem(_OB_KEY, '1');
+  var el = document.getElementById('ob-modal');
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function(){ el.style.display = 'none'; el.style.opacity = '1'; }, 300); }
+  // Mostrar tooltip de ayuda rápida en el editor
+  if (typeof showToast === 'function') showToast('🎨 Empieza subiendo una imagen de fondo →', 4000);
+}
+
+// Lanzar onboarding si usuario logueado sin haberlo completado
+(function _checkOnboarding(){
+  var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
+  var done = localStorage.getItem(_OB_KEY);
+  if (tok && !done) {
+    setTimeout(showOnboarding, 1200);
+  }
+})();
 </script>
+
+<!-- ── Onboarding modal ─────────────────────────────────────────────────── -->
+<div id="ob-modal" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d18;border:1px solid #2a2a50;border-radius:20px;padding:28px 28px 24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;">
+    <div id="ob-content"></div>
+  </div>
+</div>
 </body>
 </html>
