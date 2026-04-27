@@ -630,6 +630,8 @@
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                         <h4 id="upload-section-title" style="margin: 0;" data-i18n="upload_section_title">Cargar Imagen</h4>
                         <div style="display:flex; align-items:center; gap:6px; margin-left: auto;">
+                            <!-- Link de precios -->
+                            <a href="/precios" target="_blank" style="display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:1px solid rgba(102,126,234,.3);background:rgba(20,20,36,.6);font-size:11px;font-weight:700;color:#a5b4fc;text-decoration:none;white-space:nowrap;letter-spacing:.3px;" title="Ver planes y precios">Planes</a>
                             <!-- Botón cuenta de usuario -->
                             <button id="auth-btn" onclick="handleAuthBtn()"
                                 style="display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(124,110,255,0.4);background:rgba(20,20,36,0.8);font-size:11px;font-weight:700;color:#c4b5fd;letter-spacing:0.3px;white-space:nowrap;backdrop-filter:blur(6px);transition:all .2s;">
@@ -1806,6 +1808,8 @@
 <!-- ══ MODAL DE AUTENTICACIÓN ══════════════════════════════════════════════ -->
 <div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
   <div style="background:#13132a;border:1px solid #1e1e38;border-radius:20px;padding:32px 28px;width:100%;max-width:380px;margin:16px;box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;">
+    <button onclick="closeAuthModal()" title="Cerrar" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#555;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#555'">×</button>
+    <div id="auth-ctx-msg" style="display:none;background:rgba(124,110,255,.12);border:1px solid rgba(124,110,255,.3);border-radius:8px;padding:10px 13px;font-size:12px;color:#a5b4fc;margin-bottom:16px;text-align:center;"></div>
     <div style="display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #1e1e38;">
       <button id="auth-tab-login"    onclick="authSwitchTab('login')"    style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Iniciar sesión</button>
       <button id="auth-tab-register" onclick="authSwitchTab('register')" style="flex:1;padding:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#1a1a2e;color:#8888aa;transition:all .2s;">Crear cuenta</button>
@@ -1859,20 +1863,22 @@
 var _authTab = 'login';
 var _TOF_TOKEN_KEY = 'tof_token';
 
-function openAuthModal(tab) {
+function openAuthModal(tab, ctxMsg) {
   _authTab = tab || 'login';
   document.getElementById('auth-modal').style.display = 'flex';
   authSwitchTab(_authTab);
+  var ctx = document.getElementById('auth-ctx-msg');
+  if (ctx) { if (ctxMsg) { ctx.textContent = ctxMsg; ctx.style.display = 'block'; } else { ctx.style.display = 'none'; } }
   setTimeout(function(){ document.getElementById('auth-email').focus(); }, 100);
 }
 function closeAuthModal() {
-  var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
-  if (!logged) return; // ── Bloqueado: debe iniciar sesión primero
   document.getElementById('auth-modal').style.display = 'none';
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-success').style.display = 'none';
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+  var ctx = document.getElementById('auth-ctx-msg');
+  if (ctx) ctx.style.display = 'none';
 }
 function authSwitchTab(tab) {
   _authTab = tab;
@@ -1962,7 +1968,18 @@ async function authSubmit() {
       _authShowOk('¡Sesión iniciada!');
     }
     _authUpdateBtn(email, plan);
-    setTimeout(function(){ closeAuthModal(); }, 1500);
+    setTimeout(function(){
+      closeAuthModal();
+      // Ejecutar acción pendiente (ej: copiar JSON)
+      if (window._tof_pending) {
+        var pending = window._tof_pending;
+        window._tof_pending = null;
+        setTimeout(function(){
+          if (pending === 'copy_json' && typeof copyJSON === 'function') copyJSON();
+          else if (pending === 'copy_result_json' && typeof resultCopyJson === 'function') resultCopyJson();
+        }, 300);
+      }
+    }, 1500);
   } catch(e) {
     _authShowErr('Error de conexión. Intenta de nuevo.');
   } finally {
@@ -1991,19 +2008,13 @@ function handleAuthBtn() {
   if (tok) { window.location.href = '/dashboard'; }
   else { openAuthModal('login'); }
 }
-// Cerrar modal con Escape — solo si hay sesión activa
+// Cerrar modal con Escape
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') {
-    var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
-    if (logged) closeAuthModal();
-  }
+  if (e.key === 'Escape') closeAuthModal();
 });
-// Bloquear clic en fondo del modal si no hay sesión
+// Cerrar al hacer clic en el fondo
 document.getElementById('auth-modal').addEventListener('click', function(e){
-  if (e.target === this) {
-    var logged = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
-    if (!logged) e.stopPropagation();
-  }
+  if (e.target === this) closeAuthModal();
 });
 // ── Sesión: si el usuario sale de TextOnFlow 30 min → cierra sesión ───────────
 // Sale = empieza el reloj. Regresa = cancela y reinicia.
