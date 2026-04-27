@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, BackgroundTasks
 from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -172,11 +172,27 @@ def init_db():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS json_copies INTEGER NOT NULL DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_paused BOOLEAN NOT NULL DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url TEXT",
             ]:
                 try:
                     cur.execute(_col_sql)
                 except Exception:
                     pass
+            # Tabla projects
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS projects (
+                    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    name       TEXT NOT NULL DEFAULT 'Sin título',
+                    canvas_json JSONB NOT NULL DEFAULT '{}',
+                    image_url  TEXT,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)
+            """)
         logger.info("✅ Base de datos inicializada correctamente")
     except Exception as e:
         logger.error(f"Error inicializando BD: {e}")
@@ -380,11 +396,25 @@ class RetryTwitterEmojiSource(TwitterEmojiSource):
 
 # ─── App FastAPI ─────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="TextOnFlow Image Personalizer",
-    description="API para personalizar imágenes con texto y emojis para ManyChat",
-    version="6.0.0",
-    docs_url=None,
-    redoc_url=None,
+    title="TextOnFlow API",
+    description=(
+        "API pública de TextOnFlow — personalización dinámica de imágenes para ManyChat.\n\n"
+        "**Autenticación:** Bearer JWT (`Authorization: Bearer <token>`) obtenido en `/api/auth/login`.\n\n"
+        "**Uso rápido:** `POST /generate-multi` con el JSON exportado desde el editor."
+    ),
+    version="7.0.0",
+    contact={"name": "TextOnFlow Support", "url": "https://textonflow.com", "email": "hola@textonflow.com"},
+    license_info={"name": "Privativo — solo clientes TextOnFlow"},
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_tags=[
+        {"name": "render",    "description": "Generación y renderizado de imágenes"},
+        {"name": "projects",  "description": "Proyectos guardados del usuario"},
+        {"name": "auth",      "description": "Autenticación y registro"},
+        {"name": "user",      "description": "Perfil y uso del usuario"},
+        {"name": "admin",     "description": "Panel de superadministrador"},
+        {"name": "webhooks",  "description": "Webhooks de salida por usuario"},
+    ],
 )
 
 app.add_middleware(
@@ -473,6 +503,25 @@ def _check_rate_limit(ip: str) -> tuple:
         rec   = _ip_usage_today(ip)
         limit = PLAN_LIMITS["free"]
         return rec["count"], limit, False
+
+# ─── Rate limiting por minuto (en memoria) ────────────────────────────────────
+_MINUTE_BUCKETS: dict = {}      # key → [timestamps]
+_MINUTE_LOCK = threading.Lock()
+_MINUTE_LIMITS = {"trial": 4, "starter": 15, "agency": 40, "admin": 9999}
+
+def _check_minute_limit(key: str, plan: str = "trial") -> tuple[bool, int, int]:
+    """(allowed, used_this_min, limit_this_min) — ventana deslizante de 60 s"""
+    limit = _MINUTE_LIMITS.get(plan, 4)
+    now   = time.time()
+    with _MINUTE_LOCK:
+        stamps = [t for t in _MINUTE_BUCKETS.get(key, []) if now - t < 60]
+        used   = len(stamps)
+        if used >= limit:
+            _MINUTE_BUCKETS[key] = stamps
+            return False, used, limit
+        stamps.append(now)
+        _MINUTE_BUCKETS[key] = stamps
+        return True, used + 1, limit
 
 def _increment_ip_usage(ip: str) -> tuple:
     """Incrementa el contador y devuelve (used_after, limit)."""
@@ -2449,6 +2498,170 @@ async def user_usage(request: Request):
     }
 
 
+# ─── Webhook URL del usuario ──────────────────────────────────────────────────
+
+@app.get("/user/webhook", tags=["webhooks"],
+         summary="Obtener webhook URL configurado",
+         response_description="URL de webhook del usuario o null")
+async def get_user_webhook(request: Request):
+    """Devuelve el webhook_url configurado para el usuario autenticado."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT webhook_url FROM users WHERE id = %s", (payload["sub"],))
+        row = cur.fetchone()
+    return {"webhook_url": row["webhook_url"] if row else None}
+
+class _WebhookBody(BaseModel):
+    webhook_url: Optional[str] = None
+
+@app.put("/user/webhook", tags=["webhooks"],
+         summary="Configurar webhook URL",
+         response_description="Confirmación de actualización")
+async def set_user_webhook(body: _WebhookBody, request: Request):
+    """
+    Guarda o borra el webhook_url del usuario.  
+    TextOnFlow hará POST a esa URL tras cada render exitoso con el payload:
+    `{"event":"render.done","image_url":"...","template":"...","ts":"..."}`
+    """
+    payload = _require_user(request)
+    url = (body.webhook_url or "").strip() or None
+    if url and not url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=422, detail="La URL debe empezar con http:// o https://")
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor() as cur:
+        cur.execute("UPDATE users SET webhook_url = %s, updated_at = NOW() WHERE id = %s",
+                    (url, payload["sub"]))
+    return {"ok": True, "webhook_url": url}
+
+
+# ─── Proyectos ─────────────────────────────────────────────────────────────────
+
+class _ProjectCreate(BaseModel):
+    name: str = "Sin título"
+    canvas_json: dict = {}
+    image_url: Optional[str] = None
+
+class _ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    canvas_json: Optional[dict] = None
+    image_url: Optional[str] = None
+
+@app.post("/projects", tags=["projects"], status_code=201,
+          summary="Crear proyecto")
+async def create_project(body: _ProjectCreate, request: Request):
+    """Crea un nuevo proyecto guardando el estado completo del canvas."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            INSERT INTO projects (user_id, name, canvas_json, image_url)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, name, image_url, created_at, updated_at
+        """, (payload["sub"], body.name[:120], json.dumps(body.canvas_json), body.image_url))
+        row = cur.fetchone()
+    return {
+        "id": str(row["id"]), "name": row["name"],
+        "image_url": row["image_url"],
+        "created_at": row["created_at"].isoformat(),
+        "updated_at": row["updated_at"].isoformat(),
+    }
+
+@app.get("/projects", tags=["projects"],
+         summary="Listar proyectos del usuario")
+async def list_projects(request: Request, limit: int = 50, offset: int = 0):
+    """Devuelve los proyectos del usuario ordenados por actualización desc."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT id, name, image_url, created_at, updated_at
+            FROM projects WHERE user_id = %s
+            ORDER BY updated_at DESC LIMIT %s OFFSET %s
+        """, (payload["sub"], min(limit, 200), offset))
+        rows = cur.fetchall()
+    return {"projects": [
+        {"id": str(r["id"]), "name": r["name"], "image_url": r["image_url"],
+         "created_at": r["created_at"].isoformat(), "updated_at": r["updated_at"].isoformat()}
+        for r in rows
+    ], "total": len(rows)}
+
+@app.get("/projects/{project_id}", tags=["projects"],
+         summary="Obtener proyecto con canvas completo")
+async def get_project(project_id: str, request: Request):
+    """Devuelve el proyecto completo incluyendo canvas_json para restaurar el editor."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT id, name, canvas_json, image_url, created_at, updated_at
+            FROM projects WHERE id = %s AND user_id = %s
+        """, (project_id, payload["sub"]))
+        row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado.")
+    return {
+        "id": str(row["id"]), "name": row["name"],
+        "canvas_json": row["canvas_json"],
+        "image_url": row["image_url"],
+        "created_at": row["created_at"].isoformat(),
+        "updated_at": row["updated_at"].isoformat(),
+    }
+
+@app.put("/projects/{project_id}", tags=["projects"],
+         summary="Actualizar proyecto")
+async def update_project(project_id: str, body: _ProjectUpdate, request: Request):
+    """Actualiza nombre, canvas o imagen de un proyecto existente."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    updates, vals = [], []
+    if body.name is not None:
+        updates.append("name = %s"); vals.append(body.name[:120])
+    if body.canvas_json is not None:
+        updates.append("canvas_json = %s"); vals.append(json.dumps(body.canvas_json))
+    if body.image_url is not None:
+        updates.append("image_url = %s"); vals.append(body.image_url)
+    if not updates:
+        raise HTTPException(status_code=422, detail="Sin cambios.")
+    updates.append("updated_at = NOW()")
+    vals += [project_id, payload["sub"]]
+    with conn.cursor() as cur:
+        cur.execute(
+            f"UPDATE projects SET {', '.join(updates)} WHERE id = %s AND user_id = %s",
+            vals
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado.")
+    return {"ok": True}
+
+@app.delete("/projects/{project_id}", tags=["projects"],
+            summary="Eliminar proyecto")
+async def delete_project(project_id: str, request: Request):
+    """Elimina un proyecto del usuario."""
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM projects WHERE id = %s AND user_id = %s",
+                    (project_id, payload["sub"]))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado.")
+    return {"ok": True}
+
+
 # ─── Recuperación de contraseña ───────────────────────────────────────────────
 
 class _ForgotPasswordBody(BaseModel):
@@ -3491,6 +3704,60 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     return image
 
 
+# ─── Webhook de salida por usuario ───────────────────────────────────────────
+def _fire_user_webhook(user_id: str, image_url: str, template: str) -> None:
+    """Lanza un POST al webhook_url del usuario en segundo plano (no bloquea la respuesta)."""
+    def _do():
+        conn = get_db()
+        if not conn:
+            return
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT webhook_url FROM users WHERE id = %s", (user_id,))
+                row = cur.fetchone()
+            if not row or not row["webhook_url"]:
+                return
+            url = row["webhook_url"]
+            payload = {
+                "event": "render.done",
+                "image_url": image_url,
+                "template": template,
+                "ts": datetime.utcnow().isoformat() + "Z",
+            }
+            resp = requests.post(url, json=payload, timeout=8)
+            logger.info(f"🔔 Webhook → {url} [{resp.status_code}]")
+        except Exception as e:
+            logger.warning(f"⚠️ Webhook error ({user_id}): {e}")
+    threading.Thread(target=_do, daemon=True).start()
+
+
+# ─── Cola de renderizado simplificada (T005) ──────────────────────────────────
+import concurrent.futures as _futures
+_RENDER_JOBS: dict = {}          # job_id → {status, result, error, created_at}
+_RENDER_EXECUTOR = _futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="tof-render")
+
+def _run_render_job(job_id: str, req_data: dict, auth_header: str) -> None:
+    """Ejecuta el render en un hilo del pool y guarda el resultado en _RENDER_JOBS."""
+    _RENDER_JOBS[job_id]["status"] = "processing"
+    try:
+        port = int(os.environ.get("PORT", 8000))
+        hdrs = {"Content-Type": "application/json"}
+        if auth_header:
+            hdrs["Authorization"] = auth_header
+        resp = requests.post(
+            f"http://127.0.0.1:{port}/generate-multi",
+            json=req_data, headers=hdrs, timeout=120
+        )
+        if resp.status_code == 200:
+            _RENDER_JOBS[job_id].update({"status": "done", "result": resp.json()})
+        else:
+            _RENDER_JOBS[job_id].update({"status": "error", "error": resp.text[:500]})
+        logger.info(f"✅ Job {job_id} → HTTP {resp.status_code}")
+    except Exception as e:
+        _RENDER_JOBS[job_id].update({"status": "error", "error": str(e)})
+        logger.error(f"💥 Job {job_id} falló: {e}")
+
+
 @app.post("/generate-multi")
 async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     # ── Rate limit: usuario autenticado (JWT) o IP (fallback) ────────────────
@@ -3498,6 +3765,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     _user_id      = _user_payload["sub"] if _user_payload else None
     _ip           = _get_client_ip(http_req)
 
+    _plan = "admin"
     if _is_superadmin(http_req):
         _used, _limit = 0, 999999
     elif _user_id:
@@ -3509,6 +3777,14 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 detail=f"Límite de renders alcanzado ({_used}/{_limit} · Plan {_plan.capitalize()}). Actualiza tu plan en textonflow.com/precios",
                 headers={"X-RateLimit-Used": str(_used), "X-RateLimit-Limit": str(_limit), "X-Plan": _plan},
             )
+        # ── Rate limit por minuto ───────────────────────────────────────────
+        _min_ok, _min_used, _min_lim = _check_minute_limit(_user_id, _plan)
+        if not _min_ok:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Demasiados renders por minuto ({_min_used}/{_min_lim} por min · Plan {_plan.capitalize()}). Espera unos segundos.",
+                headers={"X-RateLimit-MinUsed": str(_min_used), "X-RateLimit-MinLimit": str(_min_lim)},
+            )
     else:
         # Sin JWT → rate limit por IP
         _used, _limit, _exceeded = _check_rate_limit(_ip)
@@ -3518,6 +3794,10 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 detail=f"Límite diario alcanzado ({_limit} imágenes/día). Crea una cuenta gratis en textonflow.com",
                 headers={"X-RateLimit-Used": str(_used), "X-RateLimit-Limit": str(_limit)},
             )
+        # Rate limit por minuto para IPs anónimas (2/min)
+        _min_ok, _min_used, _min_lim = _check_minute_limit(f"ip:{_ip}", "trial")
+        if not _min_ok:
+            raise HTTPException(status_code=429, detail="Demasiados renders por minuto. Crea una cuenta gratis para más velocidad.")
     try:
         # Cargar imagen (URL o local)
         if request.template_name.startswith(("http://", "https://")):
@@ -3819,6 +4099,10 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         else:
             _used_after, _lim = _increment_ip_usage(_ip)
 
+        # ── Webhook de salida (async, no bloquea la respuesta) ────────────────
+        if _user_id:
+            _fire_user_webhook(_user_id, image_url, request.template_name)
+
         return {"image_url": image_url, "usage": {"used": _used_after, "limit": _lim}}
 
     except requests.exceptions.RequestException as e:
@@ -3829,6 +4113,60 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Render asíncrono con job_id (T005) ──────────────────────────────────────
+
+@app.post("/render-async", tags=["render"], status_code=202,
+          summary="Enviar render a la cola (respuesta inmediata)",
+          response_description="job_id para consultar el estado luego")
+async def render_async_endpoint(
+    request: MultiTextRequest,
+    http_req: Request,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Encola el render y devuelve un **job_id** de inmediato (HTTP 202).  
+    Usa `GET /render-jobs/{job_id}` para obtener el resultado cuando esté listo.  
+    Útil para integraciones Make/Zapier donde el tiempo de respuesta es limitado.
+    """
+    job_id = str(uuid.uuid4())
+    auth_header = http_req.headers.get("Authorization", "")
+    _RENDER_JOBS[job_id] = {
+        "status": "queued",
+        "result": None,
+        "error": None,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+    }
+    # Limpia jobs viejos (> 1 h) para no acumular memoria
+    _cutoff = time.time() - 3600
+    for jid in list(_RENDER_JOBS.keys()):
+        if jid != job_id:
+            ts_str = _RENDER_JOBS[jid].get("created_at", "")
+            try:
+                from datetime import timezone as _tz
+                ts_clean = ts_str.replace("Z", "+00:00")
+                ts = datetime.fromisoformat(ts_clean).replace(tzinfo=_tz.utc).timestamp()
+                if ts < _cutoff:
+                    del _RENDER_JOBS[jid]
+            except Exception:
+                pass
+    _RENDER_EXECUTOR.submit(_run_render_job, job_id, request.model_dump(), auth_header)
+    return {"job_id": job_id, "status": "queued", "poll_url": f"/render-jobs/{job_id}"}
+
+
+@app.get("/render-jobs/{job_id}", tags=["render"],
+         summary="Consultar estado de un render asíncrono")
+async def get_render_job(job_id: str, request: Request):
+    """
+    Devuelve el estado del job: `queued` → `processing` → `done` | `error`.  
+    Cuando `status == "done"`, el campo `result` contiene `{image_url, usage}`.
+    """
+    job = _RENDER_JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404,
+            detail="Job no encontrado. Puede haber expirado (TTL 1 h) o nunca existió.")
+    return {"job_id": job_id, **job}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
