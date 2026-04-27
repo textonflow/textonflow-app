@@ -415,7 +415,7 @@ _IP_LOCK          = threading.Lock()
 
 # ─── Superadmin ────────────────────────────────────────────────────────────────
 _SUPERADMIN_EMAIL    = "admin@textonflow.com"
-_SUPERADMIN_PWD_HASH = "8634d3c5b1865bc470198ac121dd36bc01cdb653f7bdff56e4e5273ee6df1ae1"
+_SUPERADMIN_PWD_HASH = "a68f0deab7b3d957997af7469716925cdf8d64eb20d4e127c15a68a48e3d8ffa"
 _ADMIN_SESSIONS: dict = {}               # {token: {"email": str, "expires": datetime}}
 _ADMIN_LOCK           = threading.Lock()
 _SESSION_TTL          = timedelta(days=30)
