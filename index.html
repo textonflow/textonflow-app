@@ -2791,8 +2791,8 @@ function _obFinish() {
 </script>
 
 <!-- ── Onboarding modal ─────────────────────────────────────────────────── -->
-<div id="ob-modal" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#0d0d18;border:1px solid #2a2a50;border-radius:20px;padding:28px 28px 24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;">
+<div id="ob-modal" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)_obFinish();">
+  <div style="background:#0d0d18;border:1px solid #2a2a50;border-radius:20px;padding:28px 28px 24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;" onclick="event.stopPropagation();">
     <div id="ob-content"></div>
   </div>
 </div>
