@@ -6,22 +6,10 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response
 
-from auth import _is_superadmin, _get_client_ip, _check_rate_limit, PLAN_LIMITS
+from auth import _is_superadmin, _get_client_ip, _check_rate_limit
 from database import SUPABASE_DATABASE_URL, get_db
 from fonts import get_noto_emoji_font
 from stats import _read_stats
-
-try:
-    import numpy as _np
-    _NUMPY_OK = True
-except ImportError:
-    _NUMPY_OK = False
-
-try:
-    import psycopg2 as _psycopg2
-    _PSYCOPG2_OK = True
-except ImportError:
-    _PSYCOPG2_OK = False
 
 logger = logging.getLogger(__name__)
 
