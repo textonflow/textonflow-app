@@ -20,6 +20,7 @@ from io import BytesIO
 from typing import Optional, Dict
 
 import requests
+import httpx
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse, Response
 from PIL import Image, ImageDraw, ImageFont
@@ -403,12 +404,27 @@ async def enhance_prompt(req: EnhancePromptRequest):
         "systemInstruction": {"parts": [{"text": system_text}]},
         "generationConfig": {"temperature": 0.75, "maxOutputTokens": 260, "candidateCount": 1}
     }
+    last_error = None
+    for attempt in range(2):              # 2 intentos automáticos
+        try:
+            async with httpx.AsyncClient(timeout=28) as client:
+                resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code != 200:
+                logger.error(f"Enhance-prompt Gemini error {resp.status_code}: {resp.text[:300]}")
+                last_error = resp.status_code
+                await asyncio.sleep(0.8)
+                continue
+            data = resp.json()
+            break                         # éxito
+        except Exception as exc:
+            logger.warning(f"Enhance-prompt intento {attempt+1} fallido: {exc}")
+            last_error = exc
+            if attempt == 0:
+                await asyncio.sleep(0.8)
+    else:
+        raise HTTPException(status_code=502, detail="No se pudo mejorar el prompt ahora. Intenta de nuevo.")
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=25)
-        if resp.status_code != 200:
-            logger.error(f"Enhance-prompt Gemini error {resp.status_code}: {resp.text[:300]}")
-            raise HTTPException(status_code=502, detail="No se pudo mejorar el prompt ahora. Intenta de nuevo.")
-        data = resp.json()
+        data = data
         candidates = data.get("candidates", [])
         if not candidates:
             raise HTTPException(status_code=500, detail="Sin respuesta del modelo")
