@@ -4183,3 +4183,68 @@ body.tof-bg-dark .canvas-area {
         width: 100% !important;
     }
 }
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL — Handles de rotación más grandes (mínimo 44px táctil)
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Handle de rotación de TEXTO */
+    .txt-rot-handle {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 18px !important;
+    }
+
+    /* Handle de rotación de STICKERS/LOGOS */
+    .ov-rot-handle {
+        width: 36px !important;
+        height: 36px !important;
+        top: -38px !important;
+        right: -38px !important;
+        font-size: 18px !important;
+    }
+
+    /* Puntos de control de texto: visibles más grandes */
+    .text-control-point {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Menú contextual: fuente y targets más grandes en touch */
+    #ctx-menu button {
+        padding: 11px 18px !important;
+        font-size: 15px !important;
+        min-height: 44px !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL — Barra de formatos en 1 fila (scroll horizontal)
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Una sola fila horizontal con scroll — elimina el wrap de 2 filas */
+    #format-tabs-bar {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        justify-content: flex-start !important;
+        width: calc(100vw - 32px) !important;
+        max-width: calc(100vw - 32px) !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        padding: 5px 10px !important;
+        gap: 5px !important;
+    }
+    #format-tabs-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+    #format-tabs-bar .fmt-tab {
+        flex-shrink: 0 !important;   /* evita que se compriman */
+        white-space: nowrap !important;
+    }
+    #format-tabs-bar .fmt-tab-sep {
+        flex-shrink: 0 !important;
+    }
+}
