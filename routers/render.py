@@ -112,10 +112,17 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     """Pipeline de render puro: carga imagen, aplica efectos/textos/shapes/overlays.
     Devuelve PIL Image (RGBA). No hace rate-limit ni guarda en disco."""
     # Cargar imagen
-    if request.template_name.startswith(("http://", "https://")):
+    # ── SUPABASE: descarga directa siempre, sin chequeo de storage local ─────────
+    if "supabase.co" in request.template_name:
+        session = build_retry_session()
+        response = session.get(request.template_name, timeout=20,
+                               headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"})
+        response.raise_for_status()
+        image = Image.open(BytesIO(response.content)).convert("RGBA")
+        logger.info(f"☁️ _render_pil Supabase OK ({len(response.content)//1024} KB)")
+    elif request.template_name.startswith(("http://", "https://")):
         local_path = None
-        # Supabase Storage URLs → siempre descargar via HTTP (no leer del disco local)
-        if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
+        if "/storage/" in request.template_name:
             fname = request.template_name.split("/storage/")[-1].split("?")[0]
             local_path = os.path.join(STORAGE_DIR, fname)
         elif "/static/temp/" in request.template_name:
@@ -464,12 +471,27 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             image = None
 
         if image is None:
-            if request.template_name.startswith(("http://", "https://")):
+            # ── SUPABASE: descarga directa, sin chequeo de storage local ─────────
+            if "supabase.co" in request.template_name:
+                try:
+                    _sb_session = build_retry_session()
+                    _sb_resp = _sb_session.get(
+                        request.template_name, timeout=20,
+                        headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"},
+                    )
+                    _sb_resp.raise_for_status()
+                    image = Image.open(BytesIO(_sb_resp.content)).convert("RGBA")
+                    logger.info(f"☁️ Supabase imagen descargada OK ({len(_sb_resp.content)//1024} KB)")
+                except Exception as _sb_err:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Error descargando imagen de Supabase: {_sb_err}",
+                    )
+            elif request.template_name.startswith(("http://", "https://")):
                 # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
                 # (Railway bloquea peticiones HTTPS circulares al mismo host)
-                # EXCEPCIÓN: URLs de Supabase Storage → siempre descargar via HTTP
                 local_path = None
-                if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
+                if "/storage/" in request.template_name:
                     fname = request.template_name.split("/storage/")[-1].split("?")[0]
                     local_path = os.path.join(STORAGE_DIR, fname)
                 elif "/static/temp/" in request.template_name:
