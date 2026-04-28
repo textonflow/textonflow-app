@@ -6,8 +6,6 @@ Montado en main.py con: app.include_router(render_router)
 """
 import base64
 import concurrent.futures as _futures
-import hashlib
-import hmac
 import json
 import logging
 import os
@@ -15,16 +13,14 @@ import re
 import threading
 import time
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from io import BytesIO
-from typing import Optional, List, Dict
+from typing import Dict
 
 import requests
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse, Response
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-from pilmoji import Pilmoji
-from pilmoji.source import TwitterEmojiSource, EmojiCDNSource
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 try:
     import numpy as np
     _NUMPY_OK = True
