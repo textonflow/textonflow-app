@@ -129,6 +129,8 @@ class MultiTextRequest(BaseModel):
     img_pan_x:     float           = 0.0   # Offset X de la imagen en el artboard
     img_pan_y:     float           = 0.0   # Offset Y de la imagen en el artboard
     img_zoom:      float           = 1.0   # Factor de zoom de la imagen
+    # ── Imagen base64 (opcional): el frontend la envía para evitar fetch externo ─
+    template_image_b64: Optional[str] = None  # Base64 del JPEG/PNG de la plantilla
 
 class _AdminLoginBody(BaseModel):
     email: str
