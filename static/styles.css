@@ -3793,14 +3793,20 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
 #format-tabs-bar {
     /* display: flex lo pone JS */
     position: sticky;
-    top: 8px;
+    top: 28px;
     z-index: 40;
     align-self: center;
     align-items: center;
     gap: 4px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    justify-content: flex-start;
     width: auto;
+    max-width: calc(100% - 32px);
     box-sizing: border-box;
     padding: 7px 14px;
     background: rgba(10, 10, 22, 0.92);
@@ -3809,7 +3815,12 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    user-select: none;
 }
+#format-tabs-bar::-webkit-scrollbar { display: none; }
+#format-tabs-bar.grabbing { cursor: grabbing; }
+#format-tabs-bar .fmt-tab { flex-shrink: 0; }
+#format-tabs-bar .fmt-tab-sep { flex-shrink: 0; }
 
 /* Barra de controles imagen-capa — sticky debajo de tabs */
 #img-layer-controls {
