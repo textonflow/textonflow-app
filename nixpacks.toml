@@ -1,9 +1,14 @@
 [phases.setup]
 aptPkgs = ["fonts-liberation", "fontconfig", "fonts-noto-color-emoji", "fonts-noto-extra"]
 
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
 [phases.build]
 cmds = [
-  "pip install -r requirements.txt",
   "fc-cache -fv",
   "mkdir -p static/temp"
 ]
+
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.12"
