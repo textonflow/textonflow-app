@@ -1455,7 +1455,7 @@
                   </div>
                 </div>
 
-                <div class="json-section">
+                <div class="json-section" style="display:none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <h3 style="margin: 0;" data-i18n="json_panel_title">JSON para ManyChat</h3>
                         <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn">Copiar</button>
@@ -1656,7 +1656,7 @@
                         </div>
                         <div id="result-url-display" style="margin-top:10px;font-size:10px;color:#888;word-break:break-all;"></div>
                         <!-- JSON del payload -->
-                        <div style="margin-top:16px;border-top:1px solid #2a2a45;padding-top:14px;text-align:left;">
+                        <div id="result-json-section" style="margin-top:16px;border-top:1px solid #2a2a45;padding-top:14px;text-align:left;display:none;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                                 <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;" data-i18n="json_template_lbl">JSON del template</span>
                                 <button id="result-copy-json-btn" onclick="resultCopyJson()" style="font-size:11px;font-weight:600;padding:4px 12px;background:#1a3a2a;border:1.5px solid #27ae60;color:#4ade80;border-radius:6px;cursor:pointer;transition:all .15s;">
