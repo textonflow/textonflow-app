@@ -242,52 +242,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 
-@app.post("/api/auth/login")
-async def admin_login(body: _AdminLoginBody):
-    """Login de superadmin — devuelve un token de sesión de 30 días."""
-    import hashlib
-    pwd_hash = hashlib.sha256(body.password.encode()).hexdigest()
-    if body.email.strip().lower() != _SUPERADMIN_EMAIL or pwd_hash != _SUPERADMIN_PWD_HASH:
-        raise HTTPException(status_code=401, detail="Credenciales incorrectas.")
-    token   = secrets.token_urlsafe(40)
-    expires = datetime.utcnow() + _SESSION_TTL
-    with _ADMIN_LOCK:
-        _ADMIN_SESSIONS[token] = {"email": body.email, "expires": expires}
-    return {"token": token, "expires_at": expires.strftime("%Y-%m-%dT%H:%M:%SZ")}
-
-@app.post("/api/auth/logout")
-async def admin_logout(request: Request):
-    token = request.headers.get("X-Admin-Token", "")
-    if token:
-        with _ADMIN_LOCK:
-            _ADMIN_SESSIONS.pop(token, None)
-    return {"ok": True}
-
-@app.get("/api/auth/me")
-async def admin_me(request: Request):
-    if _is_superadmin(request):
-        return {"superadmin": True, "email": _SUPERADMIN_EMAIL}
-    return {"superadmin": False}
-
-
-@app.get("/api/admin/settings")
-async def admin_get_settings(request: Request):
-    """Devuelve la configuración editable (solo superadmin)."""
-    if not _is_superadmin(request):
-        raise HTTPException(status_code=403, detail="Acceso denegado.")
-    return {"free_limit": PLAN_LIMITS["free"]}
-
-@app.post("/api/admin/settings")
-async def admin_set_settings(body: _AdminSettingsBody, request: Request):
-    """Actualiza la configuración en caliente (solo superadmin)."""
-    if not _is_superadmin(request):
-        raise HTTPException(status_code=403, detail="Acceso denegado.")
-    if body.free_limit < 1 or body.free_limit > 9999:
-        raise HTTPException(status_code=400, detail="Límite debe estar entre 1 y 9999.")
-    PLAN_LIMITS["free"] = body.free_limit
-    logger.info(f"⚙️ Superadmin actualizó límite Free → {body.free_limit}")
-    return {"ok": True, "free_limit": PLAN_LIMITS["free"]}
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  AUTH DE USUARIOS (Phase 2)
 # ═══════════════════════════════════════════════════════════════════════════════
