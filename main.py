@@ -3781,47 +3781,61 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             raise HTTPException(status_code=429, detail="Demasiados renders por minuto. Crea una cuenta gratis para más velocidad.")
     try:
         # Cargar imagen (URL o local)
-        if request.template_name.startswith(("http://", "https://")):
-            # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
-            # (Railway bloquea peticiones HTTPS circulares al mismo host)
-            local_path = None
-            if "/storage/" in request.template_name:
-                fname = request.template_name.split("/storage/")[-1].split("?")[0]
-                local_path = os.path.join(STORAGE_DIR, fname)
-            elif "/static/temp/" in request.template_name:
-                fname = request.template_name.split("/static/temp/")[-1].split("?")[0]
-                local_path = os.path.join("static", "temp", fname)
-            if local_path:
-                if not os.path.exists(local_path):
-                    raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage: {os.path.basename(local_path)}")
-                logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
-                image = Image.open(local_path).convert("RGBA")
-            else:
-                logger.info(f"🔵 Descargando imagen: {request.template_name}")
-                session = build_retry_session()
-                _img_headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                    "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-                    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-                    "Referer": "https://manychat.com/",
-                }
-                response = session.get(request.template_name, timeout=15, headers=_img_headers)
-                logger.info(f"🔵 Respuesta imagen: {response.status_code} Content-Type={response.headers.get('Content-Type','?')}")
-                if response.status_code == 404:
-                    raise HTTPException(status_code=400, detail="La imagen ya no está disponible en el servidor origen (404). Descarga la imagen y vuelve a subirla directamente al editor.")
-                response.raise_for_status()
-                content_type = response.headers.get("Content-Type", "")
-                if "text/" in content_type or "html" in content_type:
-                    raise HTTPException(status_code=400, detail="La URL no apunta a una imagen válida (se recibió HTML). Descarga la imagen y súbela directamente al editor.")
-                try:
-                    image = Image.open(BytesIO(response.content)).convert("RGBA")
-                except Exception as img_err:
-                    raise HTTPException(status_code=400, detail=f"No se pudo leer la imagen: {img_err}. Verifica que la URL sea una imagen válida.")
+        # ── Prioridad 1: base64 enviada por el frontend (evita fetch externo) ──────
+        if request.template_image_b64:
+            try:
+                import base64 as _b64
+                _raw = _b64.b64decode(request.template_image_b64)
+                image = Image.open(BytesIO(_raw)).convert("RGBA")
+                logger.info(f"🟢 Imagen recibida en base64 ({len(_raw)//1024} KB) — sin fetch externo")
+            except Exception as _b64err:
+                logger.warning(f"⚠️ Error decodificando base64, intentando URL: {_b64err}")
+                image = None
         else:
-            template_path = os.path.join("templates", request.template_name)
-            if not os.path.exists(template_path):
-                raise HTTPException(status_code=404, detail=f"Imagen no encontrada: {request.template_name}")
-            image = Image.open(template_path).convert("RGBA")
+            image = None
+
+        if image is None:
+            if request.template_name.startswith(("http://", "https://")):
+                # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
+                # (Railway bloquea peticiones HTTPS circulares al mismo host)
+                local_path = None
+                if "/storage/" in request.template_name:
+                    fname = request.template_name.split("/storage/")[-1].split("?")[0]
+                    local_path = os.path.join(STORAGE_DIR, fname)
+                elif "/static/temp/" in request.template_name:
+                    fname = request.template_name.split("/static/temp/")[-1].split("?")[0]
+                    local_path = os.path.join("static", "temp", fname)
+                if local_path:
+                    if not os.path.exists(local_path):
+                        raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage: {os.path.basename(local_path)}")
+                    logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
+                    image = Image.open(local_path).convert("RGBA")
+                else:
+                    logger.info(f"🔵 Descargando imagen: {request.template_name}")
+                    session = build_retry_session()
+                    _img_headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+                        "Referer": "https://manychat.com/",
+                    }
+                    response = session.get(request.template_name, timeout=15, headers=_img_headers)
+                    logger.info(f"🔵 Respuesta imagen: {response.status_code} Content-Type={response.headers.get('Content-Type','?')}")
+                    if response.status_code == 404:
+                        raise HTTPException(status_code=400, detail="La imagen ya no está disponible en el servidor origen (404). Descarga la imagen y vuelve a subirla directamente al editor.")
+                    response.raise_for_status()
+                    content_type = response.headers.get("Content-Type", "")
+                    if "text/" in content_type or "html" in content_type:
+                        raise HTTPException(status_code=400, detail="La URL no apunta a una imagen válida (se recibió HTML). Descarga la imagen y súbela directamente al editor.")
+                    try:
+                        image = Image.open(BytesIO(response.content)).convert("RGBA")
+                    except Exception as img_err:
+                        raise HTTPException(status_code=400, detail=f"No se pudo leer la imagen: {img_err}. Verifica que la URL sea una imagen válida.")
+            else:
+                template_path = os.path.join("templates", request.template_name)
+                if not os.path.exists(template_path):
+                    raise HTTPException(status_code=404, detail=f"Imagen no encontrada: {request.template_name}")
+                image = Image.open(template_path).convert("RGBA")
 
         width, height = image.size
         logger.info(f"📐 Dimensiones: {width}x{height}")
