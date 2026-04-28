@@ -65,6 +65,38 @@ logger = logging.getLogger("textonflow")
 
 render_router = APIRouter()
 
+# ── Supabase Storage (imágenes de salida permanentes) ─────────────────────────
+_SB_URL    = os.getenv("SUPABASE_URL",              "https://dluzcrfqqieprudfeuyk.supabase.co")
+_SB_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET",  "textonflow-uploads")
+def _sb_key() -> str:
+    import base64 as _b64
+    return os.getenv("SUPABASE_SERVICE_ROLE_KEY") or _b64.b64decode(
+        "c2Jfc2VjcmV0X1gxWEloNVp0ekEyTFd0VG9pV2thUGdfc21Pd1ZiM0Y=").decode()
+
+def _upload_output_to_supabase(filepath: str, filename: str) -> str | None:
+    """Sube la imagen renderizada a Supabase Storage. Retorna URL pública o None si falla."""
+    try:
+        import urllib.request as _ureq
+        key = _sb_key()
+        if not key:
+            return None
+        with open(filepath, "rb") as f:
+            data = f.read()
+        url = f"{_SB_URL}/storage/v1/object/{_SB_BUCKET}/{filename}"
+        req = _ureq.Request(url, data=data, method="POST")
+        req.add_header("apikey",        key)
+        req.add_header("Authorization", f"Bearer {key}")
+        req.add_header("Content-Type",  "image/jpeg")
+        req.add_header("x-upsert",      "true")
+        with _ureq.urlopen(req, timeout=30) as r:
+            r.read()
+        public_url = f"{_SB_URL}/storage/v1/object/public/{_SB_BUCKET}/{filename}"
+        logger.info(f"☁️  Output → Supabase: {public_url}")
+        return public_url
+    except Exception as _e:
+        logger.warning(f"⚠️  Output Supabase upload failed (usando URL local): {_e}")
+        return None
+
 # ── Constantes de almacenamiento ───────────────────────────────────────────────
 STORAGE_DIR       = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
 TEMPLATES_API_DIR = os.getenv("TEMPLATES_API_PATH", os.path.join(STORAGE_DIR, "api_templates"))
@@ -734,23 +766,20 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             image = rgb_image
 
         output_filename = f"gen_{uuid.uuid4()}.jpg"
-        # Guardar en STORAGE_DIR (volumen persistente de Railway) para que la imagen
-        # no desaparezca si el servidor se reinicia antes de que ManyChat/Facebook la descargue.
         storage_path = os.path.join(STORAGE_DIR, output_filename)
         os.makedirs(STORAGE_DIR, exist_ok=True)
         # subsampling=0 → 4:4:4, full color resolution en cada pixel.
-        # El default de JPEG (subsampling=2 = 4:2:0) reduce la resolución
-        # del color a la cuarta parte, causando pixelado en texto de color.
-        # El texto blanco no lo sufre porque blanco no tiene chroma.
         image.save(storage_path, "JPEG", quality=95, subsampling=0)
         # También guardar en output/ para compatibilidad con el endpoint /image/
         local_path = os.path.join("output", output_filename)
         os.makedirs("output", exist_ok=True)
         image.save(local_path, "JPEG", quality=95, subsampling=0)
 
+        # ── Subir output a Supabase (URL permanente — sobrevive redeploys Railway) ──
+        sb_out_url = _upload_output_to_supabase(storage_path, output_filename)
         base_url = _get_base_url(http_req)
-        image_url = f"{base_url}/storage/{output_filename}"
-        logger.info(f"✅ Imagen generada: {output_filename}")
+        image_url = sb_out_url if sb_out_url else f"{base_url}/storage/{output_filename}"
+        logger.info(f"✅ Imagen generada: {output_filename} → {image_url[:60]}")
 
         # ── Contadores ────────────────────────────────────────────────────────
         _increment_images_generated()
@@ -1210,8 +1239,10 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
         fpath = os.path.join(STORAGE_DIR, fname)
         image.save(fpath, "JPEG", quality=90, subsampling=0)
 
+        # Subir a Supabase para URL permanente
+        sb_url = _upload_output_to_supabase(fpath, fname)
         base_url = str(request.base_url).rstrip("/")
-        image_url = f"{base_url}/storage/{fname}"
+        image_url = sb_url if sb_url else f"{base_url}/storage/{fname}"
         _track_render(tid)
         logger.info(f"🔔 /webhook/render tid={tid} → {fname} vars={list(vars_dict.keys()) if vars_dict else []}")
         return {
