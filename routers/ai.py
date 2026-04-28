@@ -24,7 +24,6 @@ from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse, Response
 from PIL import Image, ImageDraw, ImageFont
 
-from database import get_db
 from fonts import FONT_MAPPING
 from models import (
     GenerateImageRequest, GenerateTextRequest, EnhancePromptRequest,
