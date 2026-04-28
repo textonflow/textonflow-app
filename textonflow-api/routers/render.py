@@ -902,6 +902,37 @@ async def save_api_template(template: ApiTemplateRequest):
     }
 
 
+@render_router.put("/api/templates/{template_id}")
+async def update_api_template(template_id: str, template: "ApiTemplateRequest", request: Request):
+    """Actualiza el diseño completo de un template existente (template_name, textos, formas, etc.)."""
+    import secrets as _sec
+    if not re.match(r'^[a-f0-9\-]+$', template_id):
+        raise HTTPException(status_code=400, detail="ID inválido")
+    path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Template '{template_id}' no encontrado.")
+    with open(path) as f:
+        existing = json.load(f)
+    data = template.model_dump()
+    # Preservar campos de sistema
+    data["id"]                  = existing["id"]
+    data["created_at"]          = existing.get("created_at", "")
+    data["api_key"]             = existing.get("api_key", _sec.token_urlsafe(20))
+    data["require_api_key"]     = existing.get("require_api_key", False)
+    data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
+    data["updated_at"]          = datetime.now(timezone.utc).isoformat()
+    # Detectar variables {varname} en los textos
+    vars_found = set()
+    for t in data.get("texts", []):
+        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+            vars_found.add(m)
+    data["variables"] = sorted(vars_found)
+    with open(path, "w") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info(f"📋 Template API actualizado: {template_id} | template_name={data.get('template_name','')[:60]}")
+    return {"ok": True, "id": template_id, "variables": data["variables"]}
+
+
 @render_router.get("/api/templates")
 async def list_api_templates():
     """Lista todos los templates de API guardados."""
@@ -1069,7 +1100,9 @@ async def render_api_template(template_id: str, request: Request):
             content    = buf.getvalue(),
             media_type = "image/jpeg",
             headers    = {
-                "Cache-Control":           "public, max-age=30",
+                "Cache-Control":           "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma":                  "no-cache",
+                "Expires":                 "0",
                 "X-TextOnFlow-Template":   template_id,
                 "X-TextOnFlow-Variables":  ",".join(vars_dict.keys()) if vars_dict else "",
             }
