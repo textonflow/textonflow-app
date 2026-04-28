@@ -1,4 +1,3 @@
-# deploy-trigger: 1777410326
 """
 routers/render.py — Motor de renderizado PIL + templates + endpoints de imagen.
 Incluye: /generate-multi, /render-async, /render-jobs, /api/templates/*, 
@@ -17,7 +16,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
@@ -74,7 +73,7 @@ def _sb_key() -> str:
     return os.getenv("SUPABASE_SERVICE_ROLE_KEY") or _b64.b64decode(
         "c2Jfc2VjcmV0X1gxWEloNVp0ekEyTFd0VG9pV2thUGdfc21Pd1ZiM0Y=").decode()
 
-def _upload_output_to_supabase(filepath: str, filename: str) -> str | None:
+def _upload_output_to_supabase(filepath: str, filename: str) -> Optional[str]:
     """Sube la imagen renderizada a Supabase Storage. Retorna URL pública o None si falla."""
     try:
         import urllib.request as _ureq
