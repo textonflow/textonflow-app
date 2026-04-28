@@ -155,14 +155,6 @@ os.makedirs("fonts", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
 from stats import _read_stats, _increment_images_generated
-
-def _reset_time_str() -> str:
-    """Tiempo hasta medianoche UTC en formato 'Xh Ym'."""
-    now      = datetime.utcnow()
-    midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-    secs     = int((midnight - now).total_seconds())
-    return f"{secs // 3600}h {(secs % 3600) // 60}m"
-
 from utils import _get_base_url
 
 # Directorio donde se guardan los templates de contador regresivo
@@ -248,171 +240,6 @@ app.mount("/fonts", StaticFiles(directory="fonts"), name="fonts")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-# ─── Páginas legales y de ayuda ───────────────────────────────────────────────
-@app.get("/manual")
-async def manual_page():
-    return FileResponse("static/manual.html", media_type="text/html")
-
-@app.get("/privacidad")
-async def privacidad_page():
-    return FileResponse("static/privacidad.html", media_type="text/html")
-
-@app.get("/terminos")
-async def terminos_page():
-    return FileResponse("static/terminos.html", media_type="text/html")
-
-@app.get("/docs")
-async def docs_page():
-    return FileResponse("static/docs.html", media_type="text/html")
-
-@app.get("/.well-known/sg-hosted-ping")
-async def sg_ping():
-    return Response(content="OK", media_type="text/plain")
-
-@app.get("/robots.txt")
-async def robots():
-    content = """User-agent: *
-Allow: /
-Sitemap: https://www.textonflow.com/sitemap.xml
-"""
-    return Response(content=content, media_type="text/plain")
-
-@app.get("/faq")
-async def faq_page():
-    return FileResponse("static/faq.html", media_type="text/html")
-
-@app.get("/precios")
-async def precios_page():
-    return FileResponse("static/precios.html", media_type="text/html")
-
-@app.get("/casos")
-async def casos_page():
-    return FileResponse("static/casos.html", media_type="text/html")
-
-@app.get("/sitemap.xml")
-async def sitemap():
-    base = "https://www.textonflow.com"
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>{base}/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>{base}/manual</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>{base}/faq</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>{base}/privacidad</loc><lastmod>{today}</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>{base}/terminos</loc><lastmod>{today}</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>{base}/docs</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>{base}/precios</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>{base}/casos</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-</urlset>"""
-    return Response(content=xml, media_type="application/xml")
-
-
-# ─── Proxy de imágenes (evita restricciones CORS del navegador) ───────────────
-@app.get("/proxy-image")
-def proxy_image(url: str):
-    try:
-        resp = requests.get(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; TextOnFlow/1.0)"},
-            timeout=15,
-            allow_redirects=True,
-        )
-        resp.raise_for_status()
-        content_type = resp.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
-        return Response(
-            content=resp.content,
-            media_type=content_type,
-            headers={"Cache-Control": "public, max-age=3600"},
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"No se pudo cargar la imagen: {e}")
-
-
-# ─── Motor de renderizado (importado de renderer.py) ────────────────────────
-from renderer import (
-    INSTAGRAM_GRADIENT, NEGRO_GRADIENT, METALICO_GRADIENT,
-    make_gradient_image, apply_gradient_bg, apply_gradient_stroke,
-    apply_filter, apply_vignette,
-    parse_color, parse_color_with_opacity,
-    get_emoji_source, apply_blend_mode,
-    _apply_overlay_mask, _apply_overlay_border,
-    _render_canvas_shape, _auto_fit_overlay,
-    _wrap_words, draw_text_with_effects,
-    get_font_path, _format_countdown,
-)
-
-# ─── Endpoints ────────────────────────────────────────────────────────────────
-@app.get("/")
-async def root():
-    return FileResponse("index.html", media_type="text/html")
-
-@app.get("/dashboard")
-async def dashboard():
-    return FileResponse("static/dashboard.html", media_type="text/html")
-
-@app.get("/status")
-async def status():
-    noto_path = get_noto_emoji_font()
-    return {
-        "message": "TextOnFlow Image Personalizer",
-        "status": "running",
-        "version": "6.0.0",
-        "noto_emoji_available": noto_path is not None,
-        "noto_emoji_path": noto_path,
-        "docs": "/docs",
-    }
-
-
-@app.get("/health")
-async def health():
-    """Health check rápido — solo verifica que la app esté viva."""
-    db_ok = False
-    db_err = ""
-    try:
-        conn = get_db()
-        if conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1")
-            db_ok = True
-    except Exception as e:
-        db_err = str(e)[:100]
-    return {
-        "status": "ok",
-        "version": "8.1.0",
-        "numpy": _NUMPY_OK,
-        "db": db_ok,
-        "psycopg2": _PSYCOPG2_OK,
-        "db_url_prefix": SUPABASE_DATABASE_URL[:40] if SUPABASE_DATABASE_URL else "NOT SET",
-        "db_err": db_err,
-    }
-
-
-@app.get("/api/stats")
-async def get_stats():
-    """Devuelve estadísticas públicas de uso de TextOnFlow."""
-    data = _read_stats()
-    return {
-        "images_generated": data.get("images_generated", 0),
-    }
-
-@app.get("/api/usage")
-async def get_usage(request: Request):
-    """Uso diario de la IP actual (rate limiting)."""
-    if _is_superadmin(request):
-        return {"used": 0, "limit": 0, "plan": "superadmin", "exceeded": False,
-                "reset_in": "—", "pct": 0, "superadmin": True}
-    ip   = _get_client_ip(request)
-    used, limit, exceeded = _check_rate_limit(ip)
-    pct  = min(100, round(used / limit * 100)) if limit else 0
-    return {
-        "used":       used,
-        "limit":      limit,
-        "plan":       "free",
-        "exceeded":   exceeded,
-        "reset_in":   _reset_time_str(),
-        "pct":        pct,
-        "superadmin": False,
-    }
 
 
 @app.post("/api/auth/login")
@@ -461,36 +288,6 @@ async def admin_set_settings(body: _AdminSettingsBody, request: Request):
     logger.info(f"⚙️ Superadmin actualizó límite Free → {body.free_limit}")
     return {"ok": True, "free_limit": PLAN_LIMITS["free"]}
 
-@app.get("/admin-panel", include_in_schema=False)
-async def admin_panel_page():
-    """Panel de administración con gestión visual de usuarios."""
-    panel_path = os.path.join("static", "admin-panel.html")
-    if os.path.exists(panel_path):
-        return FileResponse(panel_path, media_type="text/html")
-    raise HTTPException(status_code=404, detail="Panel no encontrado.")
-
-@app.get("/superadministrador", include_in_schema=False)
-async def superadmin_page():
-    """Ruta secreta que sirve la app con flag para abrir el login admin."""
-    from fastapi.responses import HTMLResponse
-    html_path = "index.html"
-    if not os.path.exists(html_path):
-        raise HTTPException(status_code=404)
-    with open(html_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    # Inyectar script que abre el modal al cargar
-    inject = "<script>window._OPEN_SA_ON_LOAD=true;</script>"
-    content = content.replace("</body>", inject + "</body>", 1)
-    return HTMLResponse(content=content)
-
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    favicon_path = os.path.join("static", "favicon.png")
-    if os.path.exists(favicon_path):
-        return FileResponse(favicon_path, media_type="image/png")
-    return Response(status_code=204)
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 #  AUTH DE USUARIOS (Phase 2)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -518,6 +315,10 @@ app.include_router(render_router)
 # ─── Router AI ─────────────────────────────────────────────────────────────────
 from routers.ai import ai_router
 app.include_router(ai_router)
+
+# ─── Router Páginas (estáticas, health, stats, proxy-image) ─────────────────
+from routers.pages import pages_router
+app.include_router(pages_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
