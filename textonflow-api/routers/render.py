@@ -82,7 +82,8 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     # Cargar imagen
     if request.template_name.startswith(("http://", "https://")):
         local_path = None
-        if "/storage/" in request.template_name:
+        # Supabase Storage URLs → siempre descargar via HTTP (no leer del disco local)
+        if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
             fname = request.template_name.split("/storage/")[-1].split("?")[0]
             local_path = os.path.join(STORAGE_DIR, fname)
         elif "/static/temp/" in request.template_name:
@@ -434,8 +435,9 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             if request.template_name.startswith(("http://", "https://")):
                 # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
                 # (Railway bloquea peticiones HTTPS circulares al mismo host)
+                # EXCEPCIÓN: URLs de Supabase Storage → siempre descargar via HTTP
                 local_path = None
-                if "/storage/" in request.template_name:
+                if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
                     fname = request.template_name.split("/storage/")[-1].split("?")[0]
                     local_path = os.path.join(STORAGE_DIR, fname)
                 elif "/static/temp/" in request.template_name:
@@ -443,7 +445,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                     local_path = os.path.join("static", "temp", fname)
                 if local_path:
                     if not os.path.exists(local_path):
-                        raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage: {os.path.basename(local_path)}")
+                        raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage local. Si cambiaste la imagen base, re-súbela en el editor para obtener una URL permanente de Supabase Storage.")
                     logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
                     image = Image.open(local_path).convert("RGBA")
                 else:
