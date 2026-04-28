@@ -1,3 +1,4 @@
+# deploy-trigger: 1777410326
 """
 routers/render.py — Motor de renderizado PIL + templates + endpoints de imagen.
 Incluye: /generate-multi, /render-async, /render-jobs, /api/templates/*, 
