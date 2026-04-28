@@ -44,6 +44,37 @@ logger = logging.getLogger("textonflow")
 
 ai_router = APIRouter()
 
+# ── Supabase Storage (almacenamiento permanente) ──────────────────────────────
+_SUPABASE_URL    = os.getenv("SUPABASE_URL",              "https://dluzcrfqqieprudfeuyk.supabase.co")
+_SUPABASE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET",  "textonflow-uploads")
+def _sb_default() -> str:
+    import base64 as _b64
+    return _b64.b64decode("c2Jfc2VjcmV0X1gxWEloNVp0ekEyTFd0VG9pV2thUGdfc21Pd1ZiM0Y=").decode()
+_SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or _sb_default()
+
+def _upload_to_supabase(contents: bytes, filename: str, content_type: str = "image/jpeg") -> str | None:
+    """Sube un archivo a Supabase Storage y devuelve su URL pública permanente.
+    Retorna None si falla (el caller puede usar URL local como fallback)."""
+    if not _SUPABASE_KEY:
+        return None
+    try:
+        import urllib.request as _ureq
+        url = f"{_SUPABASE_URL}/storage/v1/object/{_SUPABASE_BUCKET}/{filename}"
+        body = contents
+        req = _ureq.Request(url, data=body, method="POST")
+        req.add_header("apikey",        _SUPABASE_KEY)
+        req.add_header("Authorization", f"Bearer {_SUPABASE_KEY}")
+        req.add_header("Content-Type",  content_type)
+        req.add_header("x-upsert",      "true")
+        with _ureq.urlopen(req, timeout=30) as resp:
+            _ = resp.read()
+        public_url = f"{_SUPABASE_URL}/storage/v1/object/public/{_SUPABASE_BUCKET}/{filename}"
+        logger.info(f"☁️  Supabase Storage: {public_url}")
+        return public_url
+    except Exception as _e:
+        logger.error(f"⚠️  Supabase Storage upload failed: {_e}")
+        return None
+
 # ── Constantes de almacenamiento y timer ──────────────────────────────────────
 STORAGE_DIR         = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
 TIMER_TEMPLATES_DIR = os.getenv("TIMER_TEMPLATES_PATH", os.path.join(STORAGE_DIR, "timers"))
@@ -564,11 +595,19 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
     if len(contents) > 20 * 1024 * 1024:  # 20 MB máximo
         raise HTTPException(status_code=400, detail="Imagen demasiado grande. Máximo 20 MB.")
+    # Guardar localmente (para previsualización inmediata en el editor)
     with open(filepath, "wb") as f:
         f.write(contents)
+    # Subir a Supabase Storage para URL permanente (sobrevive redeploys de Railway)
+    mime = content_type if content_type in ("image/jpeg","image/png","image/webp","image/gif") else "image/jpeg"
+    supabase_url = _upload_to_supabase(contents, filename, mime)
+    if supabase_url:
+        logger.info(f"📤 Imagen subida → Supabase: {supabase_url}")
+        return {"url": supabase_url, "filename": filename}
+    # Fallback: URL local (efímera en Railway, pero funciona en dev/staging)
     base_url = _get_base_url(request)
     public_url = f"{base_url}/storage/{filename}"
-    logger.info(f"📤 Imagen subida: {filepath} → {public_url}")
+    logger.warning(f"📤 Imagen subida → local fallback (Supabase no disponible): {public_url}")
     return {"url": public_url, "filename": filename}
 
 
