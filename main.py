@@ -4,6 +4,47 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Dict, List, Optional
 from pydantic import BaseModel
+from models import (
+    TextField,
+    CanvasShape,
+    ImageOverlay,
+    MultiTextRequest,
+    _AdminLoginBody,
+    _AdminSettingsBody,
+    _UserRegisterBody,
+    _UserLoginBody,
+    _UserUpdateBody,
+    _WebhookBody,
+    _ProjectCreate,
+    _ProjectUpdate,
+    _ForgotPasswordBody,
+    _ResetPasswordBody,
+    _SessionOpenBody,
+    _SessionCloseBody,
+    _AdminUserActionBody,
+    _CheckoutBody,
+    ApiTemplateRequest,
+    WebhookRenderRequest,
+    RefImage,
+    GenerateImageRequest,
+    GenerateTextRequest,
+    EnhancePromptRequest,
+    SaveAIImageRequest,
+    EditImageRequest,
+    QRRequest,
+    FeedbackRequest,
+    TimerStyle,
+    TimerTemplateCreate,
+    TimerTemplateResponse,
+    AssistantMessage,
+    AssistantRequest,
+    TranscriptRequest,
+    RatingRequest,
+    DesignLayoutRequest,
+    CopySuggestionsRequest,
+    BrandKitRequest,
+    ABVariantsRequest,
+)
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 from pilmoji import Pilmoji
 from pilmoji.source import TwitterEmojiSource, EmojiCDNSource
@@ -714,135 +755,6 @@ def proxy_image(url: str):
 
 
 # ─── Modelos ─────────────────────────────────────────────────────────────────
-class TextField(BaseModel):
-    text: str
-    x: int
-    y: int
-    font_size: int = 60
-    font_color: str = "#FFFFFF"
-    rotation: int = 0
-    skew_x: float = 0
-    skew_y: float = 0
-    # Tipo de relleno del fondo: "solid" | "gradient2" | "instagram"
-    background_color_type: str = "solid"
-    background_gradient_color2: str = "#FFFFFF"
-    background_gradient_angle: int = 135
-    # Tipo de borde: "solid" | "gradient2" | "instagram"
-    background_stroke_type: str = "solid"
-    background_stroke_gradient_color2: str = "#FFFFFF"
-    background_stroke_gradient_angle: int = 135
-    # Estilo de línea del borde: "solid" | "dashed" | "dotted"
-    background_stroke_dash: str = "solid"
-    line_spacing: int = 10
-    alignment: str = "left"
-    text_align: str = "center"
-    font_name: str = "Arial-Bold"
-    shadow_enabled: bool = False
-    shadow_color: str = "#000000"
-    shadow_opacity: int = 100
-    shadow_offset_x: int = 2
-    shadow_offset_y: int = 2
-    shadow_blur: int = 0   # Gaussian blur radius (px) — 0 = sombra dura, >0 = sombra difusa
-    shadow_blend_mode: str = "normal"  # Modos Photoshop: normal, multiply, darken, color_burn, linear_burn, overlay, soft_light, screen
-    stroke_enabled: bool = False
-    stroke_color: str = "#000000"
-    stroke_opacity: int = 100
-    stroke_width: int = 2
-    background_enabled: bool = False
-    background_color: str = "#000000"
-    background_opacity: int = 80
-    background_padding_top: Optional[int] = 10
-    background_padding_right: Optional[int] = 10
-    background_padding_bottom: Optional[int] = 10
-    background_padding_left: Optional[int] = 10
-    background_radius: int = 0
-    background_stroke_color: str = "#FFFFFF"
-    background_stroke_width: int = 0
-    border_padding_top: Optional[int] = 10
-    border_padding_right: Optional[int] = 20
-    border_padding_bottom: Optional[int] = 10
-    border_padding_left: Optional[int] = 20
-    warp_style: str = "none"   # none|arc|arc_lower|arc_upper|arch|bulge|shell_lower|shell_upper|flag|wave|fish|rise|fisheye|inflate|squeeze|twist
-    warp_bend: int = 0         # -100 a 100
-    # ── Text Wrap automático ──────────────────────────────────────────────────
-    text_wrap_enabled: bool = False   # Activa salto de línea automático por palabra
-    text_wrap_padding: int = 60       # Margen L/R en px (el texto ocupa ancho - 2*padding)
-    # ── Contador regresivo (opcional) ────────────────────────────────────────
-    countdown_mode: Optional[str] = None            # "event" | "urgency"
-    countdown_event_end_utc: Optional[str] = None   # "YYYY-MM-DDTHH:MM:SSZ"
-    countdown_urgency_hours: Optional[float] = None
-    countdown_ts_var: Optional[str] = None          # nombre del custom field ManyChat
-    countdown_format: Optional[str] = "HH:MM:SS"   # "HH:MM:SS" | "DD:HH:MM:SS" | "HH:MM"
-    countdown_expired_text: Optional[str] = None
-    countdown_urgency_color: Optional[str] = None   # color cuando faltan N horas
-    countdown_urgency_threshold_h: Optional[float] = 3.0  # horas umbral (default 3)
-
-
-class CanvasShape(BaseModel):
-    id: str = ""
-    shape_type: str = "rect"   # rect | square | ellipse | circle | star12
-    x: int = 0
-    y: int = 0
-    width: int = 100
-    height: int = 100
-    rotation: float = 0
-    fill_color: str = "#667eea"
-    fill_opacity: float = 0.8
-    stroke_color: str = "#000000"
-    stroke_width: int = 0
-    stroke_opacity: float = 1.0
-    z_index: int = 0
-    cover_blur: int = 0
-
-
-class ImageOverlay(BaseModel):
-    src: str          # base64 data URL (data:image/png;base64,...) o URL http
-    x: int = 0
-    y: int = 0
-    width: int = 100
-    height: int = 100
-    opacity: float = 1.0
-    rotation: float = 0
-    mask_type: str = "none"   # none | circle | ellipse | square | rect | star12
-    mask_auto_fit: bool = True
-    mask_radius: int = 0      # radio de esquinas para mask_type="rect"
-    # Borde
-    mask_border_width: int = 0
-    mask_border_color: str = "#ffffff"
-    mask_border_opacity: int = 100
-    # Sombra
-    mask_shadow_enabled: bool = False
-    mask_shadow_color: str = "#000000"
-    mask_shadow_opacity: int = 70
-    mask_shadow_blur: int = 8
-    mask_shadow_x: int = 0
-    mask_shadow_y: int = 4
-
-
-class MultiTextRequest(BaseModel):
-    template_name: str
-    texts: List[TextField]
-    vars: Optional[Dict[str, str]] = None
-    overlays: Optional[List[ImageOverlay]] = []
-    shapes: Optional[List[CanvasShape]] = []
-    filter_name: str = "none"
-    render_scale: int = 1  # 1=rápido (ManyChat), 2=alta calidad (editor)
-    watermark: bool = False  # Sello "textonflow.com" en esquina inferior derecha
-    # ── Viñeta ──
-    vignette_enabled: bool        = False
-    vignette_color:   str         = "#000000"  # hex color
-    vignette_opacity: float       = 0.6        # 0.0-1.0
-    vignette_size:    float       = 50.0       # 0-100 (qué tanto cubre)
-    vignette_sides:   Optional[List[str]] = None  # ['top','right','bottom','left','tl','tr','bl','br']
-    vignette_filter:  str         = "none"     # tono: none|sepia|warm|cold|violet|green|red|golden|cyan
-    # ── Multi-formato: artboard crop/zoom ─────────────────────────────────────
-    format_width:  Optional[int]   = None  # Ancho del artboard del formato (px)
-    format_height: Optional[int]   = None  # Alto del artboard del formato (px)
-    img_pan_x:     float           = 0.0   # Offset X de la imagen en el artboard
-    img_pan_y:     float           = 0.0   # Offset Y de la imagen en el artboard
-    img_zoom:      float           = 1.0   # Factor de zoom de la imagen
-
-
 INSTAGRAM_GRADIENT = [
     (240, 148,  51, 255),
     (230, 104,  60, 255),
@@ -2173,10 +2085,6 @@ async def get_usage(request: Request):
     }
 
 
-class _AdminLoginBody(BaseModel):
-    email: str
-    password: str
-
 @app.post("/api/auth/login")
 async def admin_login(body: _AdminLoginBody):
     """Login de superadmin — devuelve un token de sesión de 30 días."""
@@ -2211,9 +2119,6 @@ async def admin_get_settings(request: Request):
     if not _is_superadmin(request):
         raise HTTPException(status_code=403, detail="Acceso denegado.")
     return {"free_limit": PLAN_LIMITS["free"]}
-
-class _AdminSettingsBody(BaseModel):
-    free_limit: int
 
 @app.post("/api/admin/settings")
 async def admin_set_settings(body: _AdminSettingsBody, request: Request):
@@ -2268,17 +2173,6 @@ USER_PLAN_LIMITS = {
 }
 TRIAL_DAYS = 7   # duración del trial en días
 JSON_EXPORT_PLANS = {"starter", "agency", "admin"}  # planes que permiten export JSON
-
-class _UserRegisterBody(BaseModel):
-    email: str
-    password: str
-
-class _UserLoginBody(BaseModel):
-    email: str
-    password: str
-
-class _UserUpdateBody(BaseModel):
-    gemini_api_key: Optional[str] = None
 
 def _get_current_user(request: Request) -> Optional[dict]:
     """Lee el JWT del header Authorization: Bearer <token> y devuelve el payload."""
@@ -2617,9 +2511,6 @@ async def get_user_webhook(request: Request):
         row = cur.fetchone()
     return {"webhook_url": row["webhook_url"] if row else None}
 
-class _WebhookBody(BaseModel):
-    webhook_url: Optional[str] = None
-
 @app.put("/user/webhook", tags=["webhooks"],
          summary="Configurar webhook URL",
          response_description="Confirmación de actualización")
@@ -2643,16 +2534,6 @@ async def set_user_webhook(body: _WebhookBody, request: Request):
 
 
 # ─── Proyectos ─────────────────────────────────────────────────────────────────
-
-class _ProjectCreate(BaseModel):
-    name: str = "Sin título"
-    canvas_json: dict = {}
-    image_url: Optional[str] = None
-
-class _ProjectUpdate(BaseModel):
-    name: Optional[str] = None
-    canvas_json: Optional[dict] = None
-    image_url: Optional[str] = None
 
 @app.post("/projects", tags=["projects"], status_code=201,
           summary="Crear proyecto")
@@ -2766,13 +2647,6 @@ async def delete_project(project_id: str, request: Request):
 
 
 # ─── Recuperación de contraseña ───────────────────────────────────────────────
-
-class _ForgotPasswordBody(BaseModel):
-    email: str
-
-class _ResetPasswordBody(BaseModel):
-    token: str
-    new_password: str
 
 @app.post("/user/forgot-password")
 async def user_forgot_password(body: _ForgotPasswordBody):
@@ -2901,11 +2775,6 @@ async def user_track_copy(request: Request):
 
 # ─── Image Session Tracking ───────────────────────────────────────────────────
 
-class _SessionOpenBody(BaseModel):
-    session_key: str
-    image_name: str
-    image_type: str = "url"
-
 @app.post("/user/session/open")
 async def image_session_open(body: _SessionOpenBody, request: Request):
     """Registra apertura de una sesión de imagen (anónimo o autenticado)."""
@@ -2930,9 +2799,6 @@ async def image_session_open(body: _SessionOpenBody, request: Request):
     except Exception as e:
         logger.warning(f"session/open error: {e}")
     return {"ok": True}
-
-class _SessionCloseBody(BaseModel):
-    session_key: str
 
 @app.post("/user/session/close")
 async def image_session_close(body: _SessionCloseBody, request: Request):
@@ -3118,9 +2984,6 @@ async def admin_global_stats(request: Request):
         "users_by_day": users_by_day,
         "top_users": top_users,
     }
-
-class _AdminUserActionBody(BaseModel):
-    user_id: str
 
 @app.post("/api/admin/users/toggle-active")
 async def admin_toggle_active(body: _AdminUserActionBody, request: Request):
@@ -3324,11 +3187,6 @@ _PLAN_PRICE_MAP = {
     "starter": STRIPE_STARTER_PRICE_ID,
     "agency":  STRIPE_AGENCY_PRICE_ID,
 }
-
-class _CheckoutBody(BaseModel):
-    plan: str          # "starter" | "agency"
-    success_url: Optional[str] = None
-    cancel_url:  Optional[str] = None
 
 @app.post("/stripe/checkout")
 async def stripe_checkout(body: _CheckoutBody, request: Request):
@@ -4358,28 +4216,6 @@ def _read_template_stats(template_id: str) -> dict:
             pass
     return {"total": 0, "today": 0, "last_render": None, "by_day": {}}
 
-class ApiTemplateRequest(BaseModel):
-    name: str
-    template_name: str
-    texts: List[TextField] = []
-    shapes: Optional[List[CanvasShape]] = []
-    overlays: Optional[List[ImageOverlay]] = []
-    filter_name: str = "none"
-    render_scale: int = 2
-    watermark: bool = False
-    vignette_enabled: bool = False
-    vignette_color: str = "#000000"
-    vignette_opacity: float = 0.6
-    vignette_size: float = 50.0
-    vignette_sides: Optional[List[str]] = None
-    vignette_filter: str = "none"
-    format_width: Optional[int] = None
-    format_height: Optional[int] = None
-    img_pan_x: float = 0.0
-    img_pan_y: float = 0.0
-    img_zoom: float = 1.0
-
-
 @app.post("/api/templates")
 async def save_api_template(template: ApiTemplateRequest):
     """Guarda el diseño actual como template de API. Devuelve ID + URL de render."""
@@ -4589,13 +4425,6 @@ async def render_api_template(template_id: str, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class WebhookRenderRequest(BaseModel):
-    template_id: str
-    variables: Dict[str, str] = {}
-    secret: Optional[str] = None
-    output_format: str = "url"  # "url" | "base64"
-
-
 @app.post("/webhook/render")
 async def webhook_render(req: WebhookRenderRequest, request: Request):
     """
@@ -4766,13 +4595,6 @@ IMAGEN_STYLES = {
     "Pintura al óleo":         "classical oil painting, old masters technique, rich brushwork",
 }
 
-class RefImage(BaseModel):
-    data: str       # base64 sin prefijo data:URL
-    mime_type: str  # image/jpeg, image/png, image/webp
-
-# ── Mapa de referencias populares → descripción de estilo visual ────────────
-# Permite que el usuario escriba "estilo simpsons" y Gemini reciba una
-# descripción artística en lugar del nombre de la franquicia registrada.
 _STYLE_MAP = [
     # Animación americana
     (r'\blos\s+simpsons?\b',            'estilo de dibujos animados americanos con personajes de piel amarilla brillante, ojos grandes redondos, contornos negros gruesos y paleta de colores vivos'),
@@ -4841,13 +4663,6 @@ def _rewrite_prompt(prompt: str) -> str:
     # Limpiar "estilo estilo" redundante cuando el usuario ya escribió "estilo ..."
     result = re.sub(r'\bestilo\s+estilo\b', 'estilo', result, flags=re.IGNORECASE)
     return result
-
-
-class GenerateImageRequest(BaseModel):
-    prompt: str
-    aspect_ratio: str = "1:1"
-    style: Optional[str] = None
-    reference_images: Optional[List[RefImage]] = []
 
 
 def _gemini_generate_image_worker(job_id: str, api_key: str, payload: dict):
@@ -4968,10 +4783,6 @@ async def get_image_job(job_id: str):
 
 
 # ── Redactor IA — generador/mejorador de texto para capas ────────────────────
-class GenerateTextRequest(BaseModel):
-    text: str
-    tone: str = "Profesional"
-
 _REDACTOR_SYSTEM = (
     "Eres un redactor creativo especializado en textos cortos para imágenes de marketing "
     "en redes sociales y campañas de ManyChat. Tu función es mejorar o generar el texto "
@@ -5034,10 +4845,6 @@ async def generate_text(req: GenerateTextRequest):
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
 
-
-class EnhancePromptRequest(BaseModel):
-    prompt: str
-    no_text: bool = False
 
 _ENHANCE_SYSTEM = (
     "Eres un experto en escribir prompts para generadores de imágenes con IA. "
@@ -5111,10 +4918,6 @@ async def enhance_prompt(req: EnhancePromptRequest):
 # ────────────────────────────────────────────────────────────────────────────
 
 
-class SaveAIImageRequest(BaseModel):
-    image_b64: str
-    mime_type: str = "image/png"
-
 @app.get("/storage/{filename}")
 async def serve_storage_file(filename: str):
     """Sirve archivos desde el directorio de almacenamiento persistente."""
@@ -5144,12 +4947,6 @@ async def save_ai_image(req: SaveAIImageRequest, request: Request):
 
 
 # ── Editar imagen con IA ──────────────────────────────────────────────────────
-class EditImageRequest(BaseModel):
-    image_b64: str
-    mime_type: str = "image/png"
-    instruction: str
-    reference_images: list = []
-
 @app.post("/api/edit-image")
 async def edit_image(req: EditImageRequest):
     """
@@ -5251,16 +5048,7 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
     return {"url": public_url, "filename": filename}
 
 
-
-
 # ─── QR Code generator ────────────────────────────────────────────────────────
-class QRRequest(BaseModel):
-    text:        str
-    dark_color:  str = "#000000"
-    light_color: str = "#ffffff"
-    bg_color:    str = "#ffffff"
-    padding:     int = 20
-
 @app.post("/api/qr")
 async def generate_qr(req: QRRequest):
     """Genera un QR como PNG base64 con fondo de color y padding."""
@@ -5302,11 +5090,6 @@ async def generate_qr(req: QRRequest):
     b64 = base64.b64encode(buf.getvalue()).decode()
     return {"image": f"data:image/png;base64,{b64}"}
 
-
-class FeedbackRequest(BaseModel):
-    name: str
-    email: str
-    message: str
 
 @app.post("/api/feedback")
 async def submit_feedback(req: FeedbackRequest):
@@ -5390,49 +5173,6 @@ async def submit_feedback(req: FeedbackRequest):
 # ══════════════════════════════════════════════════════════════════════════════
 # ⏱  CONTADOR REGRESIVO — Modelos y endpoints
 # ══════════════════════════════════════════════════════════════════════════════
-
-class TimerStyle(BaseModel):
-    font: str = "Doto"
-    font_size: int = 52
-    color: str = "#FFFFFF"
-    x: float = 50.0            # porcentaje del ancho (0-100)
-    y: float = 50.0            # porcentaje del alto  (0-100)
-    alignment: str = "center"  # "left" | "center" | "right"
-    format: str = "HH:MM:SS"   # "DD:HH:MM:SS" | "HH:MM:SS" | "HH:MM"
-    expired_text: str = "¡Oferta expirada!"
-    stroke_enabled: bool = True
-    stroke_color: str = "#000000"
-    stroke_width: int = 2
-    shadow_enabled: bool = False
-    shadow_color: str = "#000000"
-    shadow_offset_x: float = 2.0
-    shadow_offset_y: float = 2.0
-    # Text wrap para el mensaje expirado
-    expired_wrap_enabled: bool = True    # activo por defecto: siempre wrap el expirado
-    expired_wrap_padding: int = 60       # margen L/R px
-    expired_align: str = "center"        # alineación del mensaje expirado
-
-
-class TimerTemplateCreate(BaseModel):
-    template_name: str                  # nombre descriptivo
-    base_image_url: str                 # URL de la imagen base (puede ser /storage/...)
-    mode: str                           # "event" | "urgency"
-    # Modo evento: fecha fija DD/MM/AAAA HH:MM (hora local → se guarda como UTC)
-    event_date: Optional[str] = None    # "20/03/2026 18:00"
-    event_tz: Optional[str] = "America/Mexico_City"
-    # Modo urgencia: duración fija
-    urgency_hours: Optional[float] = None
-    style: TimerStyle = TimerStyle()
-    # Imagen diferente para cuando el contador expira (opcional)
-    expired_image_url: Optional[str] = None
-
-
-class TimerTemplateResponse(BaseModel):
-    template_id: str
-    live_url_event: Optional[str] = None    # URL lista para copiar (modo evento)
-    live_url_urgency: Optional[str] = None  # URL con variables (modo urgencia)
-    preview_seconds: int                    # segundos restantes al guardar (debug)
-
 
 def _sign_timer(template_id: str, extra: str = "") -> str:
     """Genera firma HMAC-SHA256 para URL de timer."""
@@ -5847,16 +5587,6 @@ _FLOWBOT_SYSTEM = (
 )
 
 
-class AssistantMessage(BaseModel):
-    role: str
-    content: str
-
-
-class AssistantRequest(BaseModel):
-    message: str
-    history: List[AssistantMessage] = []
-
-
 @app.post("/api/assistant")
 async def flowbot_chat(req: AssistantRequest):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -5902,16 +5632,6 @@ async def flowbot_chat(req: AssistantRequest):
         raise HTTPException(status_code=504, detail="Tiempo de espera agotado. Intenta de nuevo.")
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
-
-
-class TranscriptRequest(BaseModel):
-    name: str
-    email: str
-    history: List[AssistantMessage] = []
-
-
-class RatingRequest(BaseModel):
-    rating: int
 
 
 @app.post("/api/assistant/transcript")
@@ -6145,12 +5865,6 @@ REGLAS:
 - Para CTAs usa background_enabled: true con bg_box_radius: 10
 - Responde SOLO con el JSON, nada más"""
 
-class DesignLayoutRequest(BaseModel):
-    description: str
-    canvas_width: int = 1080
-    canvas_height: int = 1080
-    context: Optional[str] = None
-
 @app.post("/api/ai/design-layout")
 async def ai_design_layout(req: DesignLayoutRequest):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -6218,10 +5932,6 @@ Formato: {"suggestions": ["variación 1", "variación 2", "variación 3"]}
 - Sin comillas anidadas en las variaciones
 - Responde SOLO el JSON"""
 
-class CopySuggestionsRequest(BaseModel):
-    current_text: str
-    context: Optional[str] = None
-
 @app.post("/api/ai/copy-suggestions")
 async def ai_copy_suggestions(req: CopySuggestionsRequest):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -6272,9 +5982,6 @@ Devuelve ÚNICAMENTE un JSON con este formato:
 - Extrae exactamente 5 colores representativos (de más a menos prominente)
 - background_color: el color más claro / fondo ideal
 - Responde SOLO el JSON"""
-
-class BrandKitRequest(BaseModel):
-    image_url: str
 
 @app.post("/api/ai/brand-kit")
 async def ai_brand_kit(req: BrandKitRequest):
@@ -6342,10 +6049,6 @@ REGLAS:
 - Variante B: colores elegantes y sofisticados (dorado, gris oscuro, blanco)
 - Variante C: colores mínimos, fondo oscuro, texto limpio
 - Responde SOLO el JSON"""
-
-class ABVariantsRequest(BaseModel):
-    texts: list
-    context: Optional[str] = None
 
 @app.post("/api/ai/ab-variants")
 async def ai_ab_variants(req: ABVariantsRequest):
