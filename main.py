@@ -3942,8 +3942,16 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 logger.info(f"🔵 Descargando imagen: {request.template_name}")
                 session = build_retry_session()
                 response = session.get(request.template_name, timeout=15)
+                if response.status_code == 404:
+                    raise HTTPException(status_code=400, detail="La imagen ya no está disponible (404). Vuelve a cargar una imagen válida.")
                 response.raise_for_status()
-                image = Image.open(BytesIO(response.content)).convert("RGBA")
+                content_type = response.headers.get("Content-Type", "")
+                if "text/" in content_type or "html" in content_type:
+                    raise HTTPException(status_code=400, detail="La URL no apunta a una imagen válida. Vuelve a cargar la imagen.")
+                try:
+                    image = Image.open(BytesIO(response.content)).convert("RGBA")
+                except Exception as img_err:
+                    raise HTTPException(status_code=400, detail=f"No se pudo leer la imagen: {img_err}. Verifica que la URL sea una imagen válida.")
         else:
             template_path = os.path.join("templates", request.template_name)
             if not os.path.exists(template_path):
