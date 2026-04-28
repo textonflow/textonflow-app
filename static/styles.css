@@ -2769,8 +2769,8 @@
 
     /* Canvas-wrapper y canvas escalan al ancho */
     .canvas-wrapper {
-        max-width: min(100%, 600px);
-        width: 100% !important;
+        max-width: 100%;
+        /* width es controlado por JS (applyImageToCanvas/_applyFormatLayout) */
     }
     #preview-canvas {
         max-width: 100%;
