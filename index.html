@@ -2850,7 +2850,7 @@ function _renderObStep() {
     '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">' +
       (_obStep > 0 ? '<button onclick="_obPrev()" style="flex:0 0 auto;padding:10px 16px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#8080a0;font-size:13px;cursor:pointer;">← Atrás</button>' : '') +
       '<button onclick="_obNext()" style="flex:1;padding:12px 20px;background:linear-gradient(135deg,#6d28d9,#4f46e5);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity=\'.88\'" onmouseout="this.style.opacity=\'1\'">' + s.cta + '</button>' +
-      '<button onclick="_obSkip()" style="flex:0 0 auto;padding:10px 12px;background:none;border:none;color:#454560;font-size:12px;cursor:pointer;text-decoration:underline;">Cerrar</button>' +
+      '<button onclick="_obSkip()" style="flex:0 0 auto;padding:10px 12px;background:none;border:none;color:#fff;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7;">Cerrar</button>' +
     '</div>' +
     '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:7px 10px;background:#080812;border:1px solid #1a1a30;border-radius:8px;">' +
       '<input type="checkbox" id="ob-hide-chk" ' + (localStorage.getItem('tof_ob_hidden') ? 'checked' : '') + ' onchange="if(this.checked){localStorage.setItem(\'tof_ob_hidden\',\'1\');}else{localStorage.removeItem(\'tof_ob_hidden\');}" style="accent-color:#7c6eff;width:13px;height:13px;cursor:pointer;">' +
@@ -2882,10 +2882,11 @@ function _obFinish() {
   if (typeof showToast === 'function') showToast('✦ Tutorial disponible en el botón inferior del panel →', 3500);
 }
 
-// Mostrar onboarding a todos los visitantes salvo que lo hayan ocultado
+// Mostrar onboarding solo si ya aceptó términos (no interrumpir ese flujo)
 (function _checkOnboarding(){
   var hidden = localStorage.getItem('tof_ob_hidden');
-  if (!hidden) {
+  var termsAccepted = localStorage.getItem('tof_terms_v2');
+  if (!hidden && termsAccepted) {
     setTimeout(showOnboarding, 1200);
   }
 })();
