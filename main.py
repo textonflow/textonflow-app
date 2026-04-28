@@ -47,7 +47,7 @@ except ImportError:
 
 try:
     from passlib.context import CryptContext
-    from jose import JWTError, jwt
+    from jose import jwt
     _AUTH_OK = True
 except ImportError:
     _AUTH_OK = False
