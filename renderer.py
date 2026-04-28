@@ -21,7 +21,7 @@ except ImportError:
     Pilmoji = None
     EmojiCDNSource = None
 
-from fonts import FONT_MAPPING, FONT_SIZE_SCALE, RetryTwitterEmojiSource
+from fonts import FONT_MAPPING, RetryTwitterEmojiSource
 from models import TextField, CanvasShape
 
 logger = logging.getLogger("textonflow")
