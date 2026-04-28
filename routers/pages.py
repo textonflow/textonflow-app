@@ -196,6 +196,41 @@ def proxy_image(url: str):
         raise HTTPException(status_code=400, detail=f"No se pudo cargar la imagen: {e}")
 
 
+# ─── Endpoint de descarga de estáticos (usado por Railway en startup) ─────────
+
+_DOWNLOAD_FILES = {
+    "app.js":              "static/app.js",
+    "styles.css":          "static/styles.css",
+    "index.html":          "index.html",
+    "favicon.png":         "static/favicon.png",
+    "logo-blanco.webp":    "static/logo-blanco.webp",
+    "logo-negro.webp":     "static/logo-negro.webp",
+    "logo-negro-new.png":  "static/logo-negro-new.png",
+    "logo-blanco-new.png": "static/logo-blanco-new.png",
+    "manual.html":         "static/manual.html",
+    "privacidad.html":     "static/privacidad.html",
+    "terminos.html":       "static/terminos.html",
+    "faq.html":            "static/faq.html",
+    "docs.html":           "static/docs.html",
+    "precios.html":        "static/precios.html",
+    "casos.html":          "static/casos.html",
+    "previews/biblica.jpg":  "static/previews/biblica.jpg",
+    "previews/plumilla.jpg": "static/previews/plumilla.jpg",
+}
+
+@pages_router.get("/api/download")
+async def download_index():
+    return {"files": list(_DOWNLOAD_FILES.keys()), "status": "ok"}
+
+@pages_router.get("/api/download/{filepath:path}")
+async def download_static(filepath: str):
+    """Sirve archivos estáticos para que Railway los descargue en startup."""
+    local = _DOWNLOAD_FILES.get(filepath)
+    if not local or not os.path.exists(local):
+        raise HTTPException(status_code=404, detail=f"Archivo no encontrado: {filepath}")
+    return FileResponse(local)
+
+
 # ─── Páginas de administración ────────────────────────────────────────────────
 
 @pages_router.get("/admin-panel", include_in_schema=False)
