@@ -2784,7 +2784,7 @@
         overflow-y: visible;
         border-left: none;
         border-top: 1px solid var(--border);
-        padding: 12px 12px 80px 12px;
+        padding: 12px 12px 16px 12px;
     }
 
     /* Acordeón: targets de toque más altos */
@@ -4043,10 +4043,6 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
         padding: 14px 20px !important;
     }
 
-    /* Panel de controles: extra bottom padding para que el sticky bar no tape nada */
-    .controls-panel {
-        padding-bottom: 16px !important;
-    }
 }
 
 /* ══ TEMAS DE FONDO (Oscuro / Gris / Blanco) — toda la pantalla ══ */
