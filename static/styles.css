@@ -4248,3 +4248,85 @@ body.tof-bg-dark .canvas-area {
         flex-shrink: 0 !important;
     }
 }
+
+/* ══════════════════════════════════════════════════════════
+   BLOQUES 5-6: Polish móvil
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* B5 — Separación extra al final del panel de controles para
+       que el último acordeón no quede tapado por el botón sticky */
+    .controls-panel {
+        padding-bottom: calc(110px + env(safe-area-inset-bottom, 12px)) !important;
+    }
+
+    /* B5 — Etiqueta "Visualizar" sticky: sube sobre safe-area */
+    #canvas-gen-bar {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* B6 — Sliders: track más alto, thumb más grande para dedo */
+    input[type="range"] {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        height: 28px !important;
+        background: transparent !important;
+        touch-action: pan-x !important;  /* scroll vertical no interfiere */
+        cursor: pointer !important;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px !important;
+        border-radius: 3px !important;
+        background: linear-gradient(90deg, #6366f1 var(--val, 50%), #2d2d4a var(--val, 50%)) !important;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none !important;
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 50% !important;
+        background: #6366f1 !important;
+        border: 2.5px solid #fff !important;
+        box-shadow: 0 1px 6px rgba(99,102,241,.5) !important;
+        margin-top: -8px !important;
+        cursor: pointer !important;
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 50% !important;
+        background: #6366f1 !important;
+        border: 2.5px solid #fff !important;
+        box-shadow: 0 1px 6px rgba(99,102,241,.5) !important;
+        cursor: pointer !important;
+    }
+    input[type="range"]::-moz-range-track {
+        height: 6px !important;
+        border-radius: 3px !important;
+        background: #2d2d4a !important;
+    }
+
+    /* B6 — Inputs numéricos: texto más grande, fácil de tocar */
+    .controls-panel input[type="number"],
+    .controls-panel input[inputmode="numeric"] {
+        font-size: 16px !important;   /* evita zoom automático en iOS */
+        height: 38px !important;
+        min-width: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+
+    /* B6 — Evitar zoom automático en iOS en TODOS los inputs */
+    .controls-panel input[type="text"],
+    .controls-panel input[type="number"],
+    .controls-panel select,
+    .controls-panel textarea {
+        font-size: 16px !important;
+    }
+
+    /* B6 — Botones de acción (añadir texto, stickers, etc.):
+       más altos y separados para dedo */
+    .controls-panel .btn-sm,
+    .controls-panel button:not(.fmt-tab):not(.tab-close):not(.ctx-menu-item):not(.ai-ratio-card) {
+        min-height: 36px !important;
+    }
+}
