@@ -4151,3 +4151,40 @@ body.tof-bg-dark .canvas-area {
         min-height: 40px !important;
     }
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   MÓVIL — Canvas proporcional + botones AI en grid 2×2
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Canvas: width:100% fuerza escala proporcional en elementos <canvas>
+       (max-width:100% solo limita, no fuerza; height:auto solo funciona
+        cuando width está explícitamente establecido) */
+    #preview-canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+    .canvas-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Botones de resultado AI: 2 columnas en vez de 4 en fila
+       evita que el último botón quede cortado */
+    .ai-result-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .ai-use-btn,
+    .ai-regen-btn,
+    .ai-download-btn {
+        flex: unset !important;
+        width: 100% !important;
+    }
+}
