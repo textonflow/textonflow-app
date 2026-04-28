@@ -3799,13 +3799,20 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             else:
                 logger.info(f"🔵 Descargando imagen: {request.template_name}")
                 session = build_retry_session()
-                response = session.get(request.template_name, timeout=15)
+                _img_headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+                    "Referer": "https://manychat.com/",
+                }
+                response = session.get(request.template_name, timeout=15, headers=_img_headers)
+                logger.info(f"🔵 Respuesta imagen: {response.status_code} Content-Type={response.headers.get('Content-Type','?')}")
                 if response.status_code == 404:
-                    raise HTTPException(status_code=400, detail="La imagen ya no está disponible (404). Vuelve a cargar una imagen válida.")
+                    raise HTTPException(status_code=400, detail="La imagen ya no está disponible en el servidor origen (404). Descarga la imagen y vuelve a subirla directamente al editor.")
                 response.raise_for_status()
                 content_type = response.headers.get("Content-Type", "")
                 if "text/" in content_type or "html" in content_type:
-                    raise HTTPException(status_code=400, detail="La URL no apunta a una imagen válida. Vuelve a cargar la imagen.")
+                    raise HTTPException(status_code=400, detail="La URL no apunta a una imagen válida (se recibió HTML). Descarga la imagen y súbela directamente al editor.")
                 try:
                     image = Image.open(BytesIO(response.content)).convert("RGBA")
                 except Exception as img_err:
