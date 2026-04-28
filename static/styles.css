@@ -4084,3 +4084,70 @@ body.tof-bg-dark .canvas-area {
     background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px) !important;
     background-size: 22px 22px !important;
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   MÓVIL COMPACTO — Panel de controles y acordeones
+   Aplica a ≤ 480 px (iPhone y similares)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+    /* ── Controls panel: padding y fuente base reducidos ── */
+    .controls-panel {
+        font-size: 13px !important;
+        padding: 8px 8px 80px 8px !important;
+    }
+
+    /* ── Acordeón headers: altura mínima reducida ── */
+    .acc-header {
+        min-height: 40px !important;
+        padding: 7px 10px !important;
+    }
+    .acc-title {
+        gap: 5px !important;
+        font-size: 12px !important;
+    }
+    .acc-icon { width: 14px !important; height: 14px !important; }
+    .acc-icon svg { width: 14px !important; height: 14px !important; }
+    .acc-add-btn {
+        font-size: 12px !important;
+        min-width: 20px !important;
+        height: 20px !important;
+    }
+    .acc-chevron { font-size: 10px !important; }
+
+    /* ── Accordion body: padding reducido ── */
+    .acc-body {
+        padding: 5px 8px 5px !important;
+    }
+
+    /* ── Range inputs más delgados ── */
+    input[type="range"] {
+        height: 22px !important;
+        margin: 1px 0 !important;
+    }
+
+    /* ── Font picker compacto ── */
+    .font-picker-btn {
+        padding: 5px 8px !important;
+        min-height: 32px !important;
+    }
+    .font-picker-dropdown {
+        max-height: 220px !important;
+    }
+
+    /* ── API de Render Dinámico ── */
+    .dapi-header { padding: 7px 10px !important; }
+    .dapi-title  { font-size: 11px !important; }
+    .dapi-badge  { font-size: 8px !important; padding: 1px 5px !important; }
+
+    /* ── Sello textonflow.com row ── */
+    #tof-sello-hdr { padding: 6px 10px !important; }
+    #tof-sello-opts { font-size: 11px !important; }
+
+    /* ── IA Core acordeón (fondo especial) ── */
+    #acc-ia-core .acc-header {
+        padding: 7px 10px !important;
+        min-height: 40px !important;
+    }
+}
