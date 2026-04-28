@@ -15,4 +15,5 @@ bcrypt==4.0.1
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 stripe==10.5.0
-# cache-bust: 2026-04-28
+
+# FORCE_REBUILD=20260428_221734
