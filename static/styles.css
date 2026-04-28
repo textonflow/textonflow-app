@@ -4154,21 +4154,13 @@ body.tof-bg-dark .canvas-area {
 
 
 /* ══════════════════════════════════════════════════════════════
-   MÓVIL — Canvas proporcional + botones AI en grid 2×2
+   MÓVIL — Botones AI en grid 2×2 (canvas sizing: ver app.js)
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-
-    /* Canvas: width:100% fuerza escala proporcional en elementos <canvas>
-       (max-width:100% solo limita, no fuerza; height:auto solo funciona
-        cuando width está explícitamente establecido) */
+    /* Canvas sizing corregido en JS (applyImageToCanvas / _applyFormatLayout)
+       usando maxW = innerWidth - 24 en mobile. No sobreescribir con CSS. */
     #preview-canvas {
-        width: 100% !important;
-        height: auto !important;
         max-height: none !important;
-    }
-    .canvas-wrapper {
-        width: 100% !important;
-        max-width: 100% !important;
     }
 }
 
