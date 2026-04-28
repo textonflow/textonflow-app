@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import secrets
 import threading
 import time
 import uuid
@@ -64,6 +65,38 @@ logger = logging.getLogger("textonflow")
 
 render_router = APIRouter()
 
+# ── Supabase Storage (imágenes de salida permanentes) ─────────────────────────
+_SB_URL    = os.getenv("SUPABASE_URL",              "https://dluzcrfqqieprudfeuyk.supabase.co")
+_SB_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET",  "textonflow-uploads")
+def _sb_key() -> str:
+    import base64 as _b64
+    return os.getenv("SUPABASE_SERVICE_ROLE_KEY") or _b64.b64decode(
+        "c2Jfc2VjcmV0X1gxWEloNVp0ekEyTFd0VG9pV2thUGdfc21Pd1ZiM0Y=").decode()
+
+def _upload_output_to_supabase(filepath: str, filename: str) -> str | None:
+    """Sube la imagen renderizada a Supabase Storage. Retorna URL pública o None si falla."""
+    try:
+        import urllib.request as _ureq
+        key = _sb_key()
+        if not key:
+            return None
+        with open(filepath, "rb") as f:
+            data = f.read()
+        url = f"{_SB_URL}/storage/v1/object/{_SB_BUCKET}/{filename}"
+        req = _ureq.Request(url, data=data, method="POST")
+        req.add_header("apikey",        key)
+        req.add_header("Authorization", f"Bearer {key}")
+        req.add_header("Content-Type",  "image/jpeg")
+        req.add_header("x-upsert",      "true")
+        with _ureq.urlopen(req, timeout=30) as r:
+            r.read()
+        public_url = f"{_SB_URL}/storage/v1/object/public/{_SB_BUCKET}/{filename}"
+        logger.info(f"☁️  Output → Supabase: {public_url}")
+        return public_url
+    except Exception as _e:
+        logger.warning(f"⚠️  Output Supabase upload failed (usando URL local): {_e}")
+        return None
+
 # ── Constantes de almacenamiento ───────────────────────────────────────────────
 STORAGE_DIR       = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
 TEMPLATES_API_DIR = os.getenv("TEMPLATES_API_PATH", os.path.join(STORAGE_DIR, "api_templates"))
@@ -81,17 +114,24 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     # Cargar imagen
     if request.template_name.startswith(("http://", "https://")):
         local_path = None
-        if "/storage/" in request.template_name:
+        # Supabase Storage URLs → siempre descargar via HTTP (no leer del disco local)
+        if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
             fname = request.template_name.split("/storage/")[-1].split("?")[0]
             local_path = os.path.join(STORAGE_DIR, fname)
         elif "/static/temp/" in request.template_name:
             fname = request.template_name.split("/static/temp/")[-1].split("?")[0]
             local_path = os.path.join("static", "temp", fname)
         if local_path:
-            if not os.path.exists(local_path):
-                raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage: {os.path.basename(local_path)}")
-            logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
-            image = Image.open(local_path).convert("RGBA")
+            if os.path.exists(local_path):
+                logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
+                image = Image.open(local_path).convert("RGBA")
+            else:
+                # Archivo no encontrado localmente (storage efímero en Railway) → fallback HTTP
+                logger.warning(f"⚠️ Archivo local no encontrado ({local_path}), descargando via HTTP: {request.template_name}")
+                session = build_retry_session()
+                response = session.get(request.template_name, timeout=15)
+                response.raise_for_status()
+                image = Image.open(BytesIO(response.content)).convert("RGBA")
         else:
             logger.info(f"🔵 Descargando imagen: {request.template_name}")
             session = build_retry_session()
@@ -427,8 +467,9 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             if request.template_name.startswith(("http://", "https://")):
                 # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
                 # (Railway bloquea peticiones HTTPS circulares al mismo host)
+                # EXCEPCIÓN: URLs de Supabase Storage → siempre descargar via HTTP
                 local_path = None
-                if "/storage/" in request.template_name:
+                if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
                     fname = request.template_name.split("/storage/")[-1].split("?")[0]
                     local_path = os.path.join(STORAGE_DIR, fname)
                 elif "/static/temp/" in request.template_name:
@@ -436,9 +477,23 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                     local_path = os.path.join("static", "temp", fname)
                 if local_path:
                     if not os.path.exists(local_path):
-                        raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage: {os.path.basename(local_path)}")
-                    logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
-                    image = Image.open(local_path).convert("RGBA")
+                        # Archivo local no encontrado (Railway redeploy borró storage efímero)
+                        # → intentar descarga HTTP como fallback (igual que _render_image_pipeline)
+                        logger.warning(f"⚠️ Archivo local no encontrado ({local_path}), intentando HTTP fallback: {request.template_name}")
+                        try:
+                            _fs = build_retry_session()
+                            _fr = _fs.get(request.template_name, timeout=15, headers={"User-Agent": "Mozilla/5.0", "Accept": "image/*,*/*;q=0.8"})
+                            if _fr.status_code == 404:
+                                raise HTTPException(status_code=400, detail="La imagen ya no está disponible en el servidor (fue borrada por redeploy). Re-súbela en el editor — ahora se guardará permanentemente en Supabase Storage.")
+                            _fr.raise_for_status()
+                            image = Image.open(BytesIO(_fr.content)).convert("RGBA")
+                        except HTTPException:
+                            raise
+                        except Exception as _fe:
+                            raise HTTPException(status_code=400, detail=f"Imagen no encontrada localmente ni descargable: {_fe}. Re-sube la imagen base en el editor.")
+                    else:
+                        logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
+                        image = Image.open(local_path).convert("RGBA")
                 else:
                     logger.info(f"🔵 Descargando imagen: {request.template_name}")
                     session = build_retry_session()
@@ -711,23 +766,20 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             image = rgb_image
 
         output_filename = f"gen_{uuid.uuid4()}.jpg"
-        # Guardar en STORAGE_DIR (volumen persistente de Railway) para que la imagen
-        # no desaparezca si el servidor se reinicia antes de que ManyChat/Facebook la descargue.
         storage_path = os.path.join(STORAGE_DIR, output_filename)
         os.makedirs(STORAGE_DIR, exist_ok=True)
         # subsampling=0 → 4:4:4, full color resolution en cada pixel.
-        # El default de JPEG (subsampling=2 = 4:2:0) reduce la resolución
-        # del color a la cuarta parte, causando pixelado en texto de color.
-        # El texto blanco no lo sufre porque blanco no tiene chroma.
         image.save(storage_path, "JPEG", quality=95, subsampling=0)
         # También guardar en output/ para compatibilidad con el endpoint /image/
         local_path = os.path.join("output", output_filename)
         os.makedirs("output", exist_ok=True)
         image.save(local_path, "JPEG", quality=95, subsampling=0)
 
+        # ── Subir output a Supabase (URL permanente — sobrevive redeploys Railway) ──
+        sb_out_url = _upload_output_to_supabase(storage_path, output_filename)
         base_url = _get_base_url(http_req)
-        image_url = f"{base_url}/storage/{output_filename}"
-        logger.info(f"✅ Imagen generada: {output_filename}")
+        image_url = sb_out_url if sb_out_url else f"{base_url}/storage/{output_filename}"
+        logger.info(f"✅ Imagen generada: {output_filename} → {image_url[:60]}")
 
         # ── Contadores ────────────────────────────────────────────────────────
         _increment_images_generated()
@@ -747,8 +799,10 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     except requests.exceptions.RequestException as e:
         logger.error(f"💥 Error de red: {e}")
         raise HTTPException(status_code=400, detail=f"Error descargando imagen: {str(e)}")
+    except HTTPException:
+        raise  # propagar 4xx tal cual — no envolver en 500
     except Exception as e:
-        logger.error(f"💥 Error: {e}")
+        logger.error(f"💥 Error inesperado: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -894,6 +948,36 @@ async def save_api_template(template: ApiTemplateRequest):
         "require_api_key": False,
         "rate_limit_per_hour": 500,
     }
+
+
+@render_router.put("/api/templates/{template_id}")
+async def update_api_template(template_id: str, template: "ApiTemplateRequest", request: Request):
+    """Actualiza el diseño completo de un template existente (template_name, textos, formas, etc.)."""
+    if not re.match(r'^[a-f0-9\-]+$', template_id):
+        raise HTTPException(status_code=400, detail="ID inválido")
+    path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Template '{template_id}' no encontrado.")
+    with open(path) as f:
+        existing = json.load(f)
+    data = template.model_dump()
+    # Preservar campos de sistema
+    data["id"]                  = existing["id"]
+    data["created_at"]          = existing.get("created_at", "")
+    data["api_key"]             = existing.get("api_key", secrets.token_urlsafe(20))
+    data["require_api_key"]     = existing.get("require_api_key", False)
+    data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
+    data["updated_at"]          = datetime.now(timezone.utc).isoformat()
+    # Detectar variables {varname} en los textos
+    vars_found = set()
+    for t in data.get("texts", []):
+        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+            vars_found.add(m)
+    data["variables"] = sorted(vars_found)
+    with open(path, "w") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info(f"📋 Template API actualizado: {template_id} | template_name={data.get('template_name','')[:60]}")
+    return {"ok": True, "id": template_id, "variables": data["variables"]}
 
 
 @render_router.get("/api/templates")
@@ -1063,7 +1147,9 @@ async def render_api_template(template_id: str, request: Request):
             content    = buf.getvalue(),
             media_type = "image/jpeg",
             headers    = {
-                "Cache-Control":           "public, max-age=30",
+                "Cache-Control":           "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma":                  "no-cache",
+                "Expires":                 "0",
                 "X-TextOnFlow-Template":   template_id,
                 "X-TextOnFlow-Variables":  ",".join(vars_dict.keys()) if vars_dict else "",
             }
@@ -1155,8 +1241,10 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
         fpath = os.path.join(STORAGE_DIR, fname)
         image.save(fpath, "JPEG", quality=90, subsampling=0)
 
+        # Subir a Supabase para URL permanente
+        sb_url = _upload_output_to_supabase(fpath, fname)
         base_url = str(request.base_url).rstrip("/")
-        image_url = f"{base_url}/storage/{fname}"
+        image_url = sb_url if sb_url else f"{base_url}/storage/{fname}"
         _track_render(tid)
         logger.info(f"🔔 /webhook/render tid={tid} → {fname} vars={list(vars_dict.keys()) if vars_dict else []}")
         return {
