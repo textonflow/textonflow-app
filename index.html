@@ -2206,6 +2206,7 @@ async function authSubmit() {
         setTimeout(function(){
           if (pending === 'copy_json' && typeof copyJSON === 'function') copyJSON();
           else if (pending === 'copy_result_json' && typeof resultCopyJson === 'function') resultCopyJson();
+          else if (pending === 'generate' && typeof generateImage === 'function') generateImage();
         }, 300);
       }
     }, 1500);
