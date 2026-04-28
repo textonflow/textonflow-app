@@ -799,8 +799,10 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     except requests.exceptions.RequestException as e:
         logger.error(f"💥 Error de red: {e}")
         raise HTTPException(status_code=400, detail=f"Error descargando imagen: {str(e)}")
+    except HTTPException:
+        raise  # propagar 4xx tal cual — no envolver en 500
     except Exception as e:
-        logger.error(f"💥 Error: {e}")
+        logger.error(f"💥 Error inesperado: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
