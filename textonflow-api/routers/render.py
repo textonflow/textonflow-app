@@ -445,9 +445,23 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                     local_path = os.path.join("static", "temp", fname)
                 if local_path:
                     if not os.path.exists(local_path):
-                        raise HTTPException(status_code=404, detail=f"Imagen no encontrada en storage local. Si cambiaste la imagen base, re-súbela en el editor para obtener una URL permanente de Supabase Storage.")
-                    logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
-                    image = Image.open(local_path).convert("RGBA")
+                        # Archivo local no encontrado (Railway redeploy borró storage efímero)
+                        # → intentar descarga HTTP como fallback (igual que _render_image_pipeline)
+                        logger.warning(f"⚠️ Archivo local no encontrado ({local_path}), intentando HTTP fallback: {request.template_name}")
+                        try:
+                            _fs = build_retry_session()
+                            _fr = _fs.get(request.template_name, timeout=15, headers={"User-Agent": "Mozilla/5.0", "Accept": "image/*,*/*;q=0.8"})
+                            if _fr.status_code == 404:
+                                raise HTTPException(status_code=400, detail="La imagen ya no está disponible en el servidor (fue borrada por redeploy). Re-súbela en el editor — ahora se guardará permanentemente en Supabase Storage.")
+                            _fr.raise_for_status()
+                            image = Image.open(BytesIO(_fr.content)).convert("RGBA")
+                        except HTTPException:
+                            raise
+                        except Exception as _fe:
+                            raise HTTPException(status_code=400, detail=f"Imagen no encontrada localmente ni descargable: {_fe}. Re-sube la imagen base en el editor.")
+                    else:
+                        logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
+                        image = Image.open(local_path).convert("RGBA")
                 else:
                     logger.info(f"🔵 Descargando imagen: {request.template_name}")
                     session = build_retry_session()
