@@ -86,12 +86,6 @@ try:
 except ImportError:
     _PSYCOPG2_OK = False
 
-try:
-    from passlib.context import CryptContext
-    from jose import jwt
-    _AUTH_OK = True
-except ImportError:
-    _AUTH_OK = False
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -102,47 +96,14 @@ from database import (
     get_db, init_db,
 )
 
-# ─── Auth helpers ─────────────────────────────────────────────────────────────
-if _AUTH_OK:
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-else:
-    pwd_context = None
-
-def hash_password(password: str) -> str:
-    if pwd_context:
-        return pwd_context.hash(password)
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def verify_password(plain: str, hashed: str) -> bool:
-    if pwd_context:
-        try:
-            return pwd_context.verify(plain, hashed)
-        except Exception:
-            pass
-    return hashlib.sha256(plain.encode()).hexdigest() == hashed
-
-def create_jwt(user_id: str, email: str, plan: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS)
-    payload = {"sub": user_id, "email": email, "plan": plan, "exp": expire}
-    if _AUTH_OK:
-        return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return base64.b64encode(json.dumps({**payload, "exp": expire.isoformat()}).encode()).decode()
-
-def decode_jwt(token: str) -> Optional[dict]:
-    try:
-        if _AUTH_OK:
-            return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        data = json.loads(base64.b64decode(token.encode()).decode())
-        return data
-    except Exception:
-        return None
-
-PLAN_LIMITS = {
-    "trial":   20,
-    "starter": 1000,
-    "agency":  10000,
-    "admin":   999999,
-}
+# ─── Auth helpers (importado de auth.py) ─────────────────────────────────────
+from auth import (
+    _AUTH_OK, hash_password, verify_password, create_jwt, decode_jwt,
+    _is_superadmin, _get_client_ip,
+    _check_rate_limit, _check_minute_limit, _increment_ip_usage,
+    PLAN_LIMITS, _ADMIN_SESSIONS, _ADMIN_LOCK, _SESSION_TTL,
+    _SUPERADMIN_EMAIL, _SUPERADMIN_PWD_HASH,
+)
 
 # ─── Job store para generación de imágenes asíncrona ─────────────────────────
 # Evita que Railway corte la conexión por timeout durante llamadas largas a Gemini
@@ -364,78 +325,6 @@ def _increment_images_generated():
                 json.dump(data, f)
         except Exception as e:
             logger.warning(f"⚠️ No se pudo actualizar stats: {e}")
-
-# ─── Rate limiting por IP ─────────────────────────────────────────────────────
-PLAN_LIMITS: dict = {"free": 9999}        # imágenes/día por IP · sin límite temporal
-_IP_USAGE: dict   = {}                    # {ip: {"date": "YYYY-MM-DD", "count": N}}
-_IP_LOCK          = threading.Lock()
-
-# ─── Superadmin ────────────────────────────────────────────────────────────────
-_SUPERADMIN_EMAIL    = "ruben@textonflow.com"
-_SUPERADMIN_PWD_HASH = "8634d3c5b1865bc470198ac121dd36bc01cdb653f7bdff56e4e5273ee6df1ae1"
-_ADMIN_SESSIONS: dict = {}               # {token: {"email": str, "expires": datetime}}
-_ADMIN_LOCK           = threading.Lock()
-_SESSION_TTL          = timedelta(days=30)
-
-def _is_superadmin(request: "Request") -> bool:
-    token = request.headers.get("X-Admin-Token", "")
-    if not token:
-        return False
-    with _ADMIN_LOCK:
-        session = _ADMIN_SESSIONS.get(token)
-        if not session:
-            return False
-        if datetime.utcnow() > session["expires"]:
-            _ADMIN_SESSIONS.pop(token, None)
-            return False
-        return True
-
-def _get_client_ip(req: "Request") -> str:
-    fwd = req.headers.get("x-forwarded-for", "")
-    return fwd.split(",")[0].strip() if fwd else (req.client.host or "unknown")
-
-def _ip_usage_today(ip: str) -> dict:
-    """Devuelve el registro del día de hoy para la IP (sin modificar)."""
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    rec   = _IP_USAGE.get(ip, {"date": today, "count": 0})
-    if rec["date"] != today:
-        rec = {"date": today, "count": 0}
-    return rec
-
-def _check_rate_limit(ip: str) -> tuple:
-    """(used, limit, exceeded) — límite desactivado temporalmente"""
-    with _IP_LOCK:
-        rec   = _ip_usage_today(ip)
-        limit = PLAN_LIMITS["free"]
-        return rec["count"], limit, False
-
-# ─── Rate limiting por minuto (en memoria) ────────────────────────────────────
-_MINUTE_BUCKETS: dict = {}      # key → [timestamps]
-_MINUTE_LOCK = threading.Lock()
-_MINUTE_LIMITS = {"trial": 4, "starter": 15, "agency": 40, "admin": 9999}
-
-def _check_minute_limit(key: str, plan: str = "trial") -> tuple[bool, int, int]:
-    """(allowed, used_this_min, limit_this_min) — ventana deslizante de 60 s"""
-    limit = _MINUTE_LIMITS.get(plan, 4)
-    now   = time.time()
-    with _MINUTE_LOCK:
-        stamps = [t for t in _MINUTE_BUCKETS.get(key, []) if now - t < 60]
-        used   = len(stamps)
-        if used >= limit:
-            _MINUTE_BUCKETS[key] = stamps
-            return False, used, limit
-        stamps.append(now)
-        _MINUTE_BUCKETS[key] = stamps
-        return True, used + 1, limit
-
-def _increment_ip_usage(ip: str) -> tuple:
-    """Incrementa el contador y devuelve (used_after, limit)."""
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    with _IP_LOCK:
-        rec = _ip_usage_today(ip)
-        rec["count"] += 1
-        _IP_USAGE[ip] = {"date": today, "count": rec["count"]}
-        return rec["count"], PLAN_LIMITS["free"]
 
 def _reset_time_str() -> str:
     """Tiempo hasta medianoche UTC en formato 'Xh Ym'."""
