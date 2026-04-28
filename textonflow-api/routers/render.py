@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import secrets
 import threading
 import time
 import uuid
@@ -905,7 +906,6 @@ async def save_api_template(template: ApiTemplateRequest):
 @render_router.put("/api/templates/{template_id}")
 async def update_api_template(template_id: str, template: "ApiTemplateRequest", request: Request):
     """Actualiza el diseño completo de un template existente (template_name, textos, formas, etc.)."""
-    import secrets as _sec
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -917,7 +917,7 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
     # Preservar campos de sistema
     data["id"]                  = existing["id"]
     data["created_at"]          = existing.get("created_at", "")
-    data["api_key"]             = existing.get("api_key", _sec.token_urlsafe(20))
+    data["api_key"]             = existing.get("api_key", secrets.token_urlsafe(20))
     data["require_api_key"]     = existing.get("require_api_key", False)
     data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
     data["updated_at"]          = datetime.now(timezone.utc).isoformat()
