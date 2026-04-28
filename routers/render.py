@@ -32,7 +32,10 @@ except ImportError:
     np = None
     _NUMPY_OK = False
 
-from auth import _is_superadmin, _get_client_ip
+from auth import (
+    _is_superadmin, _get_client_ip,
+    _check_rate_limit, _check_minute_limit, _increment_ip_usage,
+)
 from database import get_db
 from fonts import (
     FONT_MAPPING, FONT_SIZE_SCALE, NOTO_EMOJI_PATHS,
