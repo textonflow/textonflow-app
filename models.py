@@ -115,7 +115,11 @@ class MultiTextRequest(BaseModel):
     shapes: Optional[List[CanvasShape]] = []
     filter_name: str = "none"
     render_scale: int = 1  # 1=rápido (ManyChat), 2=alta calidad (editor)
-    watermark: bool = False  # Sello "textonflow.com" en esquina inferior derecha
+    watermark: bool = False  # Sello TextOnFlow sobre la imagen
+    wm_corner:  str   = "br"      # tl | tr | bl | br
+    wm_size:    int   = 22        # altura en px del logo (relativa a 1080px)
+    wm_opacity: int   = 55        # 0-100
+    wm_color:   str   = "#ffffff" # hex color del logo
     # ── Viñeta ──
     vignette_enabled: bool        = False
     vignette_color:   str         = "#000000"  # hex color
