@@ -38,6 +38,12 @@ FONT_MAPPING = {
     "Oishigo":                "./fonts/Oishigo-Regular.ttf",
     "OraqleScript":           "./fonts/OraqleScript-Regular.ttf",
     "OraqleSwash":            "./fonts/OraqleSwash-Regular.otf",
+    # ── Biblia Fonts ─────────────────────────────────────────────────────────
+    "AquilineTwo":            "./fonts/AquilineTwo-Regular.ttf",
+    "TropicalRegular":        "./fonts/Tropical-Regular.ttf",
+    "JaneAust":               "./fonts/JaneAust-Regular.ttf",
+    "MonterloRegular":        "./fonts/Monterlo-Regular.ttf",
+    "TwoProt":                "./fonts/2Prot-Regular.ttf",
     # ── MYKOZ Brand Fonts ────────────────────────────────────────────────────
     "VariexLight":            "./fonts/Variex-Light.ttf",
     "ScholarRegular":         "./fonts/Scholar-Regular.otf",
