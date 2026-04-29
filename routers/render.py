@@ -33,7 +33,7 @@ from auth import (
     _is_superadmin, _get_client_ip,
     _check_rate_limit, _check_minute_limit, _increment_ip_usage,
 )
-from database import get_db
+from database import get_db, log_render_event, get_user_render_stats
 from fonts import (
     FONT_MAPPING, FONT_SIZE_SCALE, NOTO_EMOJI_PATHS,
     get_noto_emoji_font, build_retry_session, RetryTwitterEmojiSource,
@@ -799,6 +799,13 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             _increment_user_renders(_user_id)
             _used_after = _used + 1
             _lim        = _limit
+            # Log para dashboard de estadísticas (fire-and-forget)
+            threading.Thread(
+                target=log_render_event,
+                args=(_user_id,),
+                kwargs={"project_name": getattr(request, "project_name", None), "endpoint": "generate-multi"},
+                daemon=True,
+            ).start()
         else:
             _used_after, _lim = _increment_ip_usage(_ip)
 
@@ -1315,3 +1322,164 @@ async def get_image(filename: str):
             "Expires": "0",
         }
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DASHBOARD DE ESTADÍSTICAS  /api/stats
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@render_router.get("/api/stats")
+async def get_render_stats(request: Request):
+    """Devuelve estadísticas de renders del usuario autenticado (dashboard)."""
+    user = _require_user(request)
+    stats = get_user_render_stats(user["sub"])
+    return stats
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  GIF ANIMADO  /api/gif/generate
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class _GifRequest(MultiTextRequest):
+    """Igual que MultiTextRequest + parámetros de animación."""
+    animation_type: str = "typewriter"       # typewriter | fade | bounce
+    animated_text_index: int = 0             # Índice del texto a animar
+    gif_fps: int = 12                        # Frames por segundo
+    hold_seconds: float = 1.5               # Segundos para mantener el frame final
+    gif_loop: int = 0                        # 0 = loop infinito
+
+
+@render_router.post("/api/gif/generate")
+async def generate_gif(req: _GifRequest, http_req: Request):
+    """Genera un GIF animado (typewriter o fade) a partir de un diseño TextOnFlow."""
+    _user_payload = _get_current_user(http_req)
+    _user_id      = _user_payload["sub"] if _user_payload else None
+    _ip           = _get_client_ip(http_req)
+
+    # Rate limit básico (reutilizamos el del plan)
+    if _user_id:
+        _used, _limit, _exceeded, _plan = _check_user_render_limit(_user_id)
+        if _exceeded:
+            raise HTTPException(status_code=429, detail="Límite de renders alcanzado. Actualiza tu plan.")
+    else:
+        _used, _limit, _exceeded = _check_rate_limit(_ip)
+        if _exceeded:
+            raise HTTPException(status_code=429, detail="Límite diario alcanzado. Crea una cuenta gratis.")
+
+    if not req.texts:
+        raise HTTPException(status_code=400, detail="Se requiere al menos un texto")
+
+    anim_idx = min(req.animated_text_index, len(req.texts) - 1)
+    anim_type = req.animation_type.lower()
+    frame_delay_ms = max(50, int(1000 / req.gif_fps))
+    hold_frames    = max(1, int(req.hold_seconds * req.gif_fps))
+
+    try:
+        # Convertimos _GifRequest → MultiTextRequest para _render_pil
+        base_dict = req.dict(exclude={"animation_type", "animated_text_index", "gif_fps", "hold_seconds", "gif_loop"})
+
+        frames: list = []
+        durations: list = []
+
+        # Convertir todos los frames a RGBA → luego a P (Paleta) para GIF
+        if anim_type == "typewriter":
+            full_text = req.texts[anim_idx].text
+            chars     = list(full_text)
+            if not chars:
+                raise HTTPException(status_code=400, detail="El texto animado está vacío")
+            # Agrupa caracteres para que el GIF no sea demasiado largo (máx 40 frames)
+            step = max(1, len(chars) // 40)
+            indices = list(range(1, len(chars) + 1, step))
+            if indices[-1] != len(chars):
+                indices.append(len(chars))
+            for i in indices:
+                import copy
+                req_copy = MultiTextRequest(**base_dict)
+                req_copy.texts[anim_idx].text = full_text[:i]
+                frame_img = _render_pil(req_copy).convert("RGB")
+                frames.append(frame_img)
+                durations.append(frame_delay_ms)
+            # Frames de hold al final
+            for _ in range(hold_frames):
+                frames.append(frames[-1])
+                durations.append(frame_delay_ms)
+
+        elif anim_type == "fade":
+            # Frame 1: sin el texto animado (texto vacío)
+            import copy
+            req_bg = MultiTextRequest(**base_dict)
+            req_bg.texts[anim_idx].text = ""
+            bg_img = _render_pil(req_bg).convert("RGBA")
+            # Frame final: con texto completo
+            req_full = MultiTextRequest(**base_dict)
+            fg_img = _render_pil(req_full).convert("RGBA")
+            n_fade = 12
+            for i in range(n_fade + 1):
+                alpha = i / n_fade
+                blended = Image.blend(bg_img, fg_img, alpha).convert("RGB")
+                frames.append(blended)
+                durations.append(frame_delay_ms)
+            for _ in range(hold_frames):
+                frames.append(frames[-1])
+                durations.append(frame_delay_ms)
+
+        elif anim_type == "bounce":
+            # Fade-in + fade-out en loop
+            req_bg   = MultiTextRequest(**base_dict)
+            req_bg.texts[anim_idx].text = ""
+            bg_img   = _render_pil(req_bg).convert("RGBA")
+            req_full = MultiTextRequest(**base_dict)
+            fg_img   = _render_pil(req_full).convert("RGBA")
+            n_steps  = 10
+            seq      = list(range(n_steps + 1)) + list(range(n_steps, -1, -1))
+            for i in seq:
+                alpha   = i / n_steps
+                blended = Image.blend(bg_img, fg_img, alpha).convert("RGB")
+                frames.append(blended)
+                durations.append(frame_delay_ms)
+        else:
+            raise HTTPException(status_code=400, detail="animation_type debe ser typewriter, fade o bounce")
+
+        # Convertir a paleta P para GIF compatible
+        gif_frames = [f.convert("P", palette=Image.ADAPTIVE, colors=256) for f in frames]
+
+        buf = BytesIO()
+        gif_frames[0].save(
+            buf,
+            format="GIF",
+            save_all=True,
+            append_images=gif_frames[1:],
+            loop=req.gif_loop,
+            duration=durations,
+            optimize=False,
+        )
+        buf.seek(0)
+
+        # Contadores
+        _increment_images_generated()
+        if _user_id:
+            _increment_user_renders(_user_id)
+            threading.Thread(
+                target=log_render_event,
+                args=(_user_id,),
+                kwargs={"project_name": getattr(req, "project_name", None), "endpoint": "gif"},
+                daemon=True,
+            ).start()
+        else:
+            _increment_ip_usage(_ip)
+
+        return Response(
+            content=buf.getvalue(),
+            media_type="image/gif",
+            headers={
+                "Content-Disposition": "attachment; filename=textonflow-animated.gif",
+                "Cache-Control": "no-store",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 /api/gif/generate error: {e}")
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
