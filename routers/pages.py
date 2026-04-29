@@ -184,6 +184,37 @@ async def favicon():
 
 @pages_router.get("/proxy-image")
 def proxy_image(url: str):
+    import re as _re
+
+    # ── Cortocircuito: si la URL apunta a nuestro propio /storage/ o /static/temp/
+    # leer directamente del disco en lugar de hacer HTTP circular a nosotros mismos
+    _STORAGE_DIR = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
+    _self_pat = _re.compile(r"https?://(?:www\.)?textonflow\.com(?::\d+)?/storage/(.+?)(?:\?.*)?$")
+    _temp_pat = _re.compile(r"https?://(?:www\.)?textonflow\.com(?::\d+)?/static/temp/(.+?)(?:\?.*)?$")
+    m = _self_pat.match(url) or _temp_pat.match(url)
+    if m:
+        fname = m.group(1).lstrip("/")
+        # Primero busca en STORAGE_DIR, luego en static/temp
+        candidates = [
+            os.path.join(_STORAGE_DIR, fname),
+            os.path.join("static", "temp", fname),
+        ]
+        for fpath in candidates:
+            if os.path.exists(fpath):
+                ext = fname.rsplit(".", 1)[-1].lower()
+                mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+                        "webp": "image/webp", "gif": "image/gif"}.get(ext, "image/png")
+                with open(fpath, "rb") as fh:
+                    return Response(content=fh.read(), media_type=mime,
+                                    headers={"Cache-Control": "public, max-age=3600"})
+        # Archivo ya no existe localmente (redeploy borró el storage efímero)
+        raise HTTPException(
+            status_code=400,
+            detail="La imagen ya no está disponible (el servidor se reinició y borró el storage temporal). "
+                   "Por favor re-sube la imagen base en el editor."
+        )
+
+    # ── URL externa: descarga normal ─────────────────────────────────────────
     try:
         resp = requests.get(
             url,
