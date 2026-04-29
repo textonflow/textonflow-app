@@ -135,6 +135,10 @@ def init_db():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_paused BOOLEAN NOT NULL DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url TEXT",
+                # v248 — render events enriquecidos para dashboard
+                "ALTER TABLE renders ADD COLUMN IF NOT EXISTS project_name TEXT",
+                "ALTER TABLE renders ADD COLUMN IF NOT EXISTS template_id TEXT",
+                "ALTER TABLE renders ADD COLUMN IF NOT EXISTS count INTEGER NOT NULL DEFAULT 1",
             ]:
                 try:
                     cur.execute(_col_sql)
@@ -158,3 +162,76 @@ def init_db():
         logger.info("✅ Base de datos inicializada correctamente")
     except Exception as e:
         logger.error(f"Error inicializando BD: {e}")
+
+
+def log_render_event(user_id: str, project_name: str = None, template_id: str = None, count: int = 1, endpoint: str = "generate-multi"):
+    """Registra un evento de render en la tabla renders (para dashboard de estadísticas)."""
+    conn = get_db()
+    if not conn or not user_id:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO renders (user_id, endpoint, status, project_name, template_id, count)
+                VALUES (%s, %s, 'ok', %s, %s, %s)
+                """,
+                (user_id, endpoint, project_name, template_id, count),
+            )
+    except Exception as e:
+        logger.warning(f"log_render_event error: {e}")
+
+
+def get_user_render_stats(user_id: str) -> dict:
+    """Devuelve estadísticas de renders para un usuario (usado por el dashboard)."""
+    conn = get_db()
+    if not conn:
+        return {"total_month": 0, "total_all": 0, "by_day": [], "by_project": []}
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT COALESCE(SUM(count),0) AS total FROM renders WHERE user_id=%s AND created_at >= date_trunc('month', NOW())",
+                (user_id,),
+            )
+            total_month = int(cur.fetchone()["total"])
+
+            cur.execute(
+                "SELECT COALESCE(SUM(count),0) AS total FROM renders WHERE user_id=%s",
+                (user_id,),
+            )
+            total_all = int(cur.fetchone()["total"])
+
+            cur.execute(
+                """
+                SELECT TO_CHAR(DATE(created_at),'YYYY-MM-DD') AS day, COALESCE(SUM(count),0) AS renders
+                FROM renders
+                WHERE user_id=%s AND created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at)
+                """,
+                (user_id,),
+            )
+            by_day = [dict(r) for r in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT COALESCE(project_name,'Sin nombre') AS project, COALESCE(SUM(count),0) AS renders
+                FROM renders
+                WHERE user_id=%s AND created_at >= date_trunc('month', NOW())
+                GROUP BY project_name
+                ORDER BY renders DESC
+                LIMIT 10
+                """,
+                (user_id,),
+            )
+            by_project = [dict(r) for r in cur.fetchall()]
+
+        return {
+            "total_month": total_month,
+            "total_all": total_all,
+            "by_day": by_day,
+            "by_project": by_project,
+        }
+    except Exception as e:
+        logger.error(f"get_user_render_stats error: {e}")
+        return {"total_month": 0, "total_all": 0, "by_day": [], "by_project": []}
