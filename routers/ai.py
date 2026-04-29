@@ -505,18 +505,29 @@ async def serve_storage_file(filename: str):
 
 @ai_router.post("/api/save-ai-image")
 async def save_ai_image(req: SaveAIImageRequest, request: Request):
-    """Guarda una imagen AI en almacenamiento persistente y devuelve su URL pública."""
+    """Guarda una imagen AI — intenta Supabase Storage primero (URL permanente),
+    cae a disco local solo si Supabase falla."""
     ext = "jpg" if "jpeg" in req.mime_type else "png"
     uid = str(uuid.uuid4())[:12]
     filename = f"ai_{uid}.{ext}"
-    filepath = os.path.join(STORAGE_DIR, filename)
-    os.makedirs(STORAGE_DIR, exist_ok=True)
     img_bytes = base64.b64decode(req.image_b64)
-    with open(filepath, "wb") as f:
-        f.write(img_bytes)
-    base_url = _get_base_url(request)
-    public_url = f"{base_url}/storage/{filename}"
-    logger.info(f"💾 Imagen AI guardada: {filepath} → {public_url}")
+    content_type = "image/jpeg" if ext == "jpg" else "image/png"
+
+    # ── Intento 1: Supabase Storage (URL permanente, sobrevive reinicios) ──────
+    public_url = _upload_to_supabase(img_bytes, filename, content_type)
+
+    # ── Fallback: disco local (efímero, se pierde en redeploy) ────────────────
+    if not public_url:
+        filepath = os.path.join(STORAGE_DIR, filename)
+        os.makedirs(STORAGE_DIR, exist_ok=True)
+        with open(filepath, "wb") as f:
+            f.write(img_bytes)
+        base_url = _get_base_url(request)
+        public_url = f"{base_url}/storage/{filename}"
+        logger.warning(f"⚠️  Supabase no disponible — imagen guardada localmente (efímera): {public_url}")
+    else:
+        logger.info(f"☁️  Imagen AI en Supabase: {public_url}")
+
     return {"url": public_url}
 
 
