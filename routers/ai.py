@@ -1484,7 +1484,8 @@ async def ai_design_layout(req: DesignLayoutRequest):
                              "responseMimeType": "application/json"}
     }
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        async with httpx.AsyncClient(timeout=22) as _hc:
+            resp = await _hc.post(url, json=payload, headers=headers)
         if resp.status_code == 429:
             raise HTTPException(status_code=429, detail="La IA está ocupada. Espera unos segundos e intenta de nuevo.")
         if resp.status_code != 200:
@@ -1553,7 +1554,8 @@ async def ai_copy_suggestions(req: CopySuggestionsRequest):
                              "responseMimeType": "application/json"}
     }
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=20)
+        async with httpx.AsyncClient(timeout=15) as _hc:
+            resp = await _hc.post(url, json=payload, headers=headers)
         if resp.status_code == 429:
             raise HTTPException(status_code=429, detail="La IA está ocupada. Espera unos segundos e intenta de nuevo.")
         if resp.status_code != 200:
@@ -1612,7 +1614,8 @@ async def ai_brand_kit(req: BrandKitRequest):
                              "responseMimeType": "application/json"}
     }
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        async with httpx.AsyncClient(timeout=22) as _hc:
+            resp = await _hc.post(url, json=payload, headers=headers)
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="Error al conectar con la IA")
         data = resp.json()
@@ -1693,7 +1696,8 @@ async def ai_ab_variants(req: ABVariantsRequest):
                              "responseMimeType": "application/json"}
     }
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=35)
+        async with httpx.AsyncClient(timeout=22) as _hc:
+            resp = await _hc.post(url, json=payload, headers=headers)
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="Error al conectar con la IA")
         data = resp.json()
