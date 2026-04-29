@@ -137,7 +137,7 @@
       json_section:       'JSON para ManyChat',
       json_copy:          'Copiar JSON',
       json_copied:        '✓ Copiado',
-      json_panel_title:   'JSON para ManyChat',
+      json_panel_title:   'Listo para ManyChat',
       json_copy_btn:      'Copiar',
 
       /* Modal de resultado */
@@ -563,7 +563,7 @@
       json_section:       'JSON for ManyChat',
       json_copy:          'Copy JSON',
       json_copied:        '✓ Copied',
-      json_panel_title:   'JSON for ManyChat',
+      json_panel_title:   'Ready for ManyChat',
       json_copy_btn:      'Copy',
 
       /* Result modal */
