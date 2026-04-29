@@ -1035,7 +1035,7 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
               <!-- Estilo del texto (fuente, tamaño, color) -->
               <div class="cd-separator" style="margin-top:12px;"></div>
               <div style="margin-top:10px;">
-                <div class="cd-label" style="margin-bottom:6px;">${t('text_style_lbl')}</div>
+                <div class="cd-label" style="margin-bottom:6px;">${window.t('text_style_lbl')}</div>
                 <!-- Fila 1: Fuente (picker completo independiente) -->
                 <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;overflow:visible;position:relative;" onclick="event.stopPropagation();">
                   <div style="flex:1;min-width:0;overflow:visible;position:relative;">
@@ -1057,13 +1057,13 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
                 <!-- Fila 2: Tamaño / Color normal / Color urgencia -->
                 <div class="cd-row" style="align-items:flex-end;gap:8px;flex-wrap:wrap;">
                   <div class="cd-field" style="flex:0 0 72px;">
-                    <label class="cd-label">${t('font_size')}</label>
+                    <label class="cd-label">${window.t('font_size')}</label>
                     <input type="number" inputmode="numeric" class="cd-num-input" min="12" max="800" step="2"
                       value="${t.font_size||60}"
                       onchange="updateTextProp(${index},'font_size',parseInt(this.value)||60);updatePreview();">
                   </div>
                   <div class="cd-field" style="flex:1 1 105px;min-width:90px;">
-                    <label class="cd-label">${t('color')}</label>
+                    <label class="cd-label">${window.t('color')}</label>
                     <div style="display:flex;align-items:center;gap:4px;">
                       <input type="color" data-hex-done="1" value="${t.font_color||'#FFFFFF'}"
                         style="width:28px;height:28px;min-width:28px;padding:2px;border:1.5px solid #2a2a50;border-radius:5px;background:#0e0e1c;cursor:pointer;flex-shrink:0;"
@@ -1076,7 +1076,7 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
                     </div>
                   </div>
                   <div class="cd-field" style="flex:1 1 105px;min-width:90px;">
-                    <label class="cd-label" title="Color cuando faltan menos de N horas">${t('countdown_urgency')}</label>
+                    <label class="cd-label" title="Color cuando faltan menos de N horas">${window.t('countdown_urgency')}</label>
                     <div style="display:flex;align-items:center;gap:4px;">
                       <input type="color" data-hex-done="1" value="${t.countdown_urgency_color||'#FF0000'}"
                         style="width:28px;height:28px;min-width:28px;padding:2px;border:1.5px solid #2a2a50;border-radius:5px;background:#0e0e1c;cursor:pointer;flex-shrink:0;"
