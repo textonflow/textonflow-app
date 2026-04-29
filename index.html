@@ -6,8 +6,8 @@
     <meta name="google-site-verification" content="yswz02_5nuqTXpNaUk-k5x_D5LO-3NauE0Srf-GAnwY" />
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <!-- ASSET_VERSION: v237 — Sin label Imagen, panel resizable drag -->
-    <link rel="stylesheet" href="/static/styles.css?v=237">
+    <!-- ASSET_VERSION: v238 — IA Core errores visibles + 429 handling -->
+    <link rel="stylesheet" href="/static/styles.css?v=238">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1870,8 +1870,8 @@
       Extensión Chrome
     </a>
 
-    <script src="/static/i18n.js?v=237"></script>
-    <script src="/static/app.js?v=237"></script>
+    <script src="/static/i18n.js?v=238"></script>
+    <script src="/static/app.js?v=238"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
@@ -2628,14 +2628,19 @@ async function iacGenerateDesign() {
       body: JSON.stringify({description: desc, canvas_width: (typeof imageData!=='undefined'&&imageData.width)||1080, canvas_height: (typeof imageData!=='undefined'&&imageData.height)||1080})
     });
     const d = await r.json();
-    if (!r.ok) { _iacStatus('iac-design-status', d.detail || 'Error IA','error'); return; }
+    if (!r.ok) {
+      const msg = d.detail || 'Error IA';
+      _iacStatus('iac-design-status', msg, 'error');
+      showNotif('IA Core: ' + msg, 'error');
+      return;
+    }
     _iacLastDesignLayout = d;
     document.getElementById('iac-design-result').style.display = '';
     const bgEl = document.getElementById('iac-bg-suggestion');
     if (d.background_suggestion) bgEl.textContent = '💡 Fondo sugerido: ' + d.background_suggestion;
     else bgEl.textContent = '';
     _iacStatus('iac-design-status', `✓ ${(d.texts||[]).length} capas generadas`, 'success');
-  } catch(e) { _iacStatus('iac-design-status','Error de red: '+e.message,'error');
+  } catch(e) { _iacStatus('iac-design-status','Error de red: '+e.message,'error'); showNotif('IA Core: error de red','error');
   } finally { btn.disabled = false; }
 }
 
@@ -2673,7 +2678,11 @@ function _iacRefreshCopyText() {
 async function iacGetCopySuggestions() {
   _iacRefreshCopyText();
   const currentText = (typeof texts !== 'undefined' && texts[activeTextIndex]?.text) || '';
-  if (!currentText.trim()) { _iacStatus('iac-copy-status','Selecciona una capa de texto activa','error'); return; }
+  if (!currentText.trim()) {
+    _iacStatus('iac-copy-status','Selecciona una capa de texto en el canvas primero','error');
+    showNotif('Selecciona una capa de texto en el canvas antes de usar Copy', 'error');
+    return;
+  }
   const context = (document.getElementById('iac-copy-context').value || '').trim();
   const btn = document.getElementById('iac-copy-btn');
   btn.disabled = true;
@@ -2685,7 +2694,12 @@ async function iacGetCopySuggestions() {
       body: JSON.stringify({current_text: currentText, context: context || null})
     });
     const d = await r.json();
-    if (!r.ok) { _iacStatus('iac-copy-status', d.detail || 'Error IA','error'); return; }
+    if (!r.ok) {
+      const msg = d.detail || 'Error IA';
+      _iacStatus('iac-copy-status', msg, 'error');
+      showNotif('IA Core: ' + msg, 'error');
+      return;
+    }
     const container = document.getElementById('iac-copy-suggestions');
     container.innerHTML = '';
     (d.suggestions || []).forEach((s, i) => {
@@ -2699,7 +2713,7 @@ async function iacGetCopySuggestions() {
     });
     container.style.display = 'flex';
     _iacStatus('iac-copy-status','','info');
-  } catch(e) { _iacStatus('iac-copy-status','Error: '+e.message,'error');
+  } catch(e) { _iacStatus('iac-copy-status','Error: '+e.message,'error'); showNotif('IA Core: error de red','error');
   } finally { btn.disabled = false; }
 }
 
