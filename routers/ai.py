@@ -367,22 +367,27 @@ async def generate_text(req: GenerateTextRequest):
     }
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=25)
+        if resp.status_code == 429:
+            logger.warning("Gemini generate-text 429 rate limit")
+            raise HTTPException(status_code=429, detail="La IA está ocupada ahora mismo. Espera unos segundos e intenta de nuevo.")
         if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail="Error al conectar con la IA. Intenta de nuevo.")
+            logger.error(f"Gemini generate-text error {resp.status_code}: {resp.text[:300]}")
+            raise HTTPException(status_code=502, detail=f"Error de la IA ({resp.status_code}). Intenta de nuevo en unos segundos.")
         data = resp.json()
         candidates = data.get("candidates", [])
         if not candidates:
-            raise HTTPException(status_code=500, detail="Sin respuesta del modelo")
+            raise HTTPException(status_code=500, detail="Sin respuesta del modelo IA")
         parts = candidates[0].get("content", {}).get("parts", [])
         result = "\n".join(p.get("text", "") for p in parts if "text" in p).strip()
         if not result:
-            raise HTTPException(status_code=500, detail="Respuesta vacía del modelo")
+            raise HTTPException(status_code=500, detail="Respuesta vacía del modelo IA")
         return {"text": result}
     except HTTPException:
         raise
     except requests.Timeout:
         raise HTTPException(status_code=504, detail="Tiempo de espera agotado. Intenta de nuevo.")
     except Exception as ex:
+        logger.error(f"Excepción en generate-text: {ex}")
         raise HTTPException(status_code=500, detail=str(ex))
 
 
