@@ -65,6 +65,56 @@ logger = logging.getLogger("textonflow")
 
 render_router = APIRouter()
 
+# ── Watermark logo helper ──────────────────────────────────────────────────────
+def _apply_wm_logo(image: Image.Image,
+                   corner: str = "br", size_px: int = 22,
+                   opacity_pct: int = 55, color_hex: str = "#ffffff") -> Image.Image:
+    """Pega el logo de TextOnFlow sobre la imagen con posición y estilo configurables."""
+    try:
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
+        img_w, img_h = image.size
+        scale = img_w / 1080.0
+        logo_h = max(14, int(size_px * scale))
+
+        # Busca el logo blanco (mejor sobre cualquier fondo)
+        for _lp in ["static/logo-blanco-new.png",
+                    "textonflow-api/static/logo-blanco-new.png",
+                    "/app/static/logo-blanco-new.png"]:
+            if os.path.exists(_lp):
+                logo = Image.open(_lp).convert("RGBA")
+                break
+        else:
+            return image  # no encontrado → sin sello
+
+        ow, oh = logo.size
+        logo_w = max(1, int(ow * logo_h / oh))
+        logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
+
+        # Tint + opacidad
+        hex_c = color_hex.lstrip("#")
+        try:
+            rt = int(hex_c[0:2], 16); gt = int(hex_c[2:4], 16); bt = int(hex_c[4:6], 16)
+        except Exception:
+            rt, gt, bt = 255, 255, 255
+        op = max(0, min(100, opacity_pct)) / 100.0
+        px = [(rt, gt, bt, int(a * op)) if a > 0 else (0, 0, 0, 0)
+              for (r, g, b, a) in logo.getdata()]
+        logo.putdata(px)
+
+        # Posición
+        margin = max(10, int(img_w * 0.018))
+        x = margin if corner in ("tl", "bl") else img_w - logo_w - margin
+        y = margin if corner in ("tl", "tr") else img_h - logo_h - margin
+
+        overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        overlay.paste(logo, (x, y), logo)
+        image = Image.alpha_composite(image, overlay)
+        logger.info("✦ Watermark logo aplicado corner=%s size=%s op=%s", corner, size_px, opacity_pct)
+    except Exception as _e:
+        logger.warning("⚠️ Watermark error: %s", _e)
+    return image
+
 # ── Supabase Storage (imágenes de salida permanentes) ─────────────────────────
 _SB_URL    = os.getenv("SUPABASE_URL",              "https://dluzcrfqqieprudfeuyk.supabase.co")
 _SB_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET",  "textonflow-uploads")
@@ -320,44 +370,15 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
         except Exception as e:
             logger.warning(f"⚠️ Error overlay: {e}")
 
-    # Watermark
+    # Watermark logo
     if request.watermark:
-        try:
-            if image.mode != "RGBA":
-                image = image.convert("RGBA")
-            img_w, img_h = image.size
-            wm_font_size = max(13, min(28, img_w // 55))
-            wm_font = None
-            for _fp in [
-                "fonts/PassionOne-Regular.ttf",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            ]:
-                try:
-                    wm_font = ImageFont.truetype(_fp, wm_font_size)
-                    break
-                except Exception:
-                    pass
-            if wm_font is None:
-                wm_font = ImageFont.load_default()
-            wm_text = "\u2756 textonflow.com"
-            _tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-            _bb = _tmp.textbbox((0, 0), wm_text, font=wm_font)
-            tw, th = _bb[2] - _bb[0], _bb[3] - _bb[1]
-            margin = max(8, img_w // 90)
-            pad_x, pad_y = 9, 5
-            rx1 = img_w - tw - pad_x * 2 - margin
-            ry1 = img_h - th - pad_y * 2 - margin
-            rx2 = img_w - margin
-            ry2 = img_h - margin
-            overlay_wm = Image.new("RGBA", image.size, (0, 0, 0, 0))
-            od = ImageDraw.Draw(overlay_wm)
-            od.rounded_rectangle([rx1, ry1, rx2, ry2], radius=5, fill=(0, 0, 0, 155))
-            image = Image.alpha_composite(image, overlay_wm)
-            ImageDraw.Draw(image).text((rx1 + pad_x, ry1 + pad_y), wm_text, font=wm_font, fill=(255, 255, 255, 215))
-            logger.info("✦ Watermark aplicado")
-        except Exception as _wm_err:
-            logger.warning(f"⚠️ Error watermark: {_wm_err}")
+        image = _apply_wm_logo(
+            image,
+            corner=getattr(request, "wm_corner", "br"),
+            size_px=getattr(request, "wm_size", 22),
+            opacity_pct=getattr(request, "wm_opacity", 55),
+            color_hex=getattr(request, "wm_color", "#ffffff"),
+        )
 
     return image
 
@@ -742,44 +763,13 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         # Se aplica si: (a) el request lo pide, (b) plan trial sin exención admin
         _apply_wm = request.watermark or _should_apply_watermark(_user_id)
         if _apply_wm:
-            try:
-                if image.mode != "RGBA":
-                    image = image.convert("RGBA")
-                img_w, img_h = image.size
-                wm_font_size = max(13, min(28, img_w // 55))
-                wm_font = None
-                for _fp in [
-                    "fonts/PassionOne-Regular.ttf",
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-                ]:
-                    try:
-                        wm_font = ImageFont.truetype(_fp, wm_font_size)
-                        break
-                    except Exception:
-                        pass
-                if wm_font is None:
-                    wm_font = ImageFont.load_default()
-                wm_text = "\u2756 textonflow.com"
-                _tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-                _bb = _tmp.textbbox((0, 0), wm_text, font=wm_font)
-                tw, th = _bb[2] - _bb[0], _bb[3] - _bb[1]
-                margin = max(8, img_w // 90)
-                pad_x, pad_y = 9, 5
-                rx1 = img_w - tw - pad_x * 2 - margin
-                ry1 = img_h - th - pad_y * 2 - margin
-                rx2 = img_w - margin
-                ry2 = img_h - margin
-                overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
-                od = ImageDraw.Draw(overlay)
-                od.rounded_rectangle([rx1, ry1, rx2, ry2], radius=5, fill=(0, 0, 0, 155))
-                image = Image.alpha_composite(image, overlay)
-                ImageDraw.Draw(image).text(
-                    (rx1 + pad_x, ry1 + pad_y), wm_text, font=wm_font, fill=(255, 255, 255, 215)
-                )
-                logger.info("✦ Watermark aplicado")
-            except Exception as _wm_err:
-                logger.warning(f"⚠️ Error en watermark: {_wm_err}")
+            image = _apply_wm_logo(
+                image,
+                corner=getattr(request, "wm_corner", "br"),
+                size_px=getattr(request, "wm_size", 22),
+                opacity_pct=getattr(request, "wm_opacity", 55),
+                color_hex=getattr(request, "wm_color", "#ffffff"),
+            )
 
         # Convertir a RGB y guardar como JPEG
         if image.mode == "RGBA":
@@ -1142,6 +1132,10 @@ async def render_api_template(template_id: str, request: Request):
         filter_name      = data.get("filter_name",       "none"),
         render_scale     = data.get("render_scale",      2),
         watermark        = data.get("watermark",         False),
+        wm_corner        = data.get("wm_corner",         "br"),
+        wm_size          = data.get("wm_size",           22),
+        wm_opacity       = data.get("wm_opacity",        55),
+        wm_color         = data.get("wm_color",          "#ffffff"),
         vignette_enabled = data.get("vignette_enabled",  False),
         vignette_color   = data.get("vignette_color",    "#000000"),
         vignette_opacity = data.get("vignette_opacity",  0.6),
@@ -1226,6 +1220,10 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
         filter_name      = data.get("filter_name",      "none"),
         render_scale     = data.get("render_scale",     2),
         watermark        = data.get("watermark",        False),
+        wm_corner        = data.get("wm_corner",        "br"),
+        wm_size          = data.get("wm_size",          22),
+        wm_opacity       = data.get("wm_opacity",       55),
+        wm_color         = data.get("wm_color",         "#ffffff"),
         vignette_enabled = data.get("vignette_enabled", False),
         vignette_color   = data.get("vignette_color",   "#000000"),
         vignette_opacity = data.get("vignette_opacity", 0.6),
