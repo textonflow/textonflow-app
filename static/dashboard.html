@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Cuenta — TextOnFlow</title>
 <link rel="icon" type="image/png" href="/static/favicon.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -100,6 +101,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .alert.success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
 .alert.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
 
+/* ── Estadísticas de renders ── */
+.stats-section{margin-top:20px}
+.stats-section .card-label{margin-bottom:16px}
+.chart-wrap-inner{position:relative;height:190px;margin-bottom:6px}
+.proj-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.proj-row{display:flex;align-items:center;gap:10px}
+.proj-name{flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-bar-bg{flex:2;background:var(--surface2);border-radius:100px;height:5px;overflow:hidden}
+.proj-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#5b8fff);border-radius:100px;transition:width .6s}
+.proj-cnt{font-size:12px;color:var(--accent);font-weight:700;width:46px;text-align:right;flex-shrink:0}
+.stats-empty{font-size:13px;color:var(--text3);text-align:center;padding:28px 0}
 /* Not logged in */
 .not-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center}
 .not-auth h2{font-size:1.4rem;font-weight:800;color:#fff}
@@ -245,6 +257,18 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
       <span class="info-key">Estado de cuenta</span>
       <span class="info-val" id="info-status">—</span>
     </div>
+  </div>
+
+  <!-- ── Estadísticas de renders ── -->
+  <div class="card stats-section" id="stats-section" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="card-label" style="margin:0">Renders por día (últimos 30 días)</div>
+      <button onclick="loadRenderStats()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;padding:4px 10px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''">↻ Actualizar</button>
+    </div>
+    <div class="chart-wrap-inner"><canvas id="renderChart"></canvas></div>
+    <div style="height:1px;background:var(--border);margin:16px 0"></div>
+    <div class="card-label" style="margin-bottom:10px">Por proyecto (este mes)</div>
+    <div class="proj-list" id="proj-list"><div class="stats-empty">Cargando...</div></div>
   </div>
 
   <!-- Upgrade (oculto si ya es agency o admin) -->
@@ -485,6 +509,9 @@ async function loadDashboard() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 
+    // Cargar estadísticas de renders en paralelo
+    loadRenderStats();
+
   } catch (err) {
     console.error(err);
     document.getElementById('loading').style.display = 'none';
@@ -524,6 +551,98 @@ async function upgrade(plan) {
 
 async function openPortal() {
   showAlert('Próximamente: portal de gestión de suscripción.', 'info');
+}
+
+// ── Estadísticas de renders ──────────────────────────────────────────
+let _renderChart = null;
+
+async function loadRenderStats() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const res = await fetch('/api/stats', { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('stats-section').style.display = 'block';
+    _drawChart(data.by_day || []);
+    _drawProjects(data.by_project || [], data.total_month || 0);
+  } catch (e) {
+    console.warn('loadRenderStats:', e);
+  }
+}
+
+function _drawChart(byDay) {
+  const days30 = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days30.push(d.toISOString().slice(0, 10));
+  }
+  const dayMap = {};
+  byDay.forEach(r => { dayMap[r.day] = Number(r.renders); });
+  const values = days30.map(d => dayMap[d] || 0);
+  const labels = days30.map(d => {
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  });
+
+  const canvas = document.getElementById('renderChart');
+  if (_renderChart) _renderChart.destroy();
+  _renderChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Renders',
+        data: values,
+        backgroundColor: 'rgba(124,110,255,0.65)',
+        borderColor: '#7c6eff',
+        borderWidth: 0,
+        borderRadius: 3,
+        hoverBackgroundColor: 'rgba(91,143,255,0.85)',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} renders` } }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1e1e38', drawBorder: false },
+          ticks: {
+            color: '#555577', font: { size: 10 }, maxRotation: 0,
+            callback: function(val, idx) { return idx % 5 === 0 ? this.getLabelForValue(val) : ''; }
+          }
+        },
+        y: {
+          grid: { color: '#1e1e38', drawBorder: false },
+          ticks: { color: '#555577', font: { size: 11 }, precision: 0 },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+}
+
+function _drawProjects(byProject, totalMonth) {
+  const container = document.getElementById('proj-list');
+  if (!byProject.length) {
+    container.innerHTML = '<div class="stats-empty">Aún no hay renders registrados este mes.<br>Genera imágenes desde el editor para verlas aquí.</div>';
+    return;
+  }
+  const max = Math.max(...byProject.map(p => Number(p.renders)), 1);
+  container.innerHTML = byProject.map(p => {
+    const pct = (Number(p.renders) / max * 100).toFixed(1);
+    const name = String(p.project || 'Sin nombre').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="proj-row">
+      <span class="proj-name" title="${name}">${name}</span>
+      <div class="proj-bar-bg"><div class="proj-bar-fill" style="width:${pct}%"></div></div>
+      <span class="proj-cnt">${Number(p.renders).toLocaleString('es-ES')}</span>
+    </div>`;
+  }).join('');
 }
 
 // Leer parámetro ?success=1 tras pago
