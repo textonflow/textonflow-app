@@ -814,7 +814,10 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
 +String(_cdToday.getMonth()+1).padStart(2,'0')+'-'
 +String(_cdToday.getDate()).padStart(2,'0');const tz=t.countdown_event_tz||'America/Mazatlan';const tzOptions=[['America/Mazatlan','Mazatlán / Cabo San Lucas (UTC-7)'],['America/Mexico_City','Ciudad de México / CDMX (UTC-6)'],['America/Tijuana','Tijuana / Mexicali (UTC-8)'],['America/Cancun','Cancún (UTC-5)'],['America/Chihuahua','Chihuahua (UTC-7)'],['America/New_York','Nueva York (UTC-5)'],['America/Los_Angeles','Los Angeles (UTC-8)'],['America/Chicago','Chicago (UTC-6)'],['UTC','UTC / GMT'],].map(([v,l])=>`<option value="${v}" ${tz===v?'selected':''}>${l}</option>`).join('');const fmtOptions=['HH:MM:SS','DD:HH:MM:SS','HH:MM'].map(f=>`<option value="${f}" ${(t.countdown_format||'HH:MM:SS')===f?'selected':''}>${f}</option>`).join('');return`
             <div class="cd-section">
-              <div class="cd-section-title">⏱ Contador Regresivo</div>
+              <div class="cd-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                <span>⏱ Contador Regresivo</span>
+                <button onclick="cdHelpModal(texts[${index}].countdown_mode||'event')" title="Guía de uso del contador" style="background:#1e1e3a;border:1px solid #2a2a50;border-radius:50%;width:22px;height:22px;color:#818cf8;font-size:12px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;padding:0;">?</button>
+              </div>
 
               <!-- Preview vivo en el panel -->
               <div class="cd-live-preview" id="cd-live-${index}">00:00:00</div>
