@@ -135,6 +135,8 @@ class MultiTextRequest(BaseModel):
     img_zoom:      float           = 1.0   # Factor de zoom de la imagen
     # ── Imagen base64 (opcional): el frontend la envía para evitar fetch externo ─
     template_image_b64: Optional[str] = None  # Base64 del JPEG/PNG de la plantilla
+    # ── Metadata de contexto (para dashboard de estadísticas) ──────────────────
+    project_name: Optional[str] = None  # Nombre del proyecto en el editor
 
 class _AdminLoginBody(BaseModel):
     email: str
