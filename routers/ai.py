@@ -440,10 +440,11 @@ async def enhance_prompt(req: EnhancePromptRequest):
         "systemInstruction": {"parts": [{"text": system_text}]},
         "generationConfig": {"temperature": 0.75, "maxOutputTokens": 260, "candidateCount": 1}
     }
-    # Timeouts cortos + 3 intentos: evita que Railway corte por timeout (límite ~30s)
-    # Intento 1: Gemini frío puede tardar, si falla reintentamos rápido (ya calentó)
-    _TIMEOUTS = [12, 12, 10]
+    # ⚠️  Railway corta conexiones a los ~30s.
+    # 2 intentos × 10s = 20s máximo → siempre respondemos antes del corte.
+    _TIMEOUTS = [10, 8]
     last_error = None
+    last_status = None
     data = None
     for attempt, _t in enumerate(_TIMEOUTS):
         try:
@@ -451,28 +452,36 @@ async def enhance_prompt(req: EnhancePromptRequest):
                 resp = await client.post(url, json=payload, headers=headers)
             if resp.status_code == 429:
                 logger.warning("Enhance-prompt Gemini 429 rate limit")
-                last_error = 429
-                await asyncio.sleep(1.0)
-                continue
-            if resp.status_code != 200:
-                logger.error(f"Enhance-prompt Gemini error {resp.status_code}: {resp.text[:300]}")
-                last_error = resp.status_code
+                last_error = "quota"
+                last_status = 429
                 await asyncio.sleep(0.5)
                 continue
+            if resp.status_code != 200:
+                logger.error(f"Enhance-prompt Gemini error {resp.status_code}: {resp.text[:400]}")
+                last_error = f"HTTP {resp.status_code}"
+                last_status = resp.status_code
+                break   # error no recuperable con reintento
             data = resp.json()
-            break                         # éxito
-        except asyncio.TimeoutError:
+            logger.info(f"Enhance-prompt OK (intento {attempt+1})")
+            break
+        except (httpx.TimeoutException, asyncio.TimeoutError):
             logger.warning(f"Enhance-prompt timeout intento {attempt+1}/{len(_TIMEOUTS)} ({_t}s)")
             last_error = "timeout"
             if attempt < len(_TIMEOUTS) - 1:
                 await asyncio.sleep(0.3)
         except Exception as exc:
             logger.warning(f"Enhance-prompt intento {attempt+1} error: {exc}")
-            last_error = exc
+            last_error = str(exc)
             if attempt < len(_TIMEOUTS) - 1:
                 await asyncio.sleep(0.3)
     if data is None:
-        raise HTTPException(status_code=502, detail="No se pudo mejorar el prompt ahora. Intenta de nuevo.")
+        if last_error == "quota":
+            detail = "Límite de cuota Gemini alcanzado. Espera unos segundos e intenta de nuevo."
+        elif last_error == "timeout":
+            detail = "El servicio de IA tardó demasiado. Intenta de nuevo."
+        else:
+            detail = f"No se pudo mejorar el prompt: {last_error}. Intenta de nuevo."
+        raise HTTPException(status_code=502, detail=detail)
     try:
         data = data
         candidates = data.get("candidates", [])
