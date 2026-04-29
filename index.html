@@ -7,7 +7,7 @@
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <!-- ASSET_VERSION: v244 — MRU auto-sort: sección usada sube al top con animación FLIP -->
-    <link rel="stylesheet" href="/static/styles.css?v=248">
+    <link rel="stylesheet" href="/static/styles.css?v=249">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1713,10 +1713,41 @@
                                 <span data-i18n="result_download">Descargar</span>
                             </button>
                             <!-- Exportar GIF animado -->
-                            <button id="result-gif-btn" onclick="exportAnimatedGIF()" title="Exportar como GIF animado" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#7c3aed;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;flex-shrink:0;">
+                            <div style="position:relative;display:inline-flex;flex-direction:column;align-items:center;flex-shrink:0;" id="gif-btn-wrap">
+                              <button id="result-gif-btn" onclick="exportAnimatedGIF()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#7c3aed;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;" onmouseenter="document.getElementById('gif-tip').style.opacity='1';document.getElementById('gif-tip').style.pointerEvents='auto';" onmouseleave="document.getElementById('gif-tip').style.opacity='0';document.getElementById('gif-tip').style.pointerEvents='none';">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 GIF
-                            </button>
+                              </button>
+                              <!-- Tooltip redes sociales -->
+                              <div id="gif-tip" style="opacity:0;pointer-events:none;transition:opacity .18s;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid #3a3a5c;border-radius:10px;padding:9px 13px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+                                <div style="font-size:10px;color:#9ca3ff;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;">Ideal para estas redes</div>
+                                <div style="display:flex;flex-direction:column;gap:6px;">
+                                  <!-- Instagram -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" stroke="white" stroke-width="1.6" fill="none"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/><defs><linearGradient id="ig-grad" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#f09433"/><stop offset="25%" stop-color="#e6683c"/><stop offset="50%" stop-color="#dc2743"/><stop offset="75%" stop-color="#cc2366"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Instagram DM / Stories</span>
+                                  </div>
+                                  <!-- Messenger -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0084FF"/><path d="M12 5C8.134 5 5 7.9 5 11.5c0 2.02 1.017 3.823 2.61 5.007V18.5l2.42-1.33A7.43 7.43 0 0 0 12 17.5c3.866 0 7-2.9 7-6.5S15.866 5 12 5zm.7 8.75-1.79-1.9-3.49 1.9 3.84-4.07 1.83 1.9 3.45-1.9-3.84 4.07z" fill="white"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Facebook Messenger</span>
+                                  </div>
+                                  <!-- Email -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="#EA4335"/><path d="M2 7l10 7 10-7" stroke="white" stroke-width="1.6" fill="none"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Email marketing</span>
+                                  </div>
+                                  <!-- Telegram -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2CA5E0"/><path d="M17.5 7.5l-2.5 11-3.7-3.3-1.8 1.7V14l6.5-6-7.5 4.2-2.7-.9 11.7-3.8z" fill="white"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Telegram</span>
+                                  </div>
+                                </div>
+                                <div style="margin-top:7px;padding-top:7px;border-top:1px solid #2a2a4a;font-size:10px;color:#6b7280;line-height:1.4;">WhatsApp convierte GIFs a video, usa imagen PNG para WA.</div>
+                                <!-- flecha -->
+                                <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:10px;height:6px;overflow:hidden;"><div style="width:10px;height:10px;background:#1a1a2e;border:1px solid #3a3a5c;transform:rotate(45deg);margin-top:-5px;margin-left:0;"></div></div>
+                              </div>
+                            </div>
                             <button id="result-drive-btn" onclick="resultDriveBtnClick()" class="tof-drive-save-btn" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#4a5568;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;flex-shrink:0;">
                                 <svg width="14" height="14" viewBox="0 0 87.3 78" fill="currentColor" class="tof-shrink-0"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 49.5C.4 50.9 0 52.45 0 54h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.85l5.65 10.85z" fill="#ea4335"/><path d="M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="M59.85 54H27.5L13.75 77.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="M73.4 27.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.85 54h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
                                 <span id="result-drive-btn-lbl" data-i18n="result_drive_btn">Drive</span>
@@ -1877,8 +1908,8 @@
       Extensión Chrome
     </a>
 
-    <script src="/static/i18n.js?v=248"></script>
-    <script src="/static/app.js?v=248"></script>
+    <script src="/static/i18n.js?v=249"></script>
+    <script src="/static/app.js?v=249"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
