@@ -271,7 +271,7 @@
             background: #141414;
             background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px);
             background-size: 22px 22px;
-            padding: 24px 20px 160px 20px; 
+            padding: 52px 20px 160px 20px; /* top 52px: espacio para barra fija de formatos */
             overflow: auto;
             display: flex;
             flex-direction: column;
@@ -3811,13 +3811,14 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     margin: 0 auto;         /* centrado horizontal garantizado */
 }
 
-/* Barra de tabs de formato — sticky centrada en tope del canvas-area */
+/* Barra de tabs de formato — FIJA arriba, a la derecha del logo */
 #format-tabs-bar {
     /* display: flex lo pone JS */
-    position: sticky;
-    top: 28px;
-    z-index: 40;
-    align-self: center;
+    position: fixed;
+    top: 6px;
+    left: 180px;   /* logo en left:12px (~90px ancho) + ~78px sep → ~100px desde borde logo */
+    right: calc(var(--panel-w, 320px) + 14px);
+    z-index: 350;
     align-items: center;
     gap: 4px;
     flex-wrap: nowrap;
@@ -3828,14 +3829,14 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     cursor: grab;
     justify-content: flex-start;
     width: auto;
-    max-width: calc(100% - 32px);
+    max-width: calc(100vw - 180px - var(--panel-w, 320px) - 28px);
     box-sizing: border-box;
-    padding: 7px 14px;
+    padding: 6px 14px;
     background: rgba(10, 10, 22, 0.92);
-    border-radius: 10px;
+    border-radius: 9px;
     border: 1px solid rgba(102,126,234,0.20);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 2px 12px rgba(0,0,0,0.5);
     user-select: none;
 }
@@ -3844,11 +3845,11 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
 #format-tabs-bar .fmt-tab { flex-shrink: 0; }
 #format-tabs-bar .fmt-tab-sep { flex-shrink: 0; }
 
-/* Barra de controles imagen-capa — sticky debajo de tabs */
+/* Barra de controles imagen-capa — sticky en canvas-area, debajo de la barra fija */
 #img-layer-controls {
     /* display: flex lo pone JS */
     position: sticky;
-    top: 60px;
+    top: 8px;
     z-index: 39;
     align-self: center;
     align-items: center;
@@ -4257,24 +4258,30 @@ body.tof-bg-dark .canvas-area {
    ══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-    /* Una sola fila horizontal con scroll — elimina el wrap de 2 filas */
+    /* En móvil: barra vuelve a sticky dentro del canvas-area */
     #format-tabs-bar {
+        position: sticky !important;
+        top: 8px !important;
+        left: auto !important;
+        right: auto !important;
+        width: calc(100vw - 32px) !important;
+        max-width: calc(100vw - 32px) !important;
+        align-self: center !important;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
         justify-content: flex-start !important;
-        width: calc(100vw - 32px) !important;
-        max-width: calc(100vw - 32px) !important;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
         padding: 5px 10px !important;
         gap: 5px !important;
+        z-index: 40 !important;
     }
     #format-tabs-bar::-webkit-scrollbar {
         display: none !important;
     }
     #format-tabs-bar .fmt-tab {
-        flex-shrink: 0 !important;   /* evita que se compriman */
+        flex-shrink: 0 !important;
         white-space: nowrap !important;
     }
     #format-tabs-bar .fmt-tab-sep {
