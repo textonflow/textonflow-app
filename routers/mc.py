@@ -7,16 +7,17 @@ import logging
 import uuid
 import os
 import re
-import httpx
-import base64
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+import httpx
+import psycopg2.extras
+
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Any, Optional
 
 from database import get_db
-from auth import decode_jwt
+from auth import decode_jwt, create_jwt
 
 logger = logging.getLogger("textonflow")
 
@@ -34,7 +35,7 @@ class SaveTemplateRequest(BaseModel):
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _replace_vars(obj: Any, params: dict) -> Any:
-    """Reemplaza {{variable}} en strings del payload JSON con los query params."""
+    """Reemplaza {{variable}} en strings del payload con los query params de ManyChat."""
     if isinstance(obj, str):
         def replacer(m):
             key = m.group(1).strip()
@@ -47,6 +48,42 @@ def _replace_vars(obj: Any, params: dict) -> Any:
     return obj
 
 
+def _ensure_mc_templates_table(conn):
+    """Crea la tabla mc_templates si no existe (idempotente)."""
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS mc_templates (
+                    id          TEXT PRIMARY KEY,
+                    user_id     TEXT,
+                    payload     JSONB NOT NULL,
+                    created_at  TIMESTAMPTZ DEFAULT NOW(),
+                    renders     INT DEFAULT 0
+                )
+            """)
+    except Exception as e:
+        logger.warning(f"_ensure_mc_templates_table: {e}")
+
+
+def _get_user_jwt(conn, user_id: str) -> Optional[str]:
+    """Devuelve un JWT fresco para user_id, o None si no se encuentra."""
+    if not user_id:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT id, email, plan FROM users WHERE id=%s LIMIT 1",
+                (user_id,),
+            )
+            user = cur.fetchone()
+        if not user:
+            return None
+        return create_jwt(str(user["id"]), user["email"], user["plan"])
+    except Exception as e:
+        logger.warning(f"_get_user_jwt error: {e}")
+        return None
+
+
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @mc_router.post("/template")
@@ -55,42 +92,32 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
     Guarda el diseño actual como plantilla ManyChat.
     Devuelve una URL lista para pegar en el HTTP Request de ManyChat.
     """
-    # Auth opcional — guardamos con user_id si está logueado
     user_id = None
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer "):
         try:
-            payload = decode_jwt(auth[7:])
-            user_id = payload.get("sub")
+            decoded = decode_jwt(auth[7:])
+            user_id = decoded.get("sub")
         except Exception:
             pass
 
-    template_id = str(uuid.uuid4()).replace("-", "")[:16]
+    template_id = uuid.uuid4().hex[:16]
 
     conn = get_db()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS mc_templates (
-                        id TEXT PRIMARY KEY,
-                        user_id TEXT,
-                        payload JSONB NOT NULL,
-                        created_at TIMESTAMPTZ DEFAULT NOW(),
-                        renders INT DEFAULT 0
-                    )
-                    """,
-                )
-                cur.execute(
-                    "INSERT INTO mc_templates (id, user_id, payload) VALUES (%s, %s, %s)",
-                    (template_id, user_id, json.dumps(body.payload)),
-                )
-        except Exception as e:
-            logger.error(f"save_mc_template DB error: {e}")
-            raise HTTPException(status_code=500, detail="Error guardando plantilla")
-    else:
+    if not conn:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
+
+    _ensure_mc_templates_table(conn)
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO mc_templates (id, user_id, payload) VALUES (%s, %s, %s)",
+                (template_id, user_id, json.dumps(body.payload)),
+            )
+    except Exception as e:
+        logger.error(f"save_mc_template INSERT error: {e}")
+        raise HTTPException(status_code=500, detail="Error guardando plantilla")
 
     render_url = f"{API_URL}/api/mc/{template_id}/render"
     return {
@@ -99,8 +126,7 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
         "example": render_url + "?text=Hola%20{{nombre}}&image_url={{foto_url}}",
         "instructions": (
             "Pega render_url en el paso HTTP Request de ManyChat (método GET). "
-            "Agrega tus variables de ManyChat como query params: "
-            "?text={{nombre}}&image_url={{foto}} etc."
+            "Agrega tus variables: ?text={{nombre}}&image_url={{foto}} etc."
         ),
     }
 
@@ -109,8 +135,8 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
 async def render_mc_template(template_id: str, request: Request):
     """
     Renderiza una plantilla guardada reemplazando las variables de ManyChat.
-    ManyChat llama este endpoint como HTTP Request (GET) y recibe la URL de la imagen.
-    Todos los query params se usan para reemplazar {{variable}} en el payload.
+    ManyChat llama este endpoint como HTTP Request (GET).
+    Devuelve: {"success": true, "image_url": "https://..."}
     """
     params = dict(request.query_params)
 
@@ -118,58 +144,86 @@ async def render_mc_template(template_id: str, request: Request):
     if not conn:
         raise HTTPException(status_code=503, detail="Base de datos no disponible")
 
+    _ensure_mc_templates_table(conn)
+
+    # ── Leer plantilla de BD ────────────────────────────────────────────────
     try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT payload FROM mc_templates WHERE id=%s", (template_id,))
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT payload, user_id FROM mc_templates WHERE id=%s",
+                (template_id,),
+            )
             row = cur.fetchone()
     except Exception as e:
-        logger.error(f"render_mc_template DB read error: {e}")
+        logger.error(f"render_mc_template SELECT error: {e}")
         raise HTTPException(status_code=500, detail="Error leyendo plantilla")
 
     if not row:
-        raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+        raise HTTPException(status_code=404, detail=f"Plantilla '{template_id}' no encontrada")
 
-    payload = dict(row["payload"] if hasattr(row["payload"], "keys") else json.loads(row["payload"]))
+    # psycopg2 devuelve JSONB como dict directamente con RealDictCursor
+    raw_payload = row["payload"]
+    if isinstance(raw_payload, str):
+        raw_payload = json.loads(raw_payload)
+    payload = dict(raw_payload)
 
-    # Override image_url si viene como param
+    stored_user_id = row.get("user_id")
+
+    # ── Aplicar variables de ManyChat ───────────────────────────────────────
     if "image_url" in params:
         payload["template_name"] = params["image_url"]
 
-    # Reemplazar todas las {{variables}} en el payload
     payload = _replace_vars(payload, params)
     payload["render_scale"] = 1
 
-    # Llamamos al propio /generate-multi internamente
+    # ── Obtener token JWT del dueño del template ────────────────────────────
+    jwt_token = _get_user_jwt(conn, stored_user_id) if stored_user_id else None
+
+    headers = {"Content-Type": "application/json"}
+    if jwt_token:
+        headers["Authorization"] = f"Bearer {jwt_token}"
+
+    # ── Llamar a /generate-multi internamente ───────────────────────────────
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=90) as client:
             resp = await client.post(
                 f"{API_URL}/generate-multi",
                 json=payload,
-                headers={"X-MC-Internal": "1"},
+                headers=headers,
             )
+
         if resp.status_code != 200:
-            detail = resp.json().get("detail", f"Error {resp.status_code}")
+            try:
+                detail = resp.json().get("detail", f"Error {resp.status_code}")
+            except Exception:
+                detail = f"Error {resp.status_code}"
+            logger.error(f"generate-multi interno devolvió {resp.status_code}: {detail}")
             raise HTTPException(status_code=resp.status_code, detail=detail)
 
         data = resp.json()
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"render_mc_template render error: {e}")
+        logger.error(f"render_mc_template llamada render error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-    # Actualizar contador de renders
+    # ── Actualizar contador de renders ──────────────────────────────────────
     try:
         with conn.cursor() as cur:
-            cur.execute("UPDATE mc_templates SET renders=renders+1 WHERE id=%s", (template_id,))
+            cur.execute(
+                "UPDATE mc_templates SET renders = renders + 1 WHERE id=%s",
+                (template_id,),
+            )
     except Exception:
         pass
 
-    # ManyChat espera el resultado en el body — devolvemos image_url en raíz
     image_url = data.get("url") or data.get("image_url") or ""
+
+    # ManyChat espera el JSON con image_url en la raíz para el "Mapeo de respuesta"
     return JSONResponse({
         "success": True,
         "image_url": image_url,
-        "url": image_url,          # alias por compatibilidad
+        "url": image_url,
         "template_id": template_id,
     })
