@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Generador Masivo · TextOnFlow</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a12;--surface:#13132a;--surface2:#1a1a2e;--border:#1e1e38;
+  --accent:#7c6eff;--accent2:#a5b4fc;--green:#22c55e;--orange:#f97316;
+  --gold:#f59e0b;--red:#ef4444;--text:#d0d0e8;--text2:#8888aa;--text3:#555577;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* Top bar */
+.top-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px;text-decoration:none}
+.logo span{color:var(--accent)}
+.back-btn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);text-decoration:none;padding:6px 13px;font-size:12px;font-weight:600;transition:all .2s}
+.back-btn:hover{color:#fff;border-color:var(--accent)}
+
+/* Layout */
+.main{flex:1;max-width:860px;margin:0 auto;padding:40px 24px;width:100%}
+h1{font-size:1.7rem;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.subtitle{font-size:14px;color:var(--text2);margin-bottom:32px}
+
+/* Steps */
+.steps{display:flex;gap:0;margin-bottom:32px;border-bottom:2px solid var(--border)}
+.step-tab{padding:10px 20px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
+.step-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.step-tab.done{color:var(--green)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.card h2{font-size:15px;font-weight:700;color:#fff;margin-bottom:14px}
+.card-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+
+/* Form */
+label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px}
+input[type=text],input[type=url],select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-size:13px;outline:none;transition:border .2s;font-family:inherit}
+input[type=text]:focus,input[type=url]:focus,select:focus{border-color:var(--accent)}
+select{cursor:pointer}
+
+/* Table */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+td{color:var(--text);padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* Mapping */
+.map-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.map-row:last-child{border-bottom:none}
+.var-chip{background:rgba(124,110,255,.15);color:var(--accent2);border:1px solid rgba(124,110,255,.2);border-radius:6px;padding:4px 10px;font-size:12px;font-family:monospace;white-space:nowrap}
+.arrow{color:var(--text3);font-size:16px;text-align:center}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{color:#fff;border-color:var(--accent)}
+
+/* Progress / status */
+.progress-outer{background:var(--surface2);border-radius:100px;height:8px;margin-top:12px;overflow:hidden;border:1px solid var(--border)}
+.progress-inner{height:100%;background:linear-gradient(90deg,var(--accent),#5b8fff);border-radius:100px;transition:width .3s ease}
+.status-msg{font-size:13px;color:var(--text2);margin-top:10px;min-height:20px}
+.status-msg.ok{color:var(--green)}
+.status-msg.err{color:var(--red)}
+
+/* Alert */
+.alert{border-radius:10px;padding:14px 16px;font-size:13px;margin-bottom:20px;display:none}
+.alert.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.alert.info{background:rgba(124,110,255,.1);border:1px solid rgba(124,110,255,.2);color:var(--accent2)}
+
+/* Auth required */
+.not-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center;display:none}
+.not-auth h2{font-size:1.4rem;font-weight:800;color:#fff}
+.not-auth p{color:var(--text2);font-size:14px;max-width:340px}
+
+/* Feature chips */
+.feature-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.chip .icon{font-size:14px}
+
+@media(max-width:600px){
+  .top-bar{padding:10px 16px}
+  .main{padding:24px 14px}
+  h1{font-size:1.35rem}
+  .step-tab{padding:8px 14px;font-size:12px}
+  .map-row{grid-template-columns:1fr auto 1fr;gap:6px}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="logo" href="/"><span>Text</span>OnFlow</a>
+  <span style="color:var(--border)">|</span>
+  <span style="font-size:13px;color:var(--text2);font-weight:600">Generador Masivo</span>
+  <a class="back-btn" href="/">← Editor</a>
+</div>
+
+<!-- Not auth -->
+<div class="not-auth" id="not-auth">
+  <h2>Necesitas iniciar sesión</h2>
+  <p>Accede a tu cuenta para usar el generador masivo.</p>
+  <a href="/" class="btn btn-primary">Ir al editor</a>
+</div>
+
+<div class="main" id="app" style="display:none">
+  <h1>Generador Masivo</h1>
+  <p class="subtitle">Genera cientos de imágenes personalizadas desde Google Sheets o un CSV. Sin código.</p>
+
+  <div class="feature-chips">
+    <div class="chip"><span class="icon">📊</span>Google Sheets público</div>
+    <div class="chip"><span class="icon">📄</span>CSV directo</div>
+    <div class="chip"><span class="icon">🗂</span>Descarga en ZIP</div>
+    <div class="chip"><span class="icon">⚡</span>Hasta 100 imágenes por lote</div>
+  </div>
+
+  <div class="alert error" id="alert-box"></div>
+
+  <!-- PASO 1: Fuente de datos -->
+  <div class="card" id="step1-card">
+    <h2>1. Fuente de datos</h2>
+
+    <label>URL de Google Sheets (hoja pública) o URL de CSV:</label>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input type="url" id="source-url" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1">
+      <button class="btn btn-ghost" onclick="previewColumns()" id="btn-preview">Ver columnas</button>
+    </div>
+
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.7">
+      💡 Para usar Google Sheets: ve a <strong style="color:var(--text2)">Compartir → Cualquier persona con el enlace puede ver</strong>, luego pega la URL aquí.
+    </div>
+
+    <div id="columns-preview" style="display:none">
+      <div class="card-label">Vista previa de datos (<span id="col-count">0</span> columnas · <span id="row-count">0</span> filas)</div>
+      <div class="table-wrap">
+        <table id="preview-table">
+          <thead id="preview-thead"></thead>
+          <tbody id="preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2: Diseño + mapeo -->
+  <div class="card" id="step2-card" style="display:none">
+    <h2>2. Diseño y variables</h2>
+
+    <label style="margin-bottom:10px">Pega el JSON del diseño (desde el editor: Exportar JSON → copiar):</label>
+    <textarea id="template-json" rows="5" placeholder='{"template_name":"https://...","texts":[...]}'
+      style="font-family:monospace;font-size:11px;resize:vertical"></textarea>
+    <div style="font-size:12px;color:var(--text3);margin-top:6px;margin-bottom:18px">
+      En el editor usa <strong style="color:var(--text2)">Exportar JSON</strong> para copiar el diseño actual.
+    </div>
+
+    <div id="mapping-wrap" style="display:none">
+      <div class="card-label" style="margin-bottom:12px">Mapeo de variables → columnas</div>
+      <div id="mapping-rows"></div>
+    </div>
+
+    <div style="margin-top:18px;display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="buildMapping()" id="btn-build-map">Detectar variables</button>
+      <input type="text" id="output-prefix" value="imagen" placeholder="Prefijo de archivos" style="max-width:160px">
+      <span style="font-size:12px;color:var(--text3);align-self:center">Prefijo ZIP</span>
+    </div>
+  </div>
+
+  <!-- PASO 3: Generar -->
+  <div class="card" id="step3-card" style="display:none">
+    <h2>3. Generar imágenes</h2>
+
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <div>
+        <div style="font-size:24px;font-weight:900;color:#fff;line-height:1" id="gen-count">—</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">imágenes a generar</div>
+      </div>
+      <div>
+        <div style="font-size:24px;font-weight:900;color:var(--accent);line-height:1" id="gen-renders">—</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">renders que consumirá</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-generate" onclick="generateBatch()">
+      ⚡ Generar y descargar ZIP
+    </button>
+
+    <div style="margin-top:20px;display:none" id="progress-wrap">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Generando imágenes... esto puede tardar unos segundos.</div>
+      <div class="progress-outer"><div class="progress-inner" id="progress-bar" style="width:5%"></div></div>
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('tof_token') || localStorage.getItem('tf_token') || sessionStorage.getItem('tof_token') || '';
+
+if (!TOKEN) {
+  document.getElementById('not-auth').style.display = 'flex';
+} else {
+  document.getElementById('app').style.display = 'block';
+}
+
+let _columns = [];
+let _previewRows = [];
+let _totalRows = 0;
+let _variables = [];
+
+function showAlert(msg) {
+  const el = document.getElementById('alert-box');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.className = 'alert error';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setTimeout(() => el.style.display = 'none', 8000);
+}
+
+function clearAlert() {
+  document.getElementById('alert-box').style.display = 'none';
+}
+
+async function previewColumns() {
+  clearAlert();
+  const url = document.getElementById('source-url').value.trim();
+  if (!url) { showAlert('Ingresa una URL de Google Sheets o CSV'); return; }
+
+  const btn = document.getElementById('btn-preview');
+  btn.disabled = true;
+  btn.textContent = 'Cargando...';
+
+  try {
+    const res = await fetch('/api/batch/preview-columns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ source_url: url }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert(data.detail || `Error ${res.status}`); return; }
+
+    _columns = data.columns || [];
+    _previewRows = data.preview_rows || [];
+    _totalRows = data.total_rows || 0;
+
+    renderPreviewTable();
+    document.getElementById('col-count').textContent = _columns.length;
+    document.getElementById('row-count').textContent = _totalRows;
+    document.getElementById('columns-preview').style.display = 'block';
+    document.getElementById('step2-card').style.display = 'block';
+    document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    showAlert('Error de conexión: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ver columnas';
+  }
+}
+
+function renderPreviewTable() {
+  const thead = document.getElementById('preview-thead');
+  const tbody = document.getElementById('preview-tbody');
+  thead.innerHTML = '<tr>' + _columns.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>';
+  tbody.innerHTML = _previewRows.map(row =>
+    '<tr>' + _columns.map(c => `<td>${esc(String(row[c] || ''))}</td>`).join('') + '</tr>'
+  ).join('');
+}
+
+function buildMapping() {
+  clearAlert();
+  const jsonStr = document.getElementById('template-json').value.trim();
+  if (!jsonStr) { showAlert('Pega el JSON de tu diseño primero'); return; }
+
+  let tmpl;
+  try { tmpl = JSON.parse(jsonStr); } catch(e) { showAlert('JSON inválido: ' + e.message); return; }
+
+  // Detectar variables {{var}} en todos los textos
+  const vars = new Set();
+  const re = /\{\{([^}]+)\}\}/g;
+  (tmpl.texts || []).forEach(tf => {
+    let m;
+    while ((m = re.exec(tf.text || '')) !== null) vars.add(m[1].trim());
+  });
+  _variables = [...vars];
+
+  if (!_variables.length) {
+    showAlert('No se encontraron variables {{nombre}} en el JSON. Usa {{variable}} en tus textos.');
+    return;
+  }
+
+  // Construir filas de mapeo
+  const container = document.getElementById('mapping-rows');
+  container.innerHTML = _variables.map(v => `
+    <div class="map-row">
+      <span class="var-chip">{{${esc(v)}}}</span>
+      <span class="arrow">→</span>
+      <select id="map-${v}" style="width:100%">
+        <option value="">— Elegir columna —</option>
+        ${_columns.map(c => `<option value="${esc(c)}" ${c.toLowerCase()===v.toLowerCase()?'selected':''}>${esc(c)}</option>`).join('')}
+      </select>
+    </div>
+  `).join('');
+
+  document.getElementById('mapping-wrap').style.display = 'block';
+
+  // Actualizar contador
+  const n = Math.min(_totalRows, 100);
+  document.getElementById('gen-count').textContent = n;
+  document.getElementById('gen-renders').textContent = n;
+  document.getElementById('step3-card').style.display = 'block';
+  document.getElementById('step3-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function generateBatch() {
+  clearAlert();
+  const jsonStr = document.getElementById('template-json').value.trim();
+  if (!jsonStr) { showAlert('Pega el JSON de tu diseño'); return; }
+  let tmpl;
+  try { tmpl = JSON.parse(jsonStr); } catch(e) { showAlert('JSON inválido: ' + e.message); return; }
+
+  // Construir column_map
+  const column_map = {};
+  _variables.forEach(v => {
+    const sel = document.getElementById(`map-${v}`);
+    if (sel && sel.value) column_map[v] = sel.value;
+  });
+
+  const prefix = document.getElementById('output-prefix').value.trim() || 'imagen';
+  const url = document.getElementById('source-url').value.trim();
+
+  const btn = document.getElementById('btn-generate');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+  const pw = document.getElementById('progress-wrap');
+  pw.style.display = 'block';
+  const bar = document.getElementById('progress-bar');
+  const statusEl = document.getElementById('status-msg');
+  bar.style.width = '10%';
+  statusEl.textContent = '';
+  statusEl.className = 'status-msg';
+
+  // Animamos la barra mientras esperamos
+  let fakePct = 10;
+  const fakeInterval = setInterval(() => {
+    fakePct = Math.min(fakePct + 3, 85);
+    bar.style.width = fakePct + '%';
+  }, 400);
+
+  try {
+    const res = await fetch('/api/batch/from-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        source_url: url,
+        template_json: tmpl,
+        column_map,
+        output_prefix: prefix,
+        max_rows: 100,
+      }),
+    });
+
+    clearInterval(fakeInterval);
+    bar.style.width = '100%';
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Error ${res.status}`);
+    }
+
+    const rendered = res.headers.get('X-Batch-Rendered') || '?';
+    const errors   = res.headers.get('X-Batch-Errors')   || '0';
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `textonflow-batch-${Date.now()}.zip`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    statusEl.textContent = `✓ ${rendered} imágenes generadas${errors > 0 ? ` (${errors} con error)` : ''} — descarga iniciada`;
+    statusEl.className = 'status-msg ok';
+
+  } catch (e) {
+    clearInterval(fakeInterval);
+    bar.style.width = '100%';
+    bar.style.background = '#ef4444';
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.className = 'status-msg err';
+    showAlert(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Generar y descargar ZIP';
+    setTimeout(() => { bar.style.width = '0%'; bar.style.background = ''; }, 2000);
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
