@@ -6,8 +6,8 @@
     <meta name="google-site-verification" content="yswz02_5nuqTXpNaUk-k5x_D5LO-3NauE0Srf-GAnwY" />
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <!-- ASSET_VERSION: v251 — enhance-prompt: timeouts seguros + mensaje de error real -->
-    <link rel="stylesheet" href="/static/styles.css?v=251">
+    <!-- ASSET_VERSION: v252 — Resultados para ManyChat: botones JSON/URL; Copiar URL → Copiado -->
+    <link rel="stylesheet" href="/static/styles.css?v=252">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1541,12 +1541,12 @@
 
                 <div class="json-section" style="display:none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <h3 style="margin: 0;" data-i18n="json_panel_title">JSON para ManyChat</h3>
+                        <h3 style="margin: 0;" data-i18n="json_panel_title">Resultados para ManyChat</h3>
                         <div style="display:flex;gap:6px;align-items:center;">
-                          <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn">Copiar</button>
+                          <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn" title="Copiar JSON al portapapeles">JSON</button>
                           <button onclick="sendToManyChat()" title="Generar URL lista para ManyChat — sin copiar JSON" style="display:flex;align-items:center;gap:5px;padding:5px 11px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px;white-space:nowrap;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
-                            Enviar a ManyChat
+                            URL
                           </button>
                         </div>
                     </div>
@@ -3108,9 +3108,9 @@ function _mcShowModal(state, url, errMsg) {
     '<p style="margin:0 0 6px;font-size:11px;color:#6b7280;">Ejemplo con tus variables ManyChat:</p>' +
     '<div style="background:#0d0d1a;border:1px solid #2a2a45;border-radius:6px;padding:8px 10px;font-size:10px;color:#7c6eff;font-family:monospace;word-break:break-all;margin-bottom:14px;">' + exampleUrl + '</div>' +
     '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
-      '<button onclick="_mcCopyUrl(\'' + url + '\')" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">' +
+      '<button id="mc-copy-url-btn" onclick="_mcCopyUrl(\'' + url + '\',this)" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
-        'Copiar URL' +
+        '<span>Copiar URL</span>' +
       '</button>' +
       '<button onclick="document.getElementById(\'mc-modal\').style.display=\'none\'" style="padding:9px 16px;background:#1e1e3a;color:#9ca3ff;border:1.5px solid #3a3a5c;border-radius:8px;cursor:pointer;font-size:12px;">Cerrar</button>' +
     '</div>' +
@@ -3124,9 +3124,23 @@ function _mcShowModal(state, url, errMsg) {
     '</div>';
 }
 
-function _mcCopyUrl(url) {
+function _mcCopyUrl(url, btn) {
   navigator.clipboard.writeText(url).then(function() {
+    if (btn) {
+      var span = btn.querySelector('span') || btn;
+      var orig = span.textContent;
+      span.textContent = '✓ Copiado';
+      btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+      setTimeout(function() {
+        span.textContent = orig;
+        btn.style.background = 'linear-gradient(135deg,#0084FF,#00C6FF)';
+      }, 2200);
+    }
     if (typeof showNotif === 'function') showNotif('URL copiada al portapapeles', 'success');
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    if (typeof showNotif === 'function') showNotif('URL copiada', 'success');
   });
 }
 
