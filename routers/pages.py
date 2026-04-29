@@ -239,6 +239,14 @@ async def download_static(filepath: str):
 
 # ─── Páginas de administración ────────────────────────────────────────────────
 
+@pages_router.get("/batch", include_in_schema=False)
+async def batch_page():
+    """Generador masivo desde Google Sheets / CSV."""
+    path = os.path.join("static", "batch.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Página no encontrada")
+
 @pages_router.get("/admin-panel", include_in_schema=False)
 async def admin_panel_page():
     """Panel de administración con gestión visual de usuarios."""
