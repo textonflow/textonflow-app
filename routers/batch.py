@@ -19,10 +19,10 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from auth import _get_client_ip, _get_current_user
+from auth import _get_client_ip
 from database import log_render_event
 from user_limits import (
-    _check_user_render_limit, _require_user,
+    _get_current_user, _check_user_render_limit, _require_user,
 )
 
 logger = logging.getLogger("textonflow")
