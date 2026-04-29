@@ -1446,8 +1446,10 @@ async def ai_design_layout(req: DesignLayoutRequest):
     }
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code == 429:
+            raise HTTPException(status_code=429, detail="La IA está ocupada. Espera unos segundos e intenta de nuevo.")
         if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+            raise HTTPException(status_code=502, detail=f"Error IA ({resp.status_code}): {resp.text[:120]}")
         data = resp.json()
         parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         raw = "\n".join(p.get("text", "") for p in parts if "text" in p).strip()
@@ -1513,8 +1515,10 @@ async def ai_copy_suggestions(req: CopySuggestionsRequest):
     }
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=20)
+        if resp.status_code == 429:
+            raise HTTPException(status_code=429, detail="La IA está ocupada. Espera unos segundos e intenta de nuevo.")
         if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+            raise HTTPException(status_code=502, detail=f"Error IA ({resp.status_code}): {resp.text[:120]}")
         data = resp.json()
         parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         raw = "\n".join(p.get("text","") for p in parts if "text" in p).strip()
