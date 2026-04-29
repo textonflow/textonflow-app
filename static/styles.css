@@ -39,6 +39,33 @@
             font-weight: normal; font-style: normal;
         }
 
+        /* ── Biblia Fonts ─────────────────────────────────────────────────────── */
+        @font-face {
+            font-family: 'Aquiline Two';
+            src: url('/fonts/AquilineTwo-Regular.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'Tropical';
+            src: url('/fonts/Tropical-Regular.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'Jane Aust';
+            src: url('/fonts/JaneAust-Regular.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'Monterlo';
+            src: url('/fonts/Monterlo-Regular.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'Two Prot';
+            src: url('/fonts/2Prot-Regular.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+
         /* ── CSS Variables — Dark Studio ─────────────────────────────────────── */
         :root {
             --bg-base:      #111111;
