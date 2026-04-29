@@ -440,24 +440,38 @@ async def enhance_prompt(req: EnhancePromptRequest):
         "systemInstruction": {"parts": [{"text": system_text}]},
         "generationConfig": {"temperature": 0.75, "maxOutputTokens": 260, "candidateCount": 1}
     }
+    # Timeouts cortos + 3 intentos: evita que Railway corte por timeout (límite ~30s)
+    # Intento 1: Gemini frío puede tardar, si falla reintentamos rápido (ya calentó)
+    _TIMEOUTS = [12, 12, 10]
     last_error = None
-    for attempt in range(2):              # 2 intentos automáticos
+    data = None
+    for attempt, _t in enumerate(_TIMEOUTS):
         try:
-            async with httpx.AsyncClient(timeout=28) as client:
+            async with httpx.AsyncClient(timeout=_t) as client:
                 resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code == 429:
+                logger.warning("Enhance-prompt Gemini 429 rate limit")
+                last_error = 429
+                await asyncio.sleep(1.0)
+                continue
             if resp.status_code != 200:
                 logger.error(f"Enhance-prompt Gemini error {resp.status_code}: {resp.text[:300]}")
                 last_error = resp.status_code
-                await asyncio.sleep(0.8)
+                await asyncio.sleep(0.5)
                 continue
             data = resp.json()
             break                         # éxito
+        except asyncio.TimeoutError:
+            logger.warning(f"Enhance-prompt timeout intento {attempt+1}/{len(_TIMEOUTS)} ({_t}s)")
+            last_error = "timeout"
+            if attempt < len(_TIMEOUTS) - 1:
+                await asyncio.sleep(0.3)
         except Exception as exc:
-            logger.warning(f"Enhance-prompt intento {attempt+1} fallido: {exc}")
+            logger.warning(f"Enhance-prompt intento {attempt+1} error: {exc}")
             last_error = exc
-            if attempt == 0:
-                await asyncio.sleep(0.8)
-    else:
+            if attempt < len(_TIMEOUTS) - 1:
+                await asyncio.sleep(0.3)
+    if data is None:
         raise HTTPException(status_code=502, detail="No se pudo mejorar el prompt ahora. Intenta de nuevo.")
     try:
         data = data
