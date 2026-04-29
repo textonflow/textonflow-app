@@ -76,6 +76,7 @@ from routers.users  import users_router;  app.include_router(users_router)
 from routers.admin  import admin_router;  app.include_router(admin_router)
 from routers.render import render_router; app.include_router(render_router)
 from routers.ai     import ai_router;     app.include_router(ai_router)
+from routers.batch  import batch_router;  app.include_router(batch_router)
 from routers.pages  import pages_router;  app.include_router(pages_router)
 
 if __name__ == "__main__":
