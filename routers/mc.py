@@ -176,6 +176,13 @@ async def render_mc_template(template_id: str, request: Request):
     payload = _replace_vars(payload, params)
     payload["render_scale"] = 1
 
+    # Pasar todos los query params como vars al motor de render
+    # (necesario para countdown urgency: timer_final, etc.)
+    if params:
+        existing = payload.get("vars") or {}
+        merged = {**existing, **{k: str(v) for k, v in params.items()}}
+        payload["vars"] = merged
+
     # ── Obtener token JWT del dueño del template ────────────────────────────
     jwt_token = _get_user_jwt(conn, stored_user_id) if stored_user_id else None
 
