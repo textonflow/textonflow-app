@@ -7,7 +7,7 @@
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <!-- ASSET_VERSION: v244 — MRU auto-sort: sección usada sube al top con animación FLIP -->
-    <link rel="stylesheet" href="/static/styles.css?v=249">
+    <link rel="stylesheet" href="/static/styles.css?v=250">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1542,7 +1542,13 @@
                 <div class="json-section" style="display:none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <h3 style="margin: 0;" data-i18n="json_panel_title">JSON para ManyChat</h3>
-                        <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn">Copiar</button>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                          <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn">Copiar</button>
+                          <button onclick="sendToManyChat()" title="Generar URL lista para ManyChat — sin copiar JSON" style="display:flex;align-items:center;gap:5px;padding:5px 11px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px;white-space:nowrap;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+                            Enviar a ManyChat
+                          </button>
+                        </div>
                     </div>
                     <div class="json-output">
                         <pre id="json-output">{
@@ -1777,11 +1783,17 @@
                         <div id="result-url-display" style="margin-top:10px;font-size:10px;color:#888;word-break:break-all;"></div>
                         <!-- JSON del payload -->
                         <div id="result-json-section" style="margin-top:16px;border-top:1px solid #2a2a45;padding-top:14px;text-align:left;display:none;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
                                 <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;" data-i18n="json_template_lbl">JSON del template</span>
-                                <button id="result-copy-json-btn" onclick="resultCopyJson()" style="font-size:11px;font-weight:600;padding:4px 12px;background:#1a3a2a;border:1.5px solid #27ae60;color:#4ade80;border-radius:6px;cursor:pointer;transition:all .15s;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                  <button id="result-copy-json-btn" onclick="resultCopyJson()" style="font-size:11px;font-weight:600;padding:4px 12px;background:#1a3a2a;border:1.5px solid #27ae60;color:#4ade80;border-radius:6px;cursor:pointer;transition:all .15s;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span data-i18n="json_copy_btn">Copiar JSON</span>
-                                </button>
+                                  </button>
+                                  <button onclick="sendToManyChat()" style="font-size:11px;font-weight:700;padding:4px 12px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+                                    Enviar a ManyChat
+                                  </button>
+                                </div>
                             </div>
                             <pre id="result-json-display" style="background:#0d0d1a;border:1px solid #2a2a45;border-radius:8px;padding:10px 12px;font-size:10px;color:#7c6eff;overflow-x:auto;max-height:140px;overflow-y:auto;text-align:left;margin:0;line-height:1.5;"></pre>
                         </div>
@@ -1908,8 +1920,8 @@
       Extensión Chrome
     </a>
 
-    <script src="/static/i18n.js?v=249"></script>
-    <script src="/static/app.js?v=249"></script>
+    <script src="/static/i18n.js?v=250"></script>
+    <script src="/static/app.js?v=250"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
@@ -3045,6 +3057,79 @@ function _obFinish() {
   }
 })();
 
+// ── Enviar a ManyChat: genera URL única sin copy-paste ──────────────────────
+async function sendToManyChat() {
+  var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token') || '';
+  if (!tok) {
+    if (typeof openAuthModal === 'function') openAuthModal('login', '🔒 Inicia sesión para usar "Enviar a ManyChat"');
+    return;
+  }
+  var jsonEl = document.getElementById('json-output');
+  if (!jsonEl) { if (typeof showNotif === 'function') showNotif('No hay diseño activo', 'error'); return; }
+  var payload;
+  try { payload = JSON.parse(jsonEl.textContent); } catch(e) { if (typeof showNotif === 'function') showNotif('JSON inválido', 'error'); return; }
+
+  // Mostrar modal de carga
+  _mcShowModal('loading');
+
+  try {
+    var res = await fetch('/api/mc/template', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ payload: payload })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error ' + res.status);
+    _mcShowModal('success', data.render_url);
+  } catch(e) {
+    _mcShowModal('error', '', e.message);
+  }
+}
+
+function _mcShowModal(state, url, errMsg) {
+  var m = document.getElementById('mc-modal');
+  if (!m) return;
+  m.style.display = 'flex';
+
+  var body = document.getElementById('mc-modal-body');
+  if (state === 'loading') {
+    body.innerHTML = '<div style="text-align:center;padding:20px 0;"><span class="gen-spinner" style="width:28px;height:28px;border-width:3px;"></span><div style="margin-top:14px;color:#9ca3ff;font-size:13px;">Guardando plantilla…</div></div>';
+    return;
+  }
+  if (state === 'error') {
+    body.innerHTML = '<div style="color:#f87171;font-size:13px;text-align:center;padding:10px 0;">Error: ' + (errMsg||'Inténtalo de nuevo') + '</div>';
+    return;
+  }
+  // success
+  var exampleUrl = url + '?text=Hola {{nombre}}&image_url={{foto_portada}}';
+  body.innerHTML =
+    '<p style="margin:0 0 10px;font-size:12px;color:#a0aec0;line-height:1.6;">Pega esta URL en el <strong style="color:#e2e8f0;">paso HTTP Request</strong> de ManyChat (método GET). Tus variables de ManyChat se convierten automáticamente en los parámetros de la URL.</p>' +
+    '<div style="background:#0a0a1a;border:1.5px solid #0084FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#60a5fa;font-family:monospace;word-break:break-all;margin-bottom:12px;">' + url + '</div>' +
+    '<p style="margin:0 0 6px;font-size:11px;color:#6b7280;">Ejemplo con tus variables ManyChat:</p>' +
+    '<div style="background:#0d0d1a;border:1px solid #2a2a45;border-radius:6px;padding:8px 10px;font-size:10px;color:#7c6eff;font-family:monospace;word-break:break-all;margin-bottom:14px;">' + exampleUrl + '</div>' +
+    '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+      '<button onclick="_mcCopyUrl(\'' + url + '\')" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+        'Copiar URL' +
+      '</button>' +
+      '<button onclick="document.getElementById(\'mc-modal\').style.display=\'none\'" style="padding:9px 16px;background:#1e1e3a;color:#9ca3ff;border:1.5px solid #3a3a5c;border-radius:8px;cursor:pointer;font-size:12px;">Cerrar</button>' +
+    '</div>' +
+    '<div style="margin-top:14px;padding:10px;background:#1a0f00;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#d4a017;line-height:1.5;">' +
+      '<strong>¿Cómo configurarlo en ManyChat?</strong><br>' +
+      '1. En tu Flow agrega un paso <em>HTTP Request</em><br>' +
+      '2. Método: <strong>GET</strong><br>' +
+      '3. URL: pega la URL de arriba<br>' +
+      '4. Agrega tus params: <code>text={{nombre}}</code>, <code>image_url={{foto}}</code><br>' +
+      '5. Guarda la respuesta: <code>{{image_url}}</code> → úsala en el siguiente mensaje' +
+    '</div>';
+}
+
+function _mcCopyUrl(url) {
+  navigator.clipboard.writeText(url).then(function() {
+    if (typeof showNotif === 'function') showNotif('URL copiada al portapapeles', 'success');
+  });
+}
+
 // ── Exportar GIF animado desde el resultado ─────────────────────────────────
 async function exportAnimatedGIF() {
   var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token') || '';
@@ -3118,6 +3203,20 @@ async function exportAnimatedGIF() {
 <div id="ob-modal" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)_obFinish();">
   <div style="background:#0d0d18;border:1px solid #2a2a50;border-radius:20px;padding:28px 28px 24px;width:100%;max-width:440px;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;" onclick="event.stopPropagation();">
     <div id="ob-content"></div>
+  </div>
+</div>
+
+<!-- ── Modal: Enviar a ManyChat ─────────────────────────────────────────── -->
+<div id="mc-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#13132b;border:1.5px solid #0084FF;border-radius:16px;padding:22px 24px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,132,255,.25);position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0084FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+        <span style="font-size:15px;font-weight:800;color:#e2e8f0;">URL lista para ManyChat</span>
+      </div>
+      <button onclick="document.getElementById('mc-modal').style.display='none'" style="background:none;border:none;color:#666;cursor:pointer;font-size:18px;line-height:1;">✕</button>
+    </div>
+    <div id="mc-modal-body"></div>
   </div>
 </div>
 
