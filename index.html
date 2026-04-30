@@ -6,8 +6,8 @@
     <meta name="google-site-verification" content="yswz02_5nuqTXpNaUk-k5x_D5LO-3NauE0Srf-GAnwY" />
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <!-- ASSET_VERSION: v260 — fix: drag imagen inmediato en modo formato (igual que textos/stickers) -->
-    <link rel="stylesheet" href="/static/styles.css?v=256">
+    <!-- ASSET_VERSION: v261 — ux: splash tabs reorder + ocultar tab activo + default Subir Imagen -->
+    <link rel="stylesheet" href="/static/styles.css?v=261">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,11 +315,11 @@
 
             <!-- Mode toggle -->
             <div class="splash-mode-tabs">
-                <button class="splash-tab active" id="tab-url" onclick="splashSetMode('url')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Pega un link
-                </button>
-                <button class="splash-tab" id="tab-upload" onclick="splashSetMode('upload')">
+                <button class="splash-tab active" id="tab-upload" onclick="splashSetMode('upload')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>Subir Imagen
+                </button>
+                <button class="splash-tab" id="tab-url" onclick="splashSetMode('url')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Pega un link
                 </button>
                 <button class="splash-tab" id="tab-ai" onclick="splashSetMode('ai')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>Crear con IA
@@ -327,11 +327,10 @@
             </div>
 
             <!-- URL mode -->
-            <div id="splash-url-mode">
+            <div id="splash-url-mode" style="display:none;">
                 <div class="splash-input-row">
                     <input type="text" id="splash-url-input"
-                           placeholder="https://... link de tu imagen"
-                           autofocus
+                           placeholder="Pega aquí el link de la imagen que deseas cargar"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();splashLoad();}">
                     <button onclick="splashLoad()">Cargar →</button>
                 </div>
@@ -342,7 +341,7 @@
             </div>
 
             <!-- Upload mode -->
-            <div id="splash-upload-mode" style="display:none;">
+            <div id="splash-upload-mode">
                 <!-- Rectángulo grande: receptor único de clic, drag y Ctrl+V -->
                 <div id="splash-drop-zone"
                      onclick="document.getElementById('splash-file-input').click()"
