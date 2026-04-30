@@ -1437,7 +1437,7 @@
             cursor: pointer; transition: all 0.2s;
         }
         .splash-tab:hover { border-color: #667eea; color: #fff; }
-        .splash-tab.active { background: linear-gradient(135deg,#667eea,#764ba2); border-color: transparent; color: #fff; }
+        .splash-tab.active { display: none; }
         #splash-drop-zone.dragover { border-color: #667eea; background: rgba(102,126,234,0.08); transform: scale(1.01); }
         #splash-drop-zone:hover { border-color: #888; }
 
