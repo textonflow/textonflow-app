@@ -1338,19 +1338,38 @@ async def inpaint_image(request: Request):
         logger.error(f"mask analysis error: {e}")
         raise HTTPException(status_code=400, detail=f"Error al analizar la máscara: {e}")
 
-    # ── Prompt con coordenadas exactas (sin enviar la máscara como imagen) ────
+    # ── Compositar máscara magenta sobre la imagen original (guía visual) ──────
+    try:
+        import numpy as _np
+        orig_bytes  = base64.b64decode(original_b64)
+        orig_img    = _PILImg.open(_io.BytesIO(orig_bytes)).convert("RGBA")
+        w_o, h_o    = orig_img.size
+        mask_resized = mask_img.resize((w_o, h_o), _PILImg.LANCZOS)
+        mask_np      = _np.array(mask_resized)
+        overlay_np   = _np.zeros((h_o, w_o, 4), dtype=_np.uint8)
+        overlay_np[mask_np > 128] = [255, 0, 200, 190]   # magenta semitransparente
+        overlay_pil  = _PILImg.fromarray(overlay_np, "RGBA")
+        composite    = _PILImg.alpha_composite(orig_img, overlay_pil).convert("RGB")
+        comp_buf     = _io.BytesIO()
+        composite.save(comp_buf, format="JPEG", quality=90)
+        composite_b64 = base64.b64encode(comp_buf.getvalue()).decode()
+    except Exception as _ce:
+        logger.warning(f"composite mask failed, using original: {_ce}")
+        composite_b64 = original_b64
+
+    # ── Prompt con guía visual clara ─────────────────────────────────────────
     prompt = (
-        f"Precisely edit this image. "
-        f"Remove and erase ONLY the content located in this exact rectangular region: "
-        f"left={x1p}%, right={x2p}%, top={y1p}%, bottom={y2p}% "
-        f"(percentages measured from the top-left corner of the image). "
-        f"This region is {rw}% wide and {rh}% tall, "
-        f"centered at ({cxp}%, {cyp}%) from the top-left. "
-        f"Fill the erased area with realistic background that seamlessly continues "
-        f"the surrounding textures, colors, lighting and patterns — as if nothing was ever there. "
-        f"CRITICAL: Do NOT change or modify ANYTHING outside the specified rectangular region. "
-        f"Preserve the rest of the image pixel-perfectly. "
-        f"Return only the final edited image."
+        "I will give you two images:\n"
+        "IMAGE 1 (guide): the original image with a MAGENTA/PINK highlighted zone "
+        "that marks the area to erase.\n"
+        "IMAGE 2 (to edit): the clean original image without any markings.\n\n"
+        "Your task:\n"
+        "1. Identify the MAGENTA/PINK zone shown in Image 1.\n"
+        "2. In Image 2, erase ONLY the content inside that zone.\n"
+        "3. Fill the erased area with realistic, seamless background that naturally "
+        "continues the surrounding textures, colors, and lighting — as if nothing was ever there.\n"
+        "4. Do NOT modify anything outside the marked zone.\n"
+        "5. Return the complete final edited image (clean, without any pink or magenta marks)."
     )
 
     url     = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
@@ -1359,6 +1378,7 @@ async def inpaint_image(request: Request):
         "contents": [{
             "parts": [
                 {"text": prompt},
+                {"inlineData": {"mimeType": "image/jpeg", "data": composite_b64}},
                 {"inlineData": {"mimeType": "image/jpeg", "data": original_b64}}
             ]
         }],
@@ -1380,14 +1400,18 @@ async def inpaint_image(request: Request):
         if not candidates:
             raise HTTPException(status_code=500, detail="Gemini no devolvió resultado para el borrado")
 
-        for part in candidates[0].get("content", {}).get("parts", []):
+        parts_resp = candidates[0].get("content", {}).get("parts", [])
+        for part in parts_resp:
             if "inlineData" in part:
                 return {
                     "result": part["inlineData"]["data"],
                     "mime":   part["inlineData"].get("mimeType", "image/jpeg")
                 }
 
-        raise HTTPException(status_code=500, detail="Gemini no devolvió imagen. Intenta pintando un área más pequeña.")
+        # Log texto devuelto por Gemini para debug
+        text_parts = [p.get("text","") for p in parts_resp if "text" in p]
+        logger.warning(f"inpaint: Gemini devolvió solo texto: {' '.join(text_parts)[:300]}")
+        raise HTTPException(status_code=500, detail="Gemini no devolvió imagen. Intenta con un área diferente.")
 
     except requests.Timeout:
         raise HTTPException(status_code=504, detail="Tiempo de espera agotado (90 s). Intenta con un área más pequeña.")
