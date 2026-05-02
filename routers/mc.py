@@ -48,19 +48,6 @@ def _replace_vars(obj: Any, params: dict) -> Any:
     return obj
 
 
-def _extract_vars(obj: Any, found: set) -> None:
-    """Extrae todos los nombres de variables {{varname}} que aparecen en el payload."""
-    if isinstance(obj, str):
-        for m in re.finditer(r"\{\{([^}]+)\}\}", obj):
-            found.add(m.group(1).strip())
-    elif isinstance(obj, dict):
-        for v in obj.values():
-            _extract_vars(v, found)
-    elif isinstance(obj, list):
-        for item in obj:
-            _extract_vars(item, found)
-
-
 def _ensure_mc_templates_table(conn):
     """Crea la tabla mc_templates si no existe (idempotente)."""
     try:
@@ -132,27 +119,14 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
         logger.error(f"save_mc_template INSERT error: {e}")
         raise HTTPException(status_code=500, detail="Error guardando plantilla")
 
-    # Detectar variables {{varname}} en el payload y armar URL lista para ManyChat
-    found_vars: set = set()
-    _extract_vars(body.payload, found_vars)
-    # Excluir image_url (se maneja aparte) y vars técnicas
-    skip = {"image_url", "render_scale", "watermark"}
-    mc_vars = sorted(found_vars - skip)
-
-    base_url = f"{API_URL}/api/mc/{template_id}/render"
-    if mc_vars:
-        qs = "&".join(f"{v}=%7B%7B{v}%7D%7D" for v in mc_vars)
-        render_url = f"{base_url}?{qs}"
-    else:
-        render_url = base_url
-
+    render_url = f"{API_URL}/api/mc/{template_id}/render"
     return {
         "template_id": template_id,
         "render_url": render_url,
-        "variables": mc_vars,
+        "example": render_url + "?text=Hola%20{{nombre}}&image_url={{foto_url}}",
         "instructions": (
             "Pega render_url en el paso HTTP Request de ManyChat (método GET). "
-            "Las variables ya están incluidas en la URL."
+            "Agrega tus variables: ?text={{nombre}}&image_url={{foto}} etc."
         ),
     }
 
