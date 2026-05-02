@@ -231,11 +231,12 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
         image = apply_vignette(image, color=request.vignette_color, opacity=request.vignette_opacity,
                                size=request.vignette_size, sides=sides, tone=request.vignette_filter)
 
-    # Sustituir variables {varname}
+    # Sustituir variables {varname} y {{varname}} (formato ManyChat)
     if request.vars:
         sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
         for text_field in request.texts:
             for key in sorted_keys:
+                text_field.text = text_field.text.replace(f"{{{{{key}}}}}", request.vars[key])
                 text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
 
     # Formas (z_index ordenado)
@@ -600,11 +601,12 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 tone    = request.vignette_filter,
             )
 
-        # Sustituir variables {varname} con los valores de request.vars
+        # Sustituir variables {varname} y {{varname}} (formato ManyChat)
         if request.vars:
             sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
             for text_field in request.texts:
                 for key in sorted_keys:
+                    text_field.text = text_field.text.replace(f"{{{{{key}}}}}", request.vars[key])
                     text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
 
         # Renderizar Formas de canvas (ordenadas por z_index) — ANTES que los textos
@@ -947,10 +949,13 @@ async def save_api_template(template: ApiTemplateRequest):
     data = template.model_dump()
     data["id"] = tid
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
     vars_found = set()
     for t in data.get("texts", []):
-        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+        txt = t.get("text", "")
+        for m in re.findall(r'\{\{(\w+)\}\}', txt):
+            vars_found.add(m)
+        for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
     data["variables"] = sorted(vars_found)
     data["api_key"] = secrets.token_urlsafe(20)
@@ -987,10 +992,13 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
     data["require_api_key"]     = existing.get("require_api_key", False)
     data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
     data["updated_at"]          = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
     vars_found = set()
     for t in data.get("texts", []):
-        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+        txt = t.get("text", "")
+        for m in re.findall(r'\{\{(\w+)\}\}', txt):
+            vars_found.add(m)
+        for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
     data["variables"] = sorted(vars_found)
     with open(path, "w") as f:
