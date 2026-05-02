@@ -35,12 +35,13 @@ class SaveTemplateRequest(BaseModel):
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _replace_vars(obj: Any, params: dict) -> Any:
-    """Reemplaza {{variable}} en strings del payload con los query params de ManyChat."""
+    """Reemplaza {var}, {{var}}, {{var} en strings con los query params de ManyChat."""
     if isinstance(obj, str):
         def replacer(m):
             key = m.group(1).strip()
             return str(params.get(key, m.group(0)))
-        return re.sub(r"\{\{([^}]+)\}\}", replacer, obj)
+        # Maneja: {{varname}}, {{varname} (malformado), {varname}
+        return re.sub(r"\{{1,2}([a-zA-Z_][a-zA-Z0-9_]*)\}{1,2}", replacer, obj)
     if isinstance(obj, dict):
         return {k: _replace_vars(v, params) for k, v in obj.items()}
     if isinstance(obj, list):
