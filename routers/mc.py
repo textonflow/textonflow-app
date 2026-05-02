@@ -136,7 +136,7 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
 
     base_url = f"{API_URL}/api/mc/{template_id}/render"
     if mc_vars:
-        qs = "&".join(f"{v}=%7B%7B{v}%7D%7D" for v in mc_vars)
+        qs = "&".join(f"{v}={{{{{{v}}}}}}" for v in mc_vars)
         render_url = f"{base_url}?{qs}"
     else:
         render_url = base_url
