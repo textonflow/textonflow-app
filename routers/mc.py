@@ -120,14 +120,33 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
         logger.error(f"save_mc_template INSERT error: {e}")
         raise HTTPException(status_code=500, detail="Error guardando plantilla")
 
-    render_url = f"{API_URL}/api/mc/{template_id}/render"
+    # Detectar variables en el payload y construir URL con ?var={{var}}
+    found: set = set()
+    def _scan(obj):
+        if isinstance(obj, str):
+            for m in re.finditer(r"\{{1,2}([a-zA-Z_][a-zA-Z0-9_]*)\}{0,2}", obj):
+                found.add(m.group(1).strip())
+        elif isinstance(obj, dict):
+            for v in obj.values(): _scan(v)
+        elif isinstance(obj, list):
+            [_scan(i) for i in obj]
+    _scan(body.payload)
+    skip = {"image_url", "render_scale", "watermark"}
+    mc_vars = sorted(found - skip)
+
+    base_url = f"{API_URL}/api/mc/{template_id}/render"
+    if mc_vars:
+        qs = "&".join(f"{v}=%7B%7B{v}%7D%7D" for v in mc_vars)
+        render_url = f"{base_url}?{qs}"
+    else:
+        render_url = base_url
+
     return {
         "template_id": template_id,
         "render_url": render_url,
-        "example": render_url + "?text=Hola%20{{nombre}}&image_url={{foto_url}}",
         "instructions": (
             "Pega render_url en el paso HTTP Request de ManyChat (método GET). "
-            "Agrega tus variables: ?text={{nombre}}&image_url={{foto}} etc."
+            "Las variables ya están incluidas en la URL."
         ),
     }
 
