@@ -3079,13 +3079,13 @@ async function sendToManyChat() {
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Error ' + res.status);
-    _mcShowModal('success', data.render_url, '', data.variables||[]);
+    _mcShowModal('success', data.render_url);
   } catch(e) {
-    _mcShowModal('error', '', e.message, []);
+    _mcShowModal('error', '', e.message);
   }
 }
 
-function _mcShowModal(state, url, errMsg, variables) {
+function _mcShowModal(state, url, errMsg) {
   var m = document.getElementById('mc-modal');
   if (!m) return;
   m.style.display = 'flex';
@@ -3100,32 +3100,26 @@ function _mcShowModal(state, url, errMsg, variables) {
     return;
   }
   // success
-  var vars = variables || [];
-  var hasVars = vars.length > 0;
-  var varsNote = hasVars
-    ? '<p style="margin:0 0 8px;font-size:11px;color:#6b7280;">Variables detectadas e incluidas en la URL: ' +
-        vars.map(function(v){return '<code style="background:#1a1a3a;padding:1px 5px;border-radius:3px;color:#a78bfa;">{{'+v+'}}</code>';}).join(' ') +
-      '</p>'
-    : '<p style="margin:0 0 8px;font-size:11px;color:#6b7280;">Sin variables detectadas — la URL renderiza la imagen fija.</p>';
-  var safeUrl = url.replace(/'/g, "\\'");
+  var exampleUrl = url + '?text=Hola {{nombre}}&image_url={{foto_portada}}';
   body.innerHTML =
-    '<p style="margin:0 0 10px;font-size:12px;color:#a0aec0;line-height:1.6;">Pega esta URL en el <strong style="color:#e2e8f0;">paso HTTP Request</strong> de ManyChat (método GET). Las variables ya están incluidas.</p>' +
-    '<div style="background:#0a0a1a;border:1.5px solid #0084FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#60a5fa;font-family:monospace;word-break:break-all;margin-bottom:10px;">' + url + '</div>' +
-    varsNote +
-    '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">' +
-      '<button id="mc-copy-url-btn" onclick="_mcCopyUrl(\'' + safeUrl + '\',this)" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">' +
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg>' +
+    '<p style="margin:0 0 10px;font-size:12px;color:#a0aec0;line-height:1.6;">Pega esta URL en el <strong style="color:#e2e8f0;">paso HTTP Request</strong> de ManyChat (método GET). Tus variables de ManyChat se convierten automáticamente en los parámetros de la URL.</p>' +
+    '<div style="background:#0a0a1a;border:1.5px solid #0084FF;border-radius:8px;padding:10px 12px;font-size:11px;color:#60a5fa;font-family:monospace;word-break:break-all;margin-bottom:12px;">' + url + '</div>' +
+    '<p style="margin:0 0 6px;font-size:11px;color:#6b7280;">Ejemplo con tus variables ManyChat:</p>' +
+    '<div style="background:#0d0d1a;border:1px solid #2a2a45;border-radius:6px;padding:8px 10px;font-size:10px;color:#7c6eff;font-family:monospace;word-break:break-all;margin-bottom:14px;">' + exampleUrl + '</div>' +
+    '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+      '<button id="mc-copy-url-btn" onclick="_mcCopyUrl(\'' + url + '\',this)" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
         '<span>Copiar URL</span>' +
       '</button>' +
       '<button onclick="document.getElementById(\'mc-modal\').style.display=\'none\'" style="padding:9px 16px;background:#1e1e3a;color:#9ca3ff;border:1.5px solid #3a3a5c;border-radius:8px;cursor:pointer;font-size:12px;">Cerrar</button>' +
     '</div>' +
-    '<div style="padding:10px;background:#1a0f00;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#d4a017;line-height:1.5;">' +
+    '<div style="margin-top:14px;padding:10px;background:#1a0f00;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#d4a017;line-height:1.5;">' +
       '<strong>¿Cómo configurarlo en ManyChat?</strong><br>' +
       '1. En tu Flow agrega un paso <em>HTTP Request</em><br>' +
       '2. Método: <strong>GET</strong><br>' +
-      '3. URL: pega la URL de arriba (ya tiene tus variables)<br>' +
-      '4. Mapeo de respuesta: guarda <code>image_url</code> en un campo<br>' +
-      '5. Usa ese campo en el siguiente mensaje como imagen' +
+      '3. URL: pega la URL de arriba<br>' +
+      '4. Agrega tus params: <code>text={{nombre}}</code>, <code>image_url={{foto}}</code><br>' +
+      '5. Guarda la respuesta: <code>{{image_url}}</code> → úsala en el siguiente mensaje' +
     '</div>';
 }
 
