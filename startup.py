@@ -53,6 +53,10 @@ def _auto_update_statics() -> None:
         (_UPDATE_BASE + "/casos.html",            "static/casos.html"),
         (_UPDATE_BASE + "/previews/biblica.jpg",  "static/previews/biblica.jpg"),
         (_UPDATE_BASE + "/previews/plumilla.jpg", "static/previews/plumilla.jpg"),
+        (_UPDATE_BASE + "/render.py",             "routers/render.py"),
+        (_UPDATE_BASE + "/mc.py",                 "routers/mc.py"),
+        (_UPDATE_BASE + "/ai.py",                 "routers/ai.py"),
+        (_UPDATE_BASE + "/batch.py",              "routers/batch.py"),
     ]
 
     for url, dest in files:
