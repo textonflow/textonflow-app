@@ -165,8 +165,13 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     # ── SUPABASE: descarga directa siempre, sin chequeo de storage local ─────────
     if "supabase.co" in request.template_name:
         session = build_retry_session()
-        response = session.get(request.template_name, timeout=20,
-                               headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"})
+        _sb_auth_headers = {
+            "User-Agent": "TextOnFlow/1.0",
+            "Accept": "image/*,*/*;q=0.8",
+            "apikey": _sb_key(),
+            "Authorization": f"Bearer {_sb_key()}",
+        }
+        response = session.get(request.template_name, timeout=20, headers=_sb_auth_headers)
         if response.status_code == 404:
             fname = request.template_name.split("/")[-1].split("?")[0]
             raise HTTPException(
@@ -504,9 +509,15 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             if "supabase.co" in request.template_name:
                 try:
                     _sb_session = build_retry_session()
+                    _sb_auth_hdrs = {
+                        "User-Agent": "TextOnFlow/1.0",
+                        "Accept": "image/*,*/*;q=0.8",
+                        "apikey": _sb_key(),
+                        "Authorization": f"Bearer {_sb_key()}",
+                    }
                     _sb_resp = _sb_session.get(
                         request.template_name, timeout=20,
-                        headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"},
+                        headers=_sb_auth_hdrs,
                     )
                     if _sb_resp.status_code == 404:
                         _fname = request.template_name.split("/")[-1].split("?")[0]
