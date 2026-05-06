@@ -643,11 +643,18 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
     if supabase_url:
         logger.info(f"📤 Imagen subida → Supabase: {supabase_url}")
         return {"url": supabase_url, "filename": filename}
-    # Fallback: URL local (efímera en Railway, pero funciona en dev/staging)
-    base_url = _get_base_url(request)
-    public_url = f"{base_url}/storage/{filename}"
-    logger.warning(f"📤 Imagen subida → local fallback (Supabase no disponible): {public_url}")
-    return {"url": public_url, "filename": filename}
+    # Supabase falló → devolver error claro. No usar URL local efímera:
+    # si el usuario guarda el template con una URL local, el render fallará
+    # después del próximo redeploy de Railway.
+    logger.error(f"📤 Supabase upload falló para {filename} — rechazando solicitud")
+    raise HTTPException(
+        status_code=500,
+        detail=(
+            "No se pudo guardar la imagen de forma permanente en Supabase Storage. "
+            "Revisa la configuración de SUPABASE_SERVICE_ROLE_KEY y el bucket 'textonflow-uploads'. "
+            "Inténtalo de nuevo en unos segundos."
+        ),
+    )
 
 
 # ─── QR Code generator ────────────────────────────────────────────────────────
