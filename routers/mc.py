@@ -34,6 +34,19 @@ class SaveTemplateRequest(BaseModel):
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+def _extract_vars(obj: Any, found: set) -> None:
+    """Extrae todos los nombres de variables {{var}} del payload (recursivo)."""
+    if isinstance(obj, str):
+        for m in re.finditer(r"\{{1,2}([a-zA-Z_]\w*)\}{1,2}", obj):
+            found.add(m.group(1).strip())
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            _extract_vars(v, found)
+    elif isinstance(obj, list):
+        for i in obj:
+            _extract_vars(i, found)
+
+
 def _replace_vars(obj: Any, params: dict) -> Any:
     """Reemplaza {{variable}} en strings del payload con los query params de ManyChat.
     Acepta formatos válidos y malformados: {{var}}, {{var}, {var}."""
@@ -121,14 +134,30 @@ async def save_mc_template(body: SaveTemplateRequest, request: Request):
         logger.error(f"save_mc_template INSERT error: {e}")
         raise HTTPException(status_code=500, detail="Error guardando plantilla")
 
-    render_url = f"{API_URL}/api/mc/{template_id}/render"
+    # Detectar variables {{var}} usadas en el payload para construir URL lista
+    found_vars: set = set()
+    _extract_vars(body.payload, found_vars)
+    # Excluir keys que no son variables de ManyChat (son campos internos del payload)
+    _internal_keys = {
+        "template_name", "render_scale", "format_width", "format_height",
+        "img_zoom", "img_pan_x", "img_pan_y", "project_name",
+    }
+    mc_vars = sorted(found_vars - _internal_keys)
+
+    base_url = f"{API_URL}/api/mc/{template_id}/render"
+    if mc_vars:
+        qs = "&".join(f"{v}={{{{{{v}}}}}}" for v in mc_vars)
+        render_url = f"{base_url}?{qs}"
+    else:
+        render_url = base_url
+
     return {
         "template_id": template_id,
         "render_url": render_url,
-        "example": render_url + "?text=Hola%20{{nombre}}&image_url={{foto_url}}",
+        "vars_detected": mc_vars,
         "instructions": (
             "Pega render_url en el paso HTTP Request de ManyChat (método GET). "
-            "Agrega tus variables: ?text={{nombre}}&image_url={{foto}} etc."
+            "Las variables de ManyChat ya están incluidas en la URL."
         ),
     }
 
