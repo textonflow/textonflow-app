@@ -253,6 +253,10 @@ _DOWNLOAD_FILES = {
     "casos.html":          "static/casos.html",
     "previews/biblica.jpg":  "static/previews/biblica.jpg",
     "previews/plumilla.jpg": "static/previews/plumilla.jpg",
+    "render.py": "routers/render.py",
+    "mc.py":     "routers/mc.py",
+    "ai.py":     "routers/ai.py",
+    "batch.py":  "routers/batch.py",
 }
 
 @pages_router.get("/api/download")
