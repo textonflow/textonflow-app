@@ -985,44 +985,159 @@
             margin-top: 8px;
         }
         
-        .custom-field-btn {
-            padding: 4px 6px;
-            background: var(--bg-surface-3);
-            border: 1px solid var(--accent-border);
-            border-radius: 4px;
-            font-size: 10px;
-            color: var(--accent);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-            white-space: nowrap;
+        /* ── Panel de variables ManyChat ───────────────────────────── */
+        .vars-panel {
+            margin-top: 8px;
+            background: #f4f4ff;
+            border: 1px solid #ddd8f8;
+            border-radius: 8px;
+            padding: 8px 10px;
         }
-        
-        .custom-field-btn:hover {
-            background: var(--accent);
+        .vars-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 7px;
+            font-style: italic;
+        }
+        .vars-panel-header code {
+            background: #e8e4ff;
+            color: #4f46e5;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-style: normal;
+            font-size: 10px;
+        }
+        .vars-panel-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .vars-panel-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        /* Chip sistema (azul/morado) */
+        .var-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            border: 1.5px solid transparent;
+        }
+        .var-chip-sys {
+            background: #ede9fe;
+            color: #4f46e5;
+            border-color: #c4b5fd;
+        }
+        .var-chip-sys:hover {
+            background: #4f46e5;
+            color: #fff;
+            border-color: #4f46e5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(79,70,229,0.25);
+        }
+
+        /* Chip usuario (naranja) */
+        .var-chip-user {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #fdba74;
+            position: relative;
+        }
+        .var-chip-user:hover {
+            background: #c2410c;
+            color: #fff;
+            border-color: #c2410c;
+            transform: translateY(-1px);
+        }
+        .var-chip-user .del-field {
+            display: none;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 13px;
+            height: 13px;
+            background: #e53935;
             color: white;
+            border-radius: 50%;
+            font-size: 9px;
+            line-height: 13px;
+            text-align: center;
+            font-family: sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .var-chip-user:hover .del-field { display: block; }
+
+        /* Chip "+ Nuevo" */
+        .var-chip-add {
+            background: #fff;
+            color: #6b7280;
+            border: 1.5px dashed #d1d5db;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 11px;
+        }
+        .var-chip-add:hover {
+            background: #f0fdf4;
+            color: #16a34a;
+            border-color: #86efac;
             transform: translateY(-1px);
         }
 
-        .user-field-btn {
-            padding: 4px 6px;
-            background: var(--bg-surface-3);
-            border: 1px solid var(--border-light);
-            border-radius: 4px;
-            font-size: 10px;
-            color: var(--text-secondary);
+        /* Clases legacy (por si hay código antiguo que las usa) */
+        .custom-field-btn {
+            padding: 4px 9px;
+            background: #ede9fe;
+            border: 1.5px solid #c4b5fd;
+            border-radius: 999px;
+            font-size: 11px;
+            color: #4f46e5;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
             font-family: 'Courier New', monospace;
-            font-weight: 600;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .custom-field-btn:hover {
+            background: #4f46e5;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .user-field-btn {
+            padding: 4px 9px;
+            background: #fff7ed;
+            border: 1.5px solid #fdba74;
+            border-radius: 999px;
+            font-size: 11px;
+            color: #c2410c;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
             white-space: nowrap;
             position: relative;
         }
         .user-field-btn:hover {
-            background: var(--accent-glow);
-            color: var(--accent);
-            border-color: var(--accent-border);
+            background: #c2410c;
+            color: #fff;
+            border-color: #c2410c;
         }
         .user-field-btn .del-field {
             display: none;
@@ -1043,18 +1158,18 @@
         }
         .user-field-btn:hover .del-field { display: block; }
         .add-field-btn {
-            padding: 4px 7px;
-            background: var(--bg-surface-3);
-            border: 1px dashed var(--border-light);
-            border-radius: 4px;
+            padding: 4px 9px;
+            background: #fff;
+            border: 1.5px dashed #d1d5db;
+            border-radius: 999px;
             font-size: 11px;
-            color: var(--text-secondary);
+            color: #6b7280;
             cursor: pointer;
             font-weight: 700;
             white-space: nowrap;
             transition: all 0.2s;
         }
-        .add-field-btn:hover { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+        .add-field-btn:hover { background: #f0fdf4; color: #16a34a; border-color: #86efac; }
         
         /* Modal personalizado */
         .modal-overlay {
