@@ -319,11 +319,8 @@ function confirmAddField(){const input=document.getElementById('addFieldInput');
 document.getElementById('addFieldModal').classList.remove('active');updateControls();}
 function cancelAddField(){document.getElementById('addFieldModal').classList.remove('active');}
 function removeUserCustomField(name){const fields=getUserCustomFields().filter(f=>f!==name);saveUserCustomFields(fields);updateControls();}
-function renderUserFieldButtons(index){const fields=getUserCustomFields();if(fields.length===0)return'';return fields.map(f=>`<button class="user-field-btn" onclick="insertField(${index}, '{{${f}}}')" title="Tu campo personalizado">
-                    {{${f}}}
-                    <span class="del-field" onclick="event.stopPropagation(); removeUserCustomField('${f}')" title="Eliminar campo">×</span>
-                </button>`).join('');}
-function checkCustomFields(index){const text=texts[index].text;const checker=document.getElementById(`field-checker-${index}`);const detectedDiv=document.getElementById(`detected-fields-${index}`);if(!text||!checker||!detectedDiv)return;const fieldPattern=/\{\{([^}]+)\}\}/g;const matches=[...text.matchAll(fieldPattern)];if(matches.length===0){checker.style.display='none';return;}
+function renderUserFieldButtons(index){const fields=getUserCustomFields();if(fields.length===0)return'';return fields.map(f=>`<button class="var-chip var-chip-user" onclick="insertField(${index}, '{{${f}}}')" title="Tu campo personalizado">{{${f}}}<span class="del-field" onclick="event.stopPropagation(); removeUserCustomField('${f}')" title="Eliminar campo">×</span></button>`).join('');}
+function checkCustomFields(index){const text=texts[index].text;const checker=document.getElementById(`field-checker-${index}`);const detectedDiv=document.getElementById(`detected-fields-${index}`);if(!text||!checker||!detectedDiv)return;const fieldPattern=/\{{1,2}([a-zA-Z_]\w*)\}{1,2}/g;const matches=[...text.matchAll(fieldPattern)];if(matches.length===0){checker.style.display='none';return;}
 const systemFields=['first_name','last_name','email','phone_number','full_name','id','gender','locale','timezone'];const userFields=getUserCustomFields();let html='<ul style="margin: 4px 0; padding-left: 20px; list-style: none;">';let hasWarnings=false;matches.forEach(match=>{const fieldName=match[1].trim();if(systemFields.includes(fieldName)){html+=`<li style="margin: 2px 0;"><code style="background:#e8f5e9;padding:2px 4px;border-radius:2px;">{{${fieldName}}}</code> Campo del sistema</li>`;}else if(userFields.includes(fieldName)){html+=`<li style="margin: 2px 0;"><code style="background:#fff3e0;padding:2px 4px;border-radius:2px;">{{${fieldName}}}</code> Tu campo personalizado</li>`;}else{html+=`<li style="margin: 2px 0;"><code style="background:#ffebee;padding:2px 4px;border-radius:2px;">{{${fieldName}}}</code> <strong>No registrado</strong> — <a href="#" onclick="event.preventDefault();addUserCustomField()" style="font-size:10px;color:#4caf50;">+ Agregar</a></li>`;hasWarnings=true;}});html+='</ul>';checker.style.background=hasWarnings?'#fff3cd':'#e8f5e9';checker.style.borderColor=hasWarnings?'#ffc107':'#4caf50';detectedDiv.innerHTML=html;checker.style.display='block';}
 function updateAllPads(index,value){['bg_pad_top','bg_pad_right','bg_pad_bottom','bg_pad_left'].forEach(k=>texts[index][k]=value);['top','right','bottom','left'].forEach(side=>{const el=document.getElementById(`bgpad-${side}-${index}`);if(el)el.value=value;});updatePreview();updateJSON();}
 function updateAllBrdPads(index,value){['bg_brd_pad_top','bg_brd_pad_right','bg_brd_pad_bottom','bg_brd_pad_left'].forEach(k=>texts[index][k]=value);['top','right','bottom','left'].forEach(side=>{const el=document.getElementById(`brdpad-${side}-${index}`);if(el)el.value=value;});updatePreview();updateJSON();}
@@ -342,24 +339,26 @@ function _renderTextSection(index,text){return`                        <div clas
                                 <button class="emoji-btn" onclick="event.stopPropagation(); toggleEmojiPicker(${index});" title="Insertar emoji"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
                                 <div class="emoji-picker-popup" id="emoji-picker-${index}" onclick="event.stopPropagation();"></div>
                             </div>
-                            <div class="help-text">Usa {{variable}} para ManyChat</div>
-                            
-                            <!-- Campos del sistema -->
-                            <div style="font-size:9px;color:#888;margin-top:6px;margin-bottom:2px;font-weight:600;">Sistema:</div>
-                            <div class="custom-fields" style="flex-wrap:wrap;">
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{first_name}}')" title="Nombre">{{first_name}}</button>
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{last_name}}')" title="Apellido">{{last_name}}</button>
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{full_name}}')" title="Nombre completo">{{full_name}}</button>
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{email}}')" title="Correo electrónico">{{email}}</button>
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{phone_number}}')" title="Teléfono">{{phone_number}}</button>
-                                <button class="custom-field-btn" onclick="insertField(${index}, '{{id_de_contacto}}')" title="Id de contacto">{{id_de_contacto}}</button>
-                            </div>
-                            
-                            <!-- Mis campos personalizados -->
-                            <div style="font-size:9px;color:#888;margin-top:8px;margin-bottom:2px;font-weight:600;">${t('my_fields_lbl')}</div>
-                            <div class="custom-fields" style="flex-wrap:wrap;" id="user-fields-row-${index}">
-                                ${renderUserFieldButtons(index)}
-                                <button class="add-field-btn" onclick="addUserCustomField()" title="Agregar mi campo de ManyChat">+ Nuevo</button>
+                            <!-- Panel de variables ManyChat -->
+                            <div class="vars-panel">
+                                <div class="vars-panel-header">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+                                    Usa <code>{{variable}}</code> para personalizar con ManyChat
+                                </div>
+                                <div class="vars-panel-section-label">Sistema:</div>
+                                <div class="vars-panel-chips">
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{first_name}}')" title="Nombre del contacto">{{first_name}}</button>
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{last_name}}')" title="Apellido">{{last_name}}</button>
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{full_name}}')" title="Nombre completo">{{full_name}}</button>
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{email}}')" title="Correo electrónico">{{email}}</button>
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{phone_number}}')" title="Teléfono">{{phone_number}}</button>
+                                    <button class="var-chip var-chip-sys" onclick="insertField(${index}, '{{id_de_contacto}}')" title="Id de contacto">{{id_de_contacto}}</button>
+                                </div>
+                                <div class="vars-panel-section-label" style="margin-top:8px;">${t('my_fields_lbl')}</div>
+                                <div class="vars-panel-chips" id="user-fields-row-${index}">
+                                    ${renderUserFieldButtons(index)}
+                                    <button class="var-chip var-chip-add" onclick="addUserCustomField()" title="Agregar mi campo de ManyChat">+ Nuevo</button>
+                                </div>
                             </div>
                             
                             
