@@ -167,6 +167,13 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
         session = build_retry_session()
         response = session.get(request.template_name, timeout=20,
                                headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"})
+        if response.status_code == 404:
+            fname = request.template_name.split("/")[-1].split("?")[0]
+            raise HTTPException(
+                status_code=400,
+                detail=f"La imagen de fondo '{fname}' ya no existe en Supabase Storage. "
+                       f"Ábrela en el editor, vuelve a subirla y guarda el template de nuevo en ManyChat.",
+            )
         response.raise_for_status()
         image = Image.open(BytesIO(response.content)).convert("RGBA")
         logger.info(f"☁️ _render_pil Supabase OK ({len(response.content)//1024} KB)")
@@ -501,9 +508,18 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                         request.template_name, timeout=20,
                         headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"},
                     )
+                    if _sb_resp.status_code == 404:
+                        _fname = request.template_name.split("/")[-1].split("?")[0]
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"La imagen de fondo '{_fname}' ya no existe en Supabase Storage. "
+                                   f"Ábrela en el editor, vuelve a subirla y guarda el template de nuevo en ManyChat.",
+                        )
                     _sb_resp.raise_for_status()
                     image = Image.open(BytesIO(_sb_resp.content)).convert("RGBA")
                     logger.info(f"☁️ Supabase imagen descargada OK ({len(_sb_resp.content)//1024} KB)")
+                except HTTPException:
+                    raise
                 except Exception as _sb_err:
                     raise HTTPException(
                         status_code=400,
