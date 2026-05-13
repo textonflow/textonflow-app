@@ -147,6 +147,69 @@ def _upload_output_to_supabase(filepath: str, filename: str) -> Optional[str]:
         logger.warning(f"⚠️  Output Supabase upload failed (usando URL local): {_e}")
         return None
 
+# ── Mapbox Static Images helper ───────────────────────────────────────────────
+def _fetch_mapbox_tile(location: str, zoom: int, style: str,
+                       width: int, height: int, marker: bool,
+                       vars_dict: dict = None) -> "Image.Image":
+    """Geocodifica `location` y descarga el tile estático de Mapbox.
+    Soporta variables ManyChat: {{ciudad}}, {{cp}}, etc."""
+    import urllib.parse as _up
+
+    mapbox_key = os.getenv("MAPBOX_API_KEY", "")
+    if not mapbox_key:
+        raise ValueError("MAPBOX_API_KEY no configurada en Railway")
+
+    # Resolver variables ManyChat {{var}} en la location
+    if vars_dict:
+        for k in sorted(vars_dict.keys(), key=len, reverse=True):
+            location = location.replace(f"{{{{{k}}}}}", vars_dict[k])
+            location = location.replace(f"{{{k}}}", vars_dict[k])
+    location = location.strip()
+    if not location:
+        raise ValueError("La ubicación del mapa está vacía")
+
+    # Detectar si ya son coordenadas lon,lat o lat,lon
+    _coord = re.match(r'^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$', location)
+    if _coord:
+        a, b = float(_coord.group(1)), float(_coord.group(2))
+        if -90 <= a <= 90 and -180 <= b <= 180:
+            lon_s, lat_s = str(b), str(a)   # lat,lon → lon,lat
+        else:
+            lon_s, lat_s = str(a), str(b)
+    else:
+        # Geocodificar con Mapbox Geocoding API
+        _enc = _up.quote(location)
+        _geo_url = (f"https://api.mapbox.com/geocoding/v5/mapbox.places/"
+                    f"{_enc}.json?access_token={mapbox_key}&limit=1")
+        _sess = build_retry_session()
+        _gr = _sess.get(_geo_url, timeout=12)
+        _gr.raise_for_status()
+        _feats = _gr.json().get("features", [])
+        if not _feats:
+            raise ValueError(f"Ubicación no encontrada: {location}")
+        _center = _feats[0]["center"]   # [lon, lat]
+        lon_s, lat_s = str(_center[0]), str(_center[1])
+
+    w = max(1, min(1280, width))
+    h = max(1, min(1280, height))
+
+    if marker:
+        _overlay = f"pin-l+e74c3c({lon_s},{lat_s})"
+        _map_url = (f"https://api.mapbox.com/styles/v1/mapbox/{style}/static/"
+                    f"{_overlay}/{lon_s},{lat_s},{zoom},0/{w}x{h}"
+                    f"?access_token={mapbox_key}&logo=false&attribution=false")
+    else:
+        _map_url = (f"https://api.mapbox.com/styles/v1/mapbox/{style}/static/"
+                    f"{lon_s},{lat_s},{zoom},0/{w}x{h}"
+                    f"?access_token={mapbox_key}&logo=false&attribution=false")
+
+    _sess2 = build_retry_session()
+    _mr = _sess2.get(_map_url, timeout=15)
+    _mr.raise_for_status()
+    logger.info(f"🗺️ Mapbox tile OK ({w}×{h}) para '{location}'")
+    return Image.open(BytesIO(_mr.content)).convert("RGBA")
+
+
 # ── Constantes de almacenamiento ───────────────────────────────────────────────
 STORAGE_DIR       = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
 TEMPLATES_API_DIR = os.getenv("TEMPLATES_API_PATH", os.path.join(STORAGE_DIR, "api_templates"))
@@ -310,10 +373,21 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
             font = ImageFont.load_default()
         image = draw_text_with_effects(image, text_field, font, render_scale=request.render_scale)
 
-    # Overlays (logos, stickers, badges)
+    # Overlays (logos, stickers, badges, mapas)
     for ov in (request.overlays or []):
         try:
-            if ov.src.startswith("data:"):
+            map_location = getattr(ov, 'map_location', None)
+            if map_location:
+                ov_img = _fetch_mapbox_tile(
+                    location=map_location,
+                    zoom=getattr(ov, 'map_zoom', 13),
+                    style=getattr(ov, 'map_style', 'streets-v12'),
+                    width=max(1, ov.width),
+                    height=max(1, ov.height),
+                    marker=getattr(ov, 'map_marker', True),
+                    vars_dict=getattr(request, 'vars', None) or {},
+                )
+            elif ov.src.startswith("data:"):
                 _, data = ov.src.split(",", 1)
                 ov_img = Image.open(BytesIO(base64.b64decode(data))).convert("RGBA")
             else:
@@ -705,10 +779,21 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
 
             image = draw_text_with_effects(image, text_field, font, render_scale=request.render_scale)
 
-        # Aplicar overlays de imagen (logos, firmas, badges)
+        # Aplicar overlays de imagen (logos, firmas, badges, mapas)
         for ov in (request.overlays or []):
             try:
-                if ov.src.startswith("data:"):
+                map_location = getattr(ov, 'map_location', None)
+                if map_location:
+                    ov_img = _fetch_mapbox_tile(
+                        location=map_location,
+                        zoom=getattr(ov, 'map_zoom', 13),
+                        style=getattr(ov, 'map_style', 'streets-v12'),
+                        width=max(1, ov.width),
+                        height=max(1, ov.height),
+                        marker=getattr(ov, 'map_marker', True),
+                        vars_dict=getattr(request, 'vars', None) or {},
+                    )
+                elif ov.src.startswith("data:"):
                     _, data = ov.src.split(",", 1)
                     ov_img = Image.open(BytesIO(base64.b64decode(data))).convert("RGBA")
                 else:
@@ -1518,3 +1603,28 @@ async def generate_gif(req: _GifRequest, http_req: Request):
         logger.error(f"💥 /api/gif/generate error: {e}")
         import traceback; traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Mapa Preview (editor) ───────────────────────────────────────────────────
+
+@render_router.post("/api/map-preview")
+async def map_preview_endpoint(req: Request):
+    """Devuelve vista previa del mapa como base64 PNG para el editor."""
+    body = await req.json()
+    location = (body.get("location") or "").strip()
+    if not location:
+        raise HTTPException(status_code=400, detail="location requerida")
+    zoom   = int(body.get("zoom",   13))
+    style  = body.get("style",  "streets-v12")
+    width  = int(body.get("width",  400))
+    height = int(body.get("height", 280))
+    marker = bool(body.get("marker", True))
+
+    try:
+        tile = _fetch_mapbox_tile(location, zoom, style, width, height, marker, {})
+        buf  = BytesIO()
+        tile.convert("RGB").save(buf, "JPEG", quality=88)
+        b64  = base64.b64encode(buf.getvalue()).decode()
+        return {"image": f"data:image/jpeg;base64,{b64}", "ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
