@@ -3568,5 +3568,22 @@ function cdHelpTab(tab){
 }
 </script>
 
+<!-- ══ MODAL PROPIO DE TEXTONFLOW ══════════════════════════════════════ -->
+<div id="tof-modal-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+  <div id="tof-modal-box" style="background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:24px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:tofModalIn .18s ease;">
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;">
+      <span id="tof-modal-icon" style="font-size:22px;line-height:1;flex-shrink:0;margin-top:1px;"></span>
+      <div>
+        <div id="tof-modal-title" style="font-size:13px;font-weight:800;color:#e8e8e8;margin-bottom:5px;letter-spacing:0.2px;"></div>
+        <div id="tof-modal-msg" style="font-size:12px;color:#9ca3af;line-height:1.55;"></div>
+      </div>
+    </div>
+    <div id="tof-modal-btns" style="display:flex;gap:8px;justify-content:flex-end;"></div>
+  </div>
+</div>
+<style>
+@keyframes tofModalIn{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#tof-modal-overlay.active{display:flex!important;}
+</style>
 </body>
 </html>
