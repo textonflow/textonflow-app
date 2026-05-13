@@ -1687,10 +1687,16 @@ async def map_preview_endpoint(req: Request):
 
     from_location = (body.get("from_location") or "").strip() or None
     try:
-        tile = _fetch_mapbox_tile(location, zoom, style, width, height, marker, {}, from_location)
+        import asyncio, functools
+        loop = asyncio.get_event_loop()
+        tile = await loop.run_in_executor(
+            None,
+            functools.partial(_fetch_mapbox_tile, location, zoom, style, width, height, marker, {}, from_location)
+        )
         buf  = BytesIO()
         tile.convert("RGB").save(buf, "JPEG", quality=88)
         b64  = base64.b64encode(buf.getvalue()).decode()
         return {"image": f"data:image/jpeg;base64,{b64}", "ok": True}
     except Exception as e:
+        logger.error(f"map-preview error: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
