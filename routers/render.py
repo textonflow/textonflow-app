@@ -150,7 +150,8 @@ def _upload_output_to_supabase(filepath: str, filename: str) -> Optional[str]:
 # ── Mapbox Static Images helper ───────────────────────────────────────────────
 def _fetch_mapbox_tile(location: str, zoom: int, style: str,
                        width: int, height: int, marker: bool,
-                       vars_dict: dict = None) -> "Image.Image":
+                       vars_dict: dict = None,
+                       from_location: str = None) -> "Image.Image":
     """Geocodifica `location` y descarga el tile estático de Mapbox.
     Soporta variables ManyChat: {{ciudad}}, {{cp}}, etc."""
     import urllib.parse as _up
@@ -207,7 +208,69 @@ def _fetch_mapbox_tile(location: str, zoom: int, style: str,
     _mr = _sess2.get(_map_url, timeout=15)
     _mr.raise_for_status()
     logger.info(f"🗺️ Mapbox tile OK ({w}×{h}) para '{location}'")
-    return Image.open(BytesIO(_mr.content)).convert("RGBA")
+    tile = Image.open(BytesIO(_mr.content)).convert("RGBA")
+
+    # ── Barra de distancia (opcional) ────────────────────────────────────────
+    if from_location:
+        try:
+            _fl = from_location
+            if vars_dict:
+                for _k in sorted(vars_dict.keys(), key=len, reverse=True):
+                    _fl = _fl.replace(f"{{{{{_k}}}}}", vars_dict[_k])
+                    _fl = _fl.replace(f"{{{_k}}}", vars_dict[_k])
+            _fl = _fl.strip()
+            _fc = re.match(r'^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$', _fl)
+            if _fc:
+                _fa, _fb = float(_fc.group(1)), float(_fc.group(2))
+                if -90 <= _fa <= 90 and -180 <= _fb <= 180:
+                    _from_lon, _from_lat = str(_fb), str(_fa)
+                else:
+                    _from_lon, _from_lat = str(_fa), str(_fb)
+            else:
+                _geo2_url = (f"https://api.mapbox.com/geocoding/v5/mapbox.places/"
+                             f"{_up.quote(_fl)}.json?access_token={mapbox_key}&limit=1")
+                _gr2 = build_retry_session().get(_geo2_url, timeout=10)
+                _feats2 = _gr2.json().get("features", [])
+                if not _feats2:
+                    raise ValueError(f"No se encontró: {_fl}")
+                _c2 = _feats2[0]["center"]
+                _from_lon, _from_lat = str(_c2[0]), str(_c2[1])
+
+            # Mapbox Directions API
+            _dirs_url = (f"https://api.mapbox.com/directions/v5/mapbox/driving/"
+                         f"{_from_lon},{_from_lat};{lon_s},{lat_s}"
+                         f"?access_token={mapbox_key}&overview=false")
+            _dr = build_retry_session().get(_dirs_url, timeout=12)
+            _routes = _dr.json().get("routes", [])
+            if _routes:
+                _dist_m  = _routes[0]["distance"]
+                _dur_s   = _routes[0]["duration"]
+                _dist_km = _dist_m / 1000
+                _dur_min = int(_dur_s / 60)
+                _label   = f"📍  {_dist_km:.1f} km  ·  ~{_dur_min} min en auto"
+
+                # Dibujar barra semi-transparente en la parte inferior del tile
+                from PIL import ImageDraw as _IDraw
+                _bar_h = max(26, tile.height // 9)
+                _bar   = Image.new("RGBA", (tile.width, _bar_h), (10, 10, 20, 210))
+                tile.paste(_bar, (0, tile.height - _bar_h), _bar)
+                _draw  = _IDraw.Draw(tile)
+                _fsize = max(10, _bar_h - 10)
+                try:
+                    _fnt = ImageFont.truetype(
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", _fsize)
+                except Exception:
+                    _fnt = ImageFont.load_default()
+                _draw.text(
+                    (tile.width // 2, tile.height - _bar_h // 2),
+                    _label, fill=(255, 255, 255, 255),
+                    font=_fnt, anchor="mm"
+                )
+                logger.info(f"📏 Distancia dibujada: {_label}")
+        except Exception as _de:
+            logger.warning(f"⚠️ Distancia omitida: {_de}")
+
+    return tile
 
 
 # ── Constantes de almacenamiento ───────────────────────────────────────────────
@@ -386,6 +449,7 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
                     height=max(1, ov.height),
                     marker=getattr(ov, 'map_marker', True),
                     vars_dict=getattr(request, 'vars', None) or {},
+                    from_location=getattr(ov, 'map_from_location', None) or None,
                 )
             elif ov.src.startswith("data:"):
                 _, data = ov.src.split(",", 1)
@@ -792,6 +856,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                         height=max(1, ov.height),
                         marker=getattr(ov, 'map_marker', True),
                         vars_dict=getattr(request, 'vars', None) or {},
+                        from_location=getattr(ov, 'map_from_location', None) or None,
                     )
                 elif ov.src.startswith("data:"):
                     _, data = ov.src.split(",", 1)
@@ -1620,8 +1685,9 @@ async def map_preview_endpoint(req: Request):
     height = int(body.get("height", 280))
     marker = bool(body.get("marker", True))
 
+    from_location = (body.get("from_location") or "").strip() or None
     try:
-        tile = _fetch_mapbox_tile(location, zoom, style, width, height, marker, {})
+        tile = _fetch_mapbox_tile(location, zoom, style, width, height, marker, {}, from_location)
         buf  = BytesIO()
         tile.convert("RGB").save(buf, "JPEG", quality=88)
         b64  = base64.b64encode(buf.getvalue()).decode()
