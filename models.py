@@ -85,7 +85,7 @@ class CanvasShape(BaseModel):
     cover_blur: int = 0
 
 class ImageOverlay(BaseModel):
-    src: str          # base64 data URL (data:image/png;base64,...) o URL http
+    src: str = ""     # base64 data URL (data:image/png;base64,...) o URL http
     x: int = 0
     y: int = 0
     width: int = 100
@@ -106,6 +106,12 @@ class ImageOverlay(BaseModel):
     mask_shadow_blur: int = 8
     mask_shadow_x: int = 0
     mask_shadow_y: int = 4
+    # Mapa dinámico (Mapbox Static Images)
+    map_location: Optional[str] = None        # "{{ciudad}}" | "lat,lon" | dirección
+    map_zoom: int = 13                         # 1-18
+    map_style: str = "streets-v12"            # streets-v12 | satellite-streets-v12 | dark-v11 | light-v11
+    map_marker: bool = True                   # mostrar pin en el centro
+    map_from_location: Optional[str] = None   # "{{lat_contacto}},{{lon_contacto}}" — calcula distancia al local
 
 class MultiTextRequest(BaseModel):
     template_name: str
