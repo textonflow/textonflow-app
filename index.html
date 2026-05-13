@@ -1091,25 +1091,7 @@
                         </div>
                     </div>
 
-                    <!-- ══ ACORDEÓN 0: TEMPLATES ══════════════════════════ -->
-                    <div class="acc-section sortable-panel" id="acc-templates" data-panel="templates">
-                        <div class="acc-header" onclick="toggleAccordion('templates')" style="background:linear-gradient(90deg,#1e1e3a 0%,#2a1f4a 100%);">
-                            <span class="panel-dh" title="Mover panel">⠿</span>
-                            <div class="acc-title">
-                                <span class="acc-icon" class="tof-accent-3">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                                </span>
-                                <span class="acc-name" class="tof-accent-3" data-i18n="section_templates">Templates de bienvenida</span>
-                            </div>
-                            <span id="acc-chev-templates" class="acc-chevron">▾</span>
-                        </div>
-                        <div class="acc-body" id="acc-body-templates" style="padding:12px;">
-                            <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;line-height:1.5;">Carga textos pre-configurados listos para ManyChat. <strong>Requiere imagen cargada.</strong> Puedes editar cada texto después.</p>
-                            <div style="display:flex;flex-direction:column;gap:10px;" id="tof-template-cards"></div>
-                        </div>
-                    </div>
-
-                    <!-- ══ ACORDEÓN 1: TEXTOS ══════════════════════════════ -->
+                    <!-- ══ ACORDEÓN 0: TEXTOS ══════════════════════════════ -->
                     <div class="acc-section sortable-panel" id="acc-textos" data-panel="textos">
                         <div class="acc-header acc-textos-hdr" onclick="toggleAccordion('textos')">
                             <span class="panel-dh" title="Mover panel">⠿</span>
@@ -1129,6 +1111,24 @@
                                 <div id="texts-tabs-bar"></div>
                                 <div id="texts-active-content"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ ACORDEÓN 1: TEMPLATES ══════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-templates" data-panel="templates">
+                        <div class="acc-header" onclick="toggleAccordion('templates')" style="background:linear-gradient(90deg,#1e1e3a 0%,#2a1f4a 100%);">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon" class="tof-accent-3">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </span>
+                                <span class="acc-name" class="tof-accent-3" data-i18n="section_templates">Templates de bienvenida</span>
+                            </div>
+                            <span id="acc-chev-templates" class="acc-chevron">▾</span>
+                        </div>
+                        <div class="acc-body" id="acc-body-templates" style="padding:12px;">
+                            <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;line-height:1.5;">Carga textos pre-configurados listos para ManyChat. <strong>Requiere imagen cargada.</strong> Puedes editar cada texto después.</p>
+                            <div style="display:flex;flex-direction:column;gap:10px;" id="tof-template-cards"></div>
                         </div>
                     </div>
 
