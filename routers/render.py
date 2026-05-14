@@ -333,6 +333,25 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
             response = session.get(request.template_name, timeout=15)
             response.raise_for_status()
             image = Image.open(BytesIO(response.content)).convert("RGBA")
+    elif request.template_name.startswith("/storage/") or request.template_name.startswith("/static/temp/"):
+        # URL relativa local (generada cuando Supabase no está disponible)
+        if request.template_name.startswith("/storage/"):
+            fname = request.template_name[len("/storage/"):].split("?")[0]
+            local_path = os.path.join(STORAGE_DIR, fname)
+        else:
+            fname = request.template_name[len("/static/temp/"):].split("?")[0]
+            local_path = os.path.join("static", "temp", fname)
+        if os.path.exists(local_path):
+            logger.info(f"📂 Cargando imagen local temporal: {local_path}")
+            image = Image.open(local_path).convert("RGBA")
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"La imagen temporal '{fname}' ya no está disponible (el servidor se reinició). "
+                    "Por favor vuelve a subir la imagen base en el editor."
+                ),
+            )
     else:
         template_path = os.path.join("templates", request.template_name)
         if not os.path.exists(template_path):
@@ -1513,7 +1532,7 @@ async def get_image(filename: str):
 #  DASHBOARD DE ESTADÍSTICAS  /api/stats
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@render_router.get("/api/stats")
+@render_router.get("/api/render-stats")
 async def get_render_stats(request: Request):
     """Devuelve estadísticas de renders del usuario autenticado (dashboard)."""
     user = _require_user(request)
