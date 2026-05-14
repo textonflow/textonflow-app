@@ -1321,6 +1321,92 @@
                         </div>
                     </div>
 
+                    <!-- ══ ACORDEÓN: GENERADOR MASIVO ══════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-masivo" data-panel="masivo">
+                        <div class="acc-header acc-masivo-hdr" onclick="toggleAccordion('masivo')">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+                                <span class="acc-name">Masivo</span>
+                                <span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border-radius:4px;padding:1px 5px;letter-spacing:.5px;margin-left:4px;">SHEETS</span>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-masivo">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-masivo">
+                            <div style="padding:8px 4px 4px;">
+                                <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5;">
+                                    Genera imágenes en lote desde Google Sheets o CSV. El diseño actual se usa automáticamente.
+                                </div>
+
+                                <!-- Paso 1: URL fuente -->
+                                <label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Fuente de datos</label>
+                                <div style="display:flex;gap:6px;margin-bottom:8px;">
+                                    <input id="batch-source-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/…"
+                                        style="flex:1;padding:7px 9px;font-size:12px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;min-width:0;"
+                                        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#3d3d3d'">
+                                    <button onclick="batchPreviewColumns()" id="btn-batch-preview"
+                                        style="flex-shrink:0;padding:7px 11px;font-size:11px;font-weight:700;border:1px solid #2a2a50;border-radius:7px;background:#1a1a2e;color:#a5b4fc;cursor:pointer;white-space:nowrap;">
+                                        Ver columnas
+                                    </button>
+                                </div>
+                                <div style="font-size:10px;color:#4b5563;margin-bottom:10px;">
+                                    💡 Google Sheets → Compartir → "Cualquier persona con el enlace puede ver"
+                                </div>
+
+                                <!-- Preview columnas -->
+                                <div id="batch-cols-wrap" style="display:none;margin-bottom:10px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">
+                                        <span id="batch-col-count">0</span> columnas · <span id="batch-row-count">0</span> filas
+                                    </div>
+                                    <div style="overflow-x:auto;border-radius:8px;border:1px solid #1e1e3a;font-size:11px;">
+                                        <table id="batch-preview-table" style="width:100%;border-collapse:collapse;">
+                                            <thead id="batch-preview-thead" style="background:#12121e;"></thead>
+                                            <tbody id="batch-preview-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Paso 2: Mapeo de variables -->
+                                <div id="batch-map-wrap" style="display:none;">
+                                    <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Variables del diseño → Columnas</div>
+                                    <div id="batch-map-rows" style="margin-bottom:10px;"></div>
+                                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                                        <span style="font-size:11px;color:#6b7280;">Prefijo ZIP:</span>
+                                        <input id="batch-prefix" type="text" value="imagen"
+                                            style="flex:1;padding:5px 8px;font-size:12px;border:1px solid #2a2a50;border-radius:6px;color:#e8e8e8;background:#1a1a2e;outline:none;">
+                                    </div>
+                                </div>
+
+                                <!-- Paso 3: Generar -->
+                                <div id="batch-gen-wrap" style="display:none;">
+                                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                                        <div style="text-align:center;">
+                                            <div id="batch-gen-count" style="font-size:22px;font-weight:900;color:#fff;line-height:1;">—</div>
+                                            <div style="font-size:10px;color:#6b7280;">imágenes</div>
+                                        </div>
+                                        <div style="flex:1;font-size:11px;color:#6b7280;line-height:1.5;">
+                                            Se generará una imagen por cada fila del Sheets usando el diseño actual del editor.
+                                        </div>
+                                    </div>
+                                    <button onclick="batchGenerate()" id="btn-batch-gen"
+                                        style="width:100%;padding:9px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;">
+                                        ⚡ Generar y descargar ZIP
+                                    </button>
+                                    <div id="batch-progress-wrap" style="display:none;margin-top:10px;">
+                                        <div style="background:#1a1a2e;border-radius:100px;height:6px;overflow:hidden;border:1px solid #2a2a50;">
+                                            <div id="batch-progress-bar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#7c6eff);border-radius:100px;width:5%;transition:width .3s;"></div>
+                                        </div>
+                                        <div id="batch-status" style="font-size:11px;color:#6b7280;margin-top:6px;"></div>
+                                    </div>
+                                </div>
+
+                                <div id="batch-alert" style="display:none;padding:8px 10px;border-radius:8px;font-size:11px;margin-top:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ══ ACORDEÓN: MAPA DINÁMICO ══════════════════════════ -->
                     <div class="acc-section sortable-panel" id="acc-mapa" data-panel="mapa">
                         <div class="acc-header acc-mapa-hdr" onclick="toggleAccordion('mapa')">
@@ -2047,7 +2133,7 @@
     </a>
 
     <script src="/static/i18n.js?v=250"></script>
-    <script src="/static/app.js?v=274"></script>
+    <script src="/static/app.js?v=275"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
