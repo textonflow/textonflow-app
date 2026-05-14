@@ -1666,20 +1666,26 @@
                         </label>
                         <div id="tof-sello-opts" style="display:none;padding:8px 10px 10px;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 7px 7px;">
                             <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px;">Posición</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:10px;">
                                 <button class="wm-corner-btn" data-corner="tl" onclick="wmSetCorner('tl',this)">↖ Arriba izq.</button>
                                 <button class="wm-corner-btn" data-corner="tr" onclick="wmSetCorner('tr',this)">↗ Arriba der.</button>
                                 <button class="wm-corner-btn" data-corner="bl" onclick="wmSetCorner('bl',this)">↙ Abajo izq.</button>
                                 <button class="wm-corner-btn selected" data-corner="br" onclick="wmSetCorner('br',this)">↘ Abajo der.</button>
                             </div>
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">22</span>px</div>
-                            <input type="range" id="wm-size-range" min="12" max="80" value="22"
-                                oninput="wmSetSize(this.value)"
-                                style="width:100%;accent-color:#7c6eff;cursor:pointer;margin-bottom:8px;">
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
-                            <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
-                                oninput="wmSetOpacity(this.value)"
-                                style="width:100%;accent-color:#7c6eff;cursor:pointer;margin-bottom:10px;">
+                            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">22</span>px</div>
+                                    <input type="range" id="wm-size-range" min="12" max="80" value="22"
+                                        oninput="wmSetSize(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
+                                    <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
+                                        oninput="wmSetOpacity(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                            </div>
                             <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">Color</div>
                             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
                                 <button onclick="wmSetColor('#ffffff',this)" class="wm-color-swatch" title="Blanco" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
