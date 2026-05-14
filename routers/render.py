@@ -69,48 +69,70 @@ render_router = APIRouter()
 def _apply_wm_logo(image: Image.Image,
                    corner: str = "br", size_px: int = 22,
                    opacity_pct: int = 55, color_hex: str = "#ffffff") -> Image.Image:
-    """Pega el logo de TextOnFlow sobre la imagen con posición y estilo configurables."""
+    """Pega el logo de TextOnFlow sobre la imagen con posición y estilo configurables.
+    Añade un fondo oscuro semitransparente detrás del logo para garantizar
+    visibilidad sobre cualquier color de fondo."""
     try:
         if image.mode != "RGBA":
             image = image.convert("RGBA")
         img_w, img_h = image.size
         scale = img_w / 1080.0
-        logo_h = max(14, int(size_px * scale))
+        logo_h = max(16, int(size_px * scale))
 
         # Busca el logo blanco (mejor sobre cualquier fondo)
+        logo = None
         for _lp in ["static/logo-blanco-new.png",
                     "textonflow-api/static/logo-blanco-new.png",
-                    "/app/static/logo-blanco-new.png"]:
+                    "/app/static/logo-blanco-new.png",
+                    os.path.join(os.path.dirname(__file__), "..", "static", "logo-blanco-new.png")]:
             if os.path.exists(_lp):
                 logo = Image.open(_lp).convert("RGBA")
                 break
-        else:
-            return image  # no encontrado → sin sello
+        if logo is None:
+            logger.warning("⚠️ Watermark: logo-blanco-new.png no encontrado en ninguna ruta")
+            return image
 
         ow, oh = logo.size
         logo_w = max(1, int(ow * logo_h / oh))
         logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
 
-        # Tint + opacidad
+        # Tint del logo al color elegido
         hex_c = color_hex.lstrip("#")
         try:
             rt = int(hex_c[0:2], 16); gt = int(hex_c[2:4], 16); bt = int(hex_c[4:6], 16)
         except Exception:
             rt, gt, bt = 255, 255, 255
-        op = max(0, min(100, opacity_pct)) / 100.0
-        px = [(rt, gt, bt, int(a * op)) if a > 0 else (0, 0, 0, 0)
+        logo_op = max(0, min(100, opacity_pct)) / 100.0
+        px = [(rt, gt, bt, int(a * logo_op)) if a > 0 else (0, 0, 0, 0)
               for (r, g, b, a) in logo.getdata()]
         logo.putdata(px)
 
-        # Posición
+        # Fondo pill oscuro semitransparente (asegura contraste sobre cualquier imagen)
+        pad_x = max(6, int(logo_h * 0.4))
+        pad_y = max(4, int(logo_h * 0.25))
+        pill_w = logo_w + pad_x * 2
+        pill_h = logo_h + pad_y * 2
+        pill_alpha = int(160 * logo_op)          # mismo factor de opacidad que el logo
+        pill = Image.new("RGBA", (pill_w, pill_h), (0, 0, 0, 0))
+        pill_draw = ImageDraw.Draw(pill)
+        radius = pill_h // 2
+        pill_draw.rounded_rectangle(
+            [(0, 0), (pill_w - 1, pill_h - 1)],
+            radius=radius,
+            fill=(0, 0, 0, pill_alpha),
+        )
+
+        # Posición de la pill (y del logo dentro de ella)
         margin = max(10, int(img_w * 0.018))
-        x = margin if corner in ("tl", "bl") else img_w - logo_w - margin
-        y = margin if corner in ("tl", "tr") else img_h - logo_h - margin
+        px_pos = margin if corner in ("tl", "bl") else img_w - pill_w - margin
+        py_pos = margin if corner in ("tl", "tr") else img_h - pill_h - margin
 
         overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
-        overlay.paste(logo, (x, y), logo)
+        overlay.paste(pill, (px_pos, py_pos), pill)
+        overlay.paste(logo, (px_pos + pad_x, py_pos + pad_y), logo)
         image = Image.alpha_composite(image, overlay)
-        logger.info("✦ Watermark logo aplicado corner=%s size=%s op=%s", corner, size_px, opacity_pct)
+        logger.info("✦ Watermark logo aplicado corner=%s size=%s op=%s pill=(%dx%d)",
+                    corner, size_px, opacity_pct, pill_w, pill_h)
     except Exception as _e:
         logger.warning("⚠️ Watermark error: %s", _e)
     return image
