@@ -1704,10 +1704,10 @@
                                         oninput="if(this.value.length===6&&/^[0-9a-fA-F]{6}$/.test(this.value)){wmSetColor('#'+this.value,null);}"
                                         onkeydown="if(event.key==='Enter'){this.blur();}"
                                         placeholder="ffffff">
-                                    <label title="Abrir selector de color" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
+                                    <label title="Abrir selector de color" style="position:relative;width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
                                         <input type="color" id="wm-color-picker" value="#ffffff" oninput="wmSetColor(this.value,null)"
-                                            style="width:34px;height:34px;border:none;padding:0;background:none;cursor:pointer;opacity:0;position:absolute;">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
+                                            style="position:absolute;inset:0;width:100%;height:100%;border:none;padding:0;background:none;cursor:pointer;opacity:0;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" style="pointer-events:none;position:relative;z-index:1;"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
                                     </label>
                                 </div>
                             </div>
