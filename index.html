@@ -2133,7 +2133,7 @@
     </a>
 
     <script src="/static/i18n.js?v=250"></script>
-    <script src="/static/app.js?v=275"></script>
+    <script src="/static/app.js?v=276"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
@@ -2704,10 +2704,17 @@ async function saveCurrentProject(){
   const btn = document.getElementById('btn-save-project');
   btn.disabled = true; btn.textContent = '…';
   try{
-    const canvas_json = _buildCanvasSnapshot();
-    // Captura la última imagen generada si existe
-    const lastImg = document.getElementById('result-image') ? document.getElementById('result-image').src : null;
-    const body = { name, canvas_json, image_url: (lastImg && lastImg.startsWith('http')) ? lastImg : null };
+    // _tof_last_json contiene el estado completo: texts, imageOverlays, shapes, template_name, etc.
+    const canvas_json = window._tof_last_json ? JSON.parse(JSON.stringify(window._tof_last_json)) : {};
+    // thumbnail: imagen renderizada si existe, si no la imagen base del canvas
+    const resultImg = document.getElementById('result-image');
+    let image_url = null;
+    if(resultImg && resultImg.src && resultImg.src.startsWith('http')) {
+      image_url = resultImg.src;
+    } else if(canvas_json.template_name && canvas_json.template_name.startsWith('http')) {
+      image_url = canvas_json.template_name;
+    }
+    const body = { name, canvas_json, image_url };
     const r = await fetch('/projects', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tofToken()},
@@ -2776,18 +2783,43 @@ async function openProject(id){
     if(!r.ok) throw new Error('No encontrado');
     const proj = await r.json();
     closeProjectsModal();
-    // Restaurar imagen si existe
-    if(proj.canvas_json && proj.canvas_json.currentImageUrl && window.loadImageFromUrl){
-      loadImageFromUrl(proj.canvas_json.currentImageUrl);
+    const cj = proj.canvas_json || {};
+
+    // Restaurar textos e imageOverlays en las variables globales de app.js
+    // ANTES de cargar la imagen, para que updatePreview() los pinte al terminar la carga
+    if(Array.isArray(cj.texts)) {
+      window.texts = JSON.parse(JSON.stringify(cj.texts));
     }
-    if(proj.canvas_json && proj.canvas_json.exportJSON){
-      try{
-        const j = typeof proj.canvas_json.exportJSON === 'string'
-          ? JSON.parse(proj.canvas_json.exportJSON)
-          : proj.canvas_json.exportJSON;
-        if(typeof loadFromJSON === 'function') loadFromJSON(j);
-      }catch(_){}
+    if(Array.isArray(cj.imageOverlays)) {
+      window.imageOverlays = JSON.parse(JSON.stringify(cj.imageOverlays));
     }
+    if(Array.isArray(cj.shapes)) {
+      window.shapes = JSON.parse(JSON.stringify(cj.shapes));
+    }
+
+    // Restaurar configuración de imagen (zoom, pan, etc.)
+    if(cj.img_zoom !== undefined && window.imageData) window.imageData.zoom = cj.img_zoom;
+    if(cj.img_pan_x !== undefined && window.imageData) window.imageData.panX = cj.img_pan_x;
+    if(cj.img_pan_y !== undefined && window.imageData) window.imageData.panY = cj.img_pan_y;
+
+    // Cargar imagen base (template_name es la URL de la imagen en _tof_last_json)
+    const imgUrl = cj.template_name || cj.currentImageUrl || null;
+    if(imgUrl){
+      const urlInput = document.getElementById('image-url-input');
+      if(urlInput) urlInput.value = imgUrl;
+      if(typeof loadImageFromURL === 'function'){
+        loadImageFromURL();
+      } else if(window.imageData){
+        window.imageData.filename = imgUrl;
+        if(typeof updateControls === 'function') updateControls();
+        if(typeof updatePreview === 'function') updatePreview();
+      }
+    } else {
+      // Sin imagen: solo refrescar controles
+      if(typeof updateControls === 'function') updateControls();
+      if(typeof updatePreview === 'function') updatePreview();
+    }
+
     showToast && showToast('📂 Proyecto "'+proj.name+'" cargado','success');
   }catch(e){ showToast && showToast('❌ Error abriendo proyecto','error'); }
 }
