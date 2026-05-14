@@ -643,18 +643,19 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
     if supabase_url:
         logger.info(f"📤 Imagen subida → Supabase: {supabase_url}")
         return {"url": supabase_url, "filename": filename}
-    # Supabase falló → devolver error claro. No usar URL local efímera:
-    # si el usuario guarda el template con una URL local, el render fallará
-    # después del próximo redeploy de Railway.
-    logger.error(f"📤 Supabase upload falló para {filename} — rechazando solicitud")
-    raise HTTPException(
-        status_code=500,
-        detail=(
-            "No se pudo guardar la imagen de forma permanente en Supabase Storage. "
-            "Revisa la configuración de SUPABASE_SERVICE_ROLE_KEY y el bucket 'textonflow-uploads'. "
-            "Inténtalo de nuevo en unos segundos."
+    # Supabase falló → usar URL local temporal para que el usuario pueda trabajar ahora.
+    # La imagen sobrevive mientras el servidor no se reinicie.
+    local_url = f"/storage/{filename}"
+    logger.warning(f"⚠️ Supabase falló para {filename} — devolviendo URL local temporal: {local_url}")
+    return {
+        "url": local_url,
+        "filename": filename,
+        "warning": (
+            "La imagen se guardó localmente (sesión temporal). "
+            "Puede que no esté disponible después de reiniciar el servidor. "
+            "Si Supabase está disponible, vuelve a subir la imagen para hacerla permanente."
         ),
-    )
+    }
 
 
 # ─── QR Code generator ────────────────────────────────────────────────────────
@@ -802,7 +803,8 @@ def _parse_event_date(date_str: str, tz_name: str) -> datetime:
 
 
 def _format_countdown(seconds: float, fmt: str, expired_text: str) -> str:
-    """Formatea segundos restantes en la cadena del contador."""
+    """Formatea segundos restantes en la cadena del contador.
+    Los segmentos líderes con valor 0 se omiten para evitar ruido visual."""
     if seconds <= 0:
         return expired_text
     total = int(seconds)
@@ -811,13 +813,20 @@ def _format_countdown(seconds: float, fmt: str, expired_text: str) -> str:
     minutes = (total % 3600)  // 60
     secs    = total % 60
     if fmt == "DD:HH:MM:SS":
-        return f"{days}d {hours:02d}h {minutes:02d}m {secs:02d}s"
-    elif fmt == "HH:MM":
-        total_h = days * 24 + hours
-        return f"{total_h}:{minutes:02d}"
-    else:  # HH:MM:SS (default)
-        total_h = days * 24 + hours
+        if days > 0:
+            return f"{days}d {hours:02d}h {minutes:02d}m {secs:02d}s"
+        if hours > 0:
+            return f"{hours:02d}h {minutes:02d}m {secs:02d}s"
+        return f"{minutes}m {secs:02d}s"
+    total_h = days * 24 + hours
+    if fmt == "HH:MM":
+        if total_h > 0:
+            return f"{total_h}:{minutes:02d}"
+        return f"{minutes}"
+    # HH:MM:SS (default)
+    if total_h > 0:
         return f"{total_h}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
 
 
 def _render_timer_on_image(
