@@ -175,6 +175,14 @@ class _ProjectUpdate(BaseModel):
     canvas_json: Optional[dict] = None
     image_url: Optional[str] = None
 
+class _LogoCreate(BaseModel):
+    name: str = "Logo"
+    image_url: str
+    colors: list = []
+
+class _LogoRename(BaseModel):
+    name: str
+
 class _ForgotPasswordBody(BaseModel):
     email: str
 
