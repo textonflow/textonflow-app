@@ -27,6 +27,7 @@ from models import (
     _WebhookBody, _ProjectCreate, _ProjectUpdate,
     _ForgotPasswordBody, _ResetPasswordBody,
     _SessionOpenBody, _SessionCloseBody,
+    _LogoCreate, _LogoRename,
 )
 from user_limits import (
     USER_PLAN_LIMITS, TRIAL_DAYS, JSON_EXPORT_PLANS,
@@ -728,3 +729,104 @@ async def admin_image_sessions(request: Request):
         raise HTTPException(status_code=500, detail="Error interno.")
     return {"kpis": {k: (int(v) if v is not None else 0) for k, v in kpis.items()},
             "top_images": top_images, "by_day": by_day, "recent": recent}
+
+
+# ═══════════════════════════════════════════════════════════════
+#  LOGOS DE CLIENTE  (/user/logos)
+# ═══════════════════════════════════════════════════════════════
+
+def _ensure_logos_table(conn):
+    """Crea la tabla user_logos si no existe (idempotente)."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_logos (
+                id          UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+                user_id     UUID         NOT NULL,
+                name        TEXT         NOT NULL DEFAULT 'Logo',
+                image_url   TEXT         NOT NULL,
+                colors      JSONB        NOT NULL DEFAULT '[]',
+                created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS user_logos_user_idx ON user_logos(user_id);
+        """)
+
+
+@users_router.get("/user/logos", tags=["logos"], summary="Listar logos del usuario")
+async def list_logos(request: Request):
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    _ensure_logos_table(conn)
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT id, name, image_url, colors, created_at
+            FROM user_logos WHERE user_id = %s
+            ORDER BY created_at DESC LIMIT 100
+        """, (payload["sub"],))
+        rows = cur.fetchall()
+    return {"logos": [
+        {"id": str(r["id"]), "name": r["name"],
+         "image_url": r["image_url"],
+         "colors": r["colors"] if isinstance(r["colors"], list) else [],
+         "created_at": r["created_at"].isoformat()}
+        for r in rows
+    ]}
+
+
+@users_router.post("/user/logos", tags=["logos"], status_code=201,
+                   summary="Guardar logo de cliente")
+async def create_logo(body: _LogoCreate, request: Request):
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    _ensure_logos_table(conn)
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            INSERT INTO user_logos (user_id, name, image_url, colors)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, name, image_url, colors, created_at
+        """, (payload["sub"], body.name[:60], body.image_url,
+              json.dumps(body.colors)))
+        row = cur.fetchone()
+    return {
+        "id": str(row["id"]), "name": row["name"],
+        "image_url": row["image_url"],
+        "colors": row["colors"] if isinstance(row["colors"], list) else [],
+        "created_at": row["created_at"].isoformat(),
+    }
+
+
+@users_router.put("/user/logos/{logo_id}", tags=["logos"], summary="Renombrar logo")
+async def rename_logo(logo_id: str, body: _LogoRename, request: Request):
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    _ensure_logos_table(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE user_logos SET name = %s WHERE id = %s AND user_id = %s",
+            (body.name[:60], logo_id, payload["sub"])
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Logo no encontrado.")
+    return {"ok": True}
+
+
+@users_router.delete("/user/logos/{logo_id}", tags=["logos"], summary="Eliminar logo")
+async def delete_logo(logo_id: str, request: Request):
+    payload = _require_user(request)
+    conn = get_db()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible.")
+    _ensure_logos_table(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM user_logos WHERE id = %s AND user_id = %s",
+            (logo_id, payload["sub"])
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Logo no encontrado.")
+    return {"ok": True}
