@@ -1105,7 +1105,8 @@ def get_font_path(font_name: str) -> str:
 
 # ─── Countdown helper ─────────────────────────────────────────────────────────
 def _format_countdown(seconds: float, fmt: str, expired_text: str) -> str:
-    """Formatea segundos restantes en una cadena de contador regresivo."""
+    """Formatea segundos restantes en una cadena de contador regresivo.
+    Los segmentos líderes con valor 0 se omiten para evitar ruido visual."""
     if seconds <= 0:
         return expired_text or "¡Oferta expirada!"
     s  = int(seconds)
@@ -1114,7 +1115,17 @@ def _format_countdown(seconds: float, fmt: str, expired_text: str) -> str:
     mm = (s % 3600)  // 60
     ss = s % 60
     if fmt == "DD:HH:MM:SS":
-        return f"{dd}:{hh:02d}:{mm:02d}:{ss:02d}"
+        if dd > 0:
+            return f"{dd}:{hh:02d}:{mm:02d}:{ss:02d}"
+        if hh > 0:
+            return f"{hh}:{mm:02d}:{ss:02d}"
+        return f"{mm}:{ss:02d}"
+    total_h = hh + dd * 24
     if fmt == "HH:MM":
-        return f"{hh + dd*24}:{mm:02d}"
-    return f"{hh + dd*24}:{mm:02d}:{ss:02d}"
+        if total_h > 0:
+            return f"{total_h}:{mm:02d}"
+        return f"{mm}"
+    # HH:MM:SS (default)
+    if total_h > 0:
+        return f"{total_h}:{mm:02d}:{ss:02d}"
+    return f"{mm}:{ss:02d}"
