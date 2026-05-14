@@ -377,7 +377,7 @@ function _renderTypographySection(index,text){return`<!-- ══ TIPOGRAFÍA —
                         <div style="margin-top:8px;padding:8px;background:#f9f9f9;border-radius:7px;border:1px solid #e8e8e8;">
                             <div style="display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:visible;" onclick="event.stopPropagation();">
                                 <!-- Font picker (flex:1) -->
-                                <div style="flex:1;min-width:0;overflow:visible;position:relative;">
+                                <div style="flex:1;min-width:110px;overflow:visible;position:relative;">
                                 ${(() => {
                                     const cur = fontFamilies.find(f => f.value === text.font_value) || fontFamilies[0];
                                     const groups = [...new Set(fontFamilies.map(f => f.group))];
@@ -391,7 +391,7 @@ function _renderTypographySection(index,text){return`<!-- ══ TIPOGRAFÍA —
                                         return divider +
                                             items.map(f => `<div class="font-picker-option${f.value === text.font_value ? ' selected' : ''}"style="${f.css}"onclick="selectFont(${index},'${f.value}',event)">${f.display}</div>`).join('');
                                     }).join('');
-                                    return `<div class="font-picker"id="fp-${index}"style="width:100%;"><button class="font-picker-btn"onclick="toggleFontPicker(${index},event)"type="button"style="width:100%;"><span class="font-picker-label"style="${cur.css};max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;">${cur.display}</span><span class="fp-arrow">▼</span></button><div class="font-picker-dropdown"id="fp-list-${index}">${options}</div></div>`;
+                                    return `<div class="font-picker"id="fp-${index}"style="width:100%;"><button class="font-picker-btn"onclick="toggleFontPicker(${index},event)"type="button"style="width:100%;"><span class="font-picker-label"style="${cur.css};max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;">${cur.display}</span><span class="fp-arrow">▼</span></button><div class="font-picker-dropdown"id="fp-list-${index}">${options}</div></div>`;
                                 })()}
                                 </div>
                                 <!-- Tamaño -->
@@ -1054,7 +1054,7 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
                 <div class="cd-label" style="margin-bottom:6px;">${window.t('text_style_lbl')}</div>
                 <!-- Fila 1: Fuente (picker completo independiente) -->
                 <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;overflow:visible;position:relative;" onclick="event.stopPropagation();">
-                  <div style="flex:1;min-width:0;overflow:visible;position:relative;">
+                  <div style="flex:1;min-width:110px;overflow:visible;position:relative;">
                     ${(()=>{
                       const cur = fontFamilies.find(f=>f.value===(t.font_value||'Arial'))||fontFamilies[0];
                       const groups = [...new Set(fontFamilies.map(f=>f.group))];
