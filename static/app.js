@@ -1356,113 +1356,25 @@ else if(corner==='bl'){wm.style.bottom=g;wm.style.left=gs;}
 else{wm.style.bottom=g;wm.style.right=gs;}}
 function wmSetOpacity(val){var wm=document.getElementById('canvas-watermark');var lbl=document.getElementById('wm-opacity-val');if(wm)wm.style.opacity=val/100;if(lbl)lbl.textContent=val;}
 function extractDominantColors(img,count){var c=document.createElement('canvas');c.width=80;c.height=80;var ctx=c.getContext('2d');ctx.drawImage(img,0,0,80,80);var data=ctx.getImageData(0,0,80,80).data;var cmap={};for(var i=0;i<data.length;i+=4){var a=data[i+3];if(a<100)continue;var r=Math.round(data[i]/40)*40;var g=Math.round(data[i+1]/40)*40;var b=Math.round(data[i+2]/40)*40;var bright=(r+g+b);if(bright>710||bright<30)continue;var key=r+','+g+','+b;cmap[key]=(cmap[key]||0)+1;}var sorted=Object.entries(cmap).sort(function(a,b){return b[1]-a[1];});var result=[];sorted.slice(0,count).forEach(function(e){var p=e[0].split(',').map(Number);var hex='#'+p.map(function(v){return v.toString(16).padStart(2,'0');}).join('');result.push(hex);});return result;}
-var _clientLogos=JSON.parse(localStorage.getItem('tof_client_logos')||'[]');
-function _tofLogoToken(){return localStorage.getItem('tof_token')||sessionStorage.getItem('tof_token')||'';}
-async function loadLogosFromServer(){
-  var tok=_tofLogoToken();
-  if(!tok){renderLogosPanel();return;}
-  try{
-    var r=await fetch('/user/logos',{headers:{'Authorization':'Bearer '+tok}});
-    if(!r.ok){renderLogosPanel();return;}
-    var data=await r.json();
-    var serverLogos=data.logos||[];
-    var localLogos=JSON.parse(localStorage.getItem('tof_client_logos')||'[]');
-    if(localLogos.length>0&&serverLogos.length===0){
-      for(var ll of localLogos){
-        if(!ll.dataUrl)continue;
-        try{
-          var blob=await(await fetch(ll.dataUrl)).blob();
-          var fd=new FormData();fd.append('file',blob,(ll.name||'logo')+'.png');
-          var ur=await fetch('/api/upload-image',{method:'POST',headers:{'Authorization':'Bearer '+tok},body:fd});
-          if(!ur.ok)continue;
-          var ud=await ur.json();
-          var cr=await fetch('/user/logos',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:ll.name||'Logo',image_url:ud.url,colors:ll.colors||[]})});
-          if(cr.ok){var cd=await cr.json();serverLogos.push(cd);}
-        }catch(ex){}
-      }
-      localStorage.removeItem('tof_client_logos');
-    }
-    _clientLogos=serverLogos;
-    renderLogosPanel();
-  }catch(e){renderLogosPanel();}
-}
-function addClientLogo(input){
-  var file=input.files[0];if(!file)return;
-  var tok=_tofLogoToken();
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    var dataUrl=e.target.result;
-    var img=new Image();
-    img.onload=async function(){
-      var colors=extractDominantColors(img,7);
-      if(!tok){
-        var logo={id:Date.now(),name:file.name.replace(/\.[^.]+$/,'').slice(0,28),dataUrl:dataUrl,colors:colors};
-        _clientLogos.push(logo);
-        try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){_clientLogos.pop();showNotif('Logo muy grande para guardar','error');return;}
-        renderLogosPanel();_openAccordion('logos');showNotif('Logo guardado ✦','success');
-        return;
-      }
-      showNotif('Subiendo logo…','info');
-      try{
-        var blob=await(await fetch(dataUrl)).blob();
-        var fd=new FormData();fd.append('file',blob,file.name||'logo.png');
-        var ur=await fetch('/api/upload-image',{method:'POST',headers:{'Authorization':'Bearer '+tok},body:fd});
-        if(!ur.ok)throw new Error('upload');
-        var ud=await ur.json();
-        var name=file.name.replace(/\.[^.]+$/,'').slice(0,28)||'Logo';
-        var cr=await fetch('/user/logos',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:name,image_url:ud.url,colors:colors})});
-        if(!cr.ok)throw new Error('create');
-        var cd=await cr.json();
-        _clientLogos.unshift(cd);
-        renderLogosPanel();_openAccordion('logos');showNotif('Logo guardado ✦','success');
-      }catch(ex){showNotif('Error al subir logo','error');}
-    };
-    img.src=dataUrl;
-  };
-  reader.readAsDataURL(file);input.value='';
-}
-async function deleteClientLogo(id){
-  if(!await showTofConfirm('¿Eliminar este logo? Esta acción no se puede deshacer.','Eliminar logo','🗑️'))return;
-  var tok=_tofLogoToken();
-  if(tok){
-    try{
-      var r=await fetch('/user/logos/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+tok}});
-      if(!r.ok&&r.status!==404){showNotif('Error al eliminar logo','error');return;}
-    }catch(ex){showNotif('Error de red','error');return;}
-  }
-  _clientLogos=_clientLogos.filter(function(l){return String(l.id)!==String(id);});
-  if(!tok) try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){}
-  renderLogosPanel();
-}
-function renameClientLogo(id){
-  var logo=_clientLogos.find(function(l){return String(l.id)===String(id);});if(!logo)return;
-  var nameSpan=document.getElementById('logo-name-'+id);if(!nameSpan)return;
-  var prev=logo.name;
-  var inp=document.createElement('input');inp.type='text';inp.value=prev;inp.maxLength=32;
-  inp.style.cssText='flex:1;min-width:0;max-width:140px;background:#0a0a1a;border:1px solid #4a3a90;border-radius:4px;color:#c0b8ff;font-size:11px;font-weight:600;padding:2px 6px;outline:none;';
-  var wrap=nameSpan.parentNode;wrap.replaceChild(inp,nameSpan);inp.focus();inp.select();
-  var tok=_tofLogoToken();
-  async function _save(){
-    var val=inp.value.trim().slice(0,32)||prev;
-    logo.name=val;
-    if(tok){
-      try{await fetch('/user/logos/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:val})});}catch(ex){}
-    } else {
-      try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){}
-    }
-    renderLogosPanel();
-  }
-  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();_save();}else if(e.key==='Escape'){logo.name=prev;renderLogosPanel();}});
-  inp.addEventListener('blur',function(){_save();});
-}
+var _clientLogos=JSON.parse(localStorage.getItem('tof_client_logos')||'[]');function _tofLogoToken(){return localStorage.getItem('tof_token')||sessionStorage.getItem('tof_token')||'';}
+async function loadLogosFromServer(){var tok=_tofLogoToken();if(!tok){renderLogosPanel();return;}
+try{var r=await fetch('/user/logos',{headers:{'Authorization':'Bearer '+tok}});if(!r.ok){renderLogosPanel();return;}
+var data=await r.json();var serverLogos=data.logos||[];var localLogos=JSON.parse(localStorage.getItem('tof_client_logos')||'[]');if(localLogos.length>0&&serverLogos.length===0){for(var ll of localLogos){if(!ll.dataUrl)continue;try{var blob=await(await fetch(ll.dataUrl)).blob();var fd=new FormData();fd.append('file',blob,(ll.name||'logo')+'.png');var ur=await fetch('/api/upload-image',{method:'POST',headers:{'Authorization':'Bearer '+tok},body:fd});if(!ur.ok)continue;var ud=await ur.json();var cr=await fetch('/user/logos',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:ll.name||'Logo',image_url:ud.url,colors:ll.colors||[]})});if(cr.ok){var cd=await cr.json();serverLogos.push(cd);}}catch(ex){}}
+localStorage.removeItem('tof_client_logos');}
+_clientLogos=serverLogos;renderLogosPanel();}catch(e){renderLogosPanel();}}
+function addClientLogo(input){var file=input.files[0];if(!file)return;var tok=_tofLogoToken();var reader=new FileReader();reader.onload=async function(e){var dataUrl=e.target.result;var img=new Image();img.onload=async function(){var colors=extractDominantColors(img,7);if(!tok){var logo={id:Date.now(),name:file.name.replace(/\.[^.]+$/,'').slice(0,28),dataUrl:dataUrl,colors:colors};_clientLogos.push(logo);try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){_clientLogos.pop();showNotif('Logo muy grande para guardar','error');return;}
+renderLogosPanel();_openAccordion('logos');showNotif('Logo guardado ✦','success');return;}
+showNotif('Subiendo logo…','info');try{var blob=await(await fetch(dataUrl)).blob();var fd=new FormData();fd.append('file',blob,file.name||'logo.png');var ur=await fetch('/api/upload-image',{method:'POST',headers:{'Authorization':'Bearer '+tok},body:fd});if(!ur.ok)throw new Error('upload');var ud=await ur.json();var name=file.name.replace(/\.[^.]+$/,'').slice(0,28)||'Logo';var cr=await fetch('/user/logos',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:name,image_url:ud.url,colors:colors})});if(!cr.ok)throw new Error('create');var cd=await cr.json();_clientLogos.unshift(cd);renderLogosPanel();_openAccordion('logos');showNotif('Logo guardado ✦','success');}catch(ex){showNotif('Error al subir logo','error');}};img.src=dataUrl;};reader.readAsDataURL(file);input.value='';}
+async function deleteClientLogo(id){if(!await showTofConfirm('¿Eliminar este logo? Esta acción no se puede deshacer.','Eliminar logo','🗑️'))return;var tok=_tofLogoToken();if(tok){try{var r=await fetch('/user/logos/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+tok}});if(!r.ok&&r.status!==404){showNotif('Error al eliminar logo','error');return;}}catch(ex){showNotif('Error de red','error');return;}}
+_clientLogos=_clientLogos.filter(function(l){return String(l.id)!==String(id);});if(!tok)try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){}
+renderLogosPanel();}
+function renameClientLogo(id){var logo=_clientLogos.find(function(l){return String(l.id)===String(id);});if(!logo)return;var nameSpan=document.getElementById('logo-name-'+id);if(!nameSpan)return;var prev=logo.name;var inp=document.createElement('input');inp.type='text';inp.value=prev;inp.maxLength=32;inp.style.cssText='flex:1;min-width:0;max-width:140px;background:#0a0a1a;border:1px solid #4a3a90;border-radius:4px;color:#c0b8ff;font-size:11px;font-weight:600;padding:2px 6px;outline:none;';var wrap=nameSpan.parentNode;wrap.replaceChild(inp,nameSpan);inp.focus();inp.select();var tok=_tofLogoToken();async function _save(){var val=inp.value.trim().slice(0,32)||prev;logo.name=val;if(tok){try{await fetch('/user/logos/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({name:val})});}catch(ex){}}else{try{localStorage.setItem('tof_client_logos',JSON.stringify(_clientLogos));}catch(ex){}}
+renderLogosPanel();}
+inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();_save();}else if(e.key==='Escape'){logo.name=prev;renderLogosPanel();}});inp.addEventListener('blur',function(){_save();});}
 function useLogoColor(hex){const targets=selectedTexts.length>0?[...new Set([...selectedTexts,...(activeTextIndex>=0?[activeTextIndex]:[])])]:(activeTextIndex>=0?[activeTextIndex]:[]);if(targets.length===0){showNotif('Selecciona una capa de texto primero','info');return;}targets.forEach(function(i){if(texts[i])texts[i].font_color=hex;});saveHistory();updateLayerList();updateControls();updatePreview();updateJSON();showToast('Color aplicado ✦',1200);}
-function _toPngDataUrl(dataUrl,img,callback){
-  if(!dataUrl.startsWith('data:')){callback(dataUrl);return;}
-  if(!dataUrl.startsWith('data:image/svg')&&!dataUrl.startsWith('data:image/svg+xml')){callback(dataUrl);return;}
-  var sw=img.naturalWidth||img.width||400;var sh=img.naturalHeight||img.height||400;if(sw<1)sw=400;if(sh<1)sh=400;
-  var cvs=document.createElement('canvas');cvs.width=sw;cvs.height=sh;cvs.getContext('2d').drawImage(img,0,0,sw,sh);
-  try{callback(cvs.toDataURL('image/png'));}catch(e){callback(dataUrl);}
-}
+function _toPngDataUrl(dataUrl,img,callback){if(!dataUrl.startsWith('data:')){callback(dataUrl);return;}
+if(!dataUrl.startsWith('data:image/svg')&&!dataUrl.startsWith('data:image/svg+xml')){callback(dataUrl);return;}
+var sw=img.naturalWidth||img.width||400;var sh=img.naturalHeight||img.height||400;if(sw<1)sw=400;if(sh<1)sh=400;var cvs=document.createElement('canvas');cvs.width=sw;cvs.height=sh;cvs.getContext('2d').drawImage(img,0,0,sw,sh);try{callback(cvs.toDataURL('image/png'));}catch(e){callback(dataUrl);}}
 function useLogoAsSticker(dataUrl){var img=new Image();img.onload=function(){_toPngDataUrl(dataUrl,img,function(pngSrc){var sw=img.naturalWidth||img.width||200;var sh=img.naturalHeight||img.height||200;if(sw<1)sw=200;if(sh<1)sh=200;var maxW=imageData.width?Math.min(sw,imageData.width*0.4):Math.min(sw,200);var ratio=maxW/sw;var w=Math.round(maxW);var h=Math.round(sh*ratio);var newOv={id:'ov'+(_overlayIdCounter++),src:pngSrc,img:img,x:Math.round((imageData.width||400)/2-w/2),y:Math.round((imageData.height||300)/2-h/2),width:w,height:h,opacity:1.0,rotation:0,mask_type:'none',mask_auto_fit:true,mask_radius:0,overlay_padding_enabled:false,overlay_padding_value:20,overlay_padding_side:'left',mask_border_width:0,mask_border_color:'#ffffff',mask_border_opacity:100,mask_shadow_enabled:false,mask_shadow_color:'#000000',mask_shadow_opacity:70,mask_shadow_blur:8,mask_shadow_x:0,mask_shadow_y:4,z_layer:'above'};imageOverlays.push(newOv);_openAccordion('stickers');updateStickerTabs();updatePreview();showNotif('Logo añadido como sticker ✦','success');});};img.src=dataUrl;}
 function renderLogosPanel(){var grid=document.getElementById('logos-grid');if(!grid)return;var badge=document.getElementById('acc-badge-logos');if(badge)badge.textContent=_clientLogos.length;if(_clientLogos.length===0){grid.innerHTML='<div style="text-align:center;color:#444;font-size:11px;padding:16px 0;line-height:1.6;">Sin logos guardados.<br>Usa <strong style="color:#666;">＋</strong> para subir el logo de un cliente.</div>';return;}grid.innerHTML=_clientLogos.map(function(logo){var imgSrc=logo.image_url||logo.dataUrl||'';var swatches=(logo.colors||[]).map(function(c){return'<button onclick="useLogoColor(\''+c+'\')" title="'+c+'" style="width:18px;height:18px;border-radius:50%;background:'+c+';border:1.5px solid rgba(255,255,255,0.1);cursor:pointer;padding:0;flex-shrink:0;" class="wm-color-swatch"></button>';}).join('');return'<div style="background:#0d0d1f;border:1px solid #1e1e3a;border-radius:8px;padding:9px;margin-bottom:8px;">'+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+'<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+'<img src="'+imgSrc+'" style="width:34px;height:34px;object-fit:contain;border-radius:5px;background:#111;flex-shrink:0;border:1px solid #1e1e3a;">'+'<span id="logo-name-'+logo.id+'" style="font-size:11px;color:#c0b8ff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">'+logo.name+'</span>'+'<button onclick="renameClientLogo(\''+logo.id+'\')" title="Renombrar" style="flex-shrink:0;background:transparent;border:none;color:#5a5a90;cursor:pointer;font-size:13px;padding:0 3px;line-height:1;" onmouseover="this.style.color=\'#a090f0\';" onmouseout="this.style.color=\'#5a5a90\';">✏</button>'+'</div>'+'<div style="display:flex;gap:4px;flex-shrink:0;margin-left:6px;">'+'<button onclick="useLogoAsSticker(\''+imgSrc+'\')" title="Usar como sticker en el canvas" style="font-size:10px;padding:3px 7px;background:#1a2a1a;color:#4ade80;border:1px solid #1e3a1e;border-radius:5px;cursor:pointer;font-weight:700;">＋ Sticker</button>'+'<button onclick="deleteClientLogo(\''+logo.id+'\')" title="Eliminar logo" style="font-size:10px;padding:3px 7px;background:#2a1a1a;color:#f87171;border:1px solid #3a1e1e;border-radius:5px;cursor:pointer;font-weight:700;">✕</button>'+'</div></div>'+'<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">'+'<span style="font-size:9px;color:#444;margin-right:2px;">Colores:</span>'+
 swatches+'</div></div>';}).join('');}
@@ -1676,10 +1588,12 @@ async function _saLoadSettings(){try{var tok=_getAdminToken();var r=await fetch(
 window._saLoadSettings=_saLoadSettings;window.loadUsageInfo=loadUsageInfo;window._renderUsageBar=_renderUsageBar;(function(){var _modalHTML='<div id="sa-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);align-items:center;justify-content:center;">'
 +'<div style="background:#fff;border-radius:14px;padding:32px 28px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:inherit;position:relative;">'
 +'<h3 style="margin:0 0 18px;font-size:17px;color:#1e293b;text-align:center;">🔐 Acceso Superadmin</h3>'
-+'<input id="sa-email" type="email" placeholder="Email" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:10px;font-size:14px;">'
-+'<input id="sa-pwd" type="password" placeholder="Contraseña" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:14px;font-size:14px;">'
++'<form id="sa-form" onsubmit="document.getElementById(\'sa-login-btn\').click();return false;" style="margin:0;">'
++'<input id="sa-email" type="email" placeholder="Email" autocomplete="username" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:10px;font-size:14px;">'
++'<input id="sa-pwd" type="password" placeholder="Contraseña" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:14px;font-size:14px;">'
 +'<div id="sa-err" style="color:#f87171;font-size:12px;margin-bottom:10px;min-height:16px;text-align:center;"></div>'
-+'<button id="sa-login-btn" style="width:100%;padding:11px;background:linear-gradient(90deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Entrar</button>'
++'<button id="sa-login-btn" type="submit" style="width:100%;padding:11px;background:linear-gradient(90deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Entrar</button>'
++'</form>'
 +'<button id="sa-logout-btn" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;margin-top:8px;cursor:pointer;">Cerrar sesión actual</button>'
 +'<button id="sa-close-btn" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>'
 +'</div></div>';var _div=document.createElement('div');_div.innerHTML=_modalHTML;document.body.appendChild(_div.firstChild);var _modal=document.getElementById('sa-modal');_modal.style.display='none';function _openSA(){_modal.style.display='flex';_modal.style.alignItems='center';_modal.style.justifyContent='center';document.getElementById('sa-err').textContent='';document.getElementById('sa-email').value='';document.getElementById('sa-pwd').value='';}
