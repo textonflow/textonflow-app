@@ -1,0 +1,50 @@
+{
+  "name": "TextOnFlow — Render Básico (HTTP)",
+  "flow": [
+    {
+      "id": 1,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://www.textonflow.com/webhook/render",
+        "method": "post",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "contentType": "application/json",
+        "data": "{\"template_id\":\"TU_TEMPLATE_ID\",\"variables\":{\"nombre\":\"Juan García\",\"descuento\":\"30\",\"producto\":\"Plan Pro\"}}"
+      },
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": { "method": { "label": "POST" } },
+        "parameters": [
+          { "name": "handleErrors", "type": "boolean", "label": "Show advanced settings" }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "eu1.make.com"
+  }
+}
