@@ -126,6 +126,7 @@ class MultiTextRequest(BaseModel):
     wm_size:    int   = 22        # altura en px del logo (relativa a 1080px)
     wm_opacity: int   = 55        # 0-100
     wm_color:   str   = "#ffffff" # hex color del logo
+    wm_pill:    bool  = True      # mostrar fondo pill detrás del logo
     # ── Viñeta ──
     vignette_enabled: bool        = False
     vignette_color:   str         = "#000000"  # hex color
