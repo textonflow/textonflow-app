@@ -736,8 +736,8 @@
 
                     <div class="canvas-wrapper" id="canvas-wrapper">
                     <canvas id="preview-canvas"></canvas>
-                    <div id="canvas-watermark" style="position:absolute;bottom:14px;right:18px;display:none;pointer-events:none;z-index:200;background:rgba(0,0,0,0.50);border-radius:999px;padding:5px 12px;line-height:0;">
-                      <img id="canvas-watermark-img" src="/static/logo-blanco-new.png" alt="" style="height:22px;width:auto;display:block;opacity:1;">
+                    <div id="canvas-watermark" style="position:absolute;bottom:14px;right:18px;display:none;pointer-events:none;z-index:200;background:rgba(0,0,0,0.50);border-radius:999px;padding:6px 14px;align-items:center;gap:0;">
+                      <img id="canvas-watermark-img" src="/static/logo-blanco-new.png" alt="" style="height:55px;width:auto;display:block;opacity:1;">
                     </div>
                     <div id="text-layers" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
                     <!-- Snap lines -->
@@ -1704,8 +1704,8 @@
                             </div>
                             <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
                                 <div style="flex:1;min-width:0;">
-                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">22</span>px</div>
-                                    <input type="range" id="wm-size-range" min="12" max="80" value="22"
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">55</span>px</div>
+                                    <input type="range" id="wm-size-range" min="20" max="150" value="55"
                                         oninput="wmSetSize(this.value)"
                                         style="width:100%;accent-color:#7c6eff;cursor:pointer;">
                                 </div>
