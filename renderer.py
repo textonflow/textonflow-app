@@ -793,6 +793,171 @@ def _wrap_words(text: str, font, max_width: int, draw) -> str:
     return '\n'.join(result_lines)
 
 
+# ─── Inline Text Runs (formato por selección de palabras) ─────────────────────
+_RUN_FONT_FAMILIES: dict = {
+    'Arial':               {'r':'Arial',           'b':'Arial-Bold',          'i':'Arial-Italic',      'bi':'Arial-BoldItalic'},
+    'Arial-Bold':          {'r':'Arial',           'b':'Arial-Bold',          'i':'Arial-Italic',      'bi':'Arial-BoldItalic'},
+    'Arial-Italic':        {'r':'Arial',           'b':'Arial-Bold',          'i':'Arial-Italic',      'bi':'Arial-BoldItalic'},
+    'Arial-BoldItalic':    {'r':'Arial',           'b':'Arial-Bold',          'i':'Arial-Italic',      'bi':'Arial-BoldItalic'},
+    'GeomanistRegular':    {'r':'GeomanistRegular','b':'GeomanistBold',        'i':'GeomanistItalic',   'bi':'GeomanistBoldItalic'},
+    'GeomanistBold':       {'r':'GeomanistRegular','b':'GeomanistBold',        'i':'GeomanistItalic',   'bi':'GeomanistBoldItalic'},
+    'GeomanistItalic':     {'r':'GeomanistRegular','b':'GeomanistBold',        'i':'GeomanistItalic',   'bi':'GeomanistBoldItalic'},
+    'GeomanistBoldItalic': {'r':'GeomanistRegular','b':'GeomanistBold',        'i':'GeomanistItalic',   'bi':'GeomanistBoldItalic'},
+    'ScholarRegular':      {'r':'ScholarRegular',  'b':'ScholarRegular',       'i':'ScholarItalic',     'bi':'ScholarItalic'},
+}
+
+def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, size: int):
+    """Devuelve ImageFont para un run con bold/italic override, o None si no cambia."""
+    run_bold   = run_fmt.get('bold_override')
+    run_italic = run_fmt.get('italic_override')
+    if run_bold is None and run_italic is None:
+        return None
+    fb = font_backend_name or base_font_name
+    v  = _RUN_FONT_FAMILIES.get(fb, {})
+    el_bold   = base_font_name in (v.get('b','___'), v.get('bi','___'))
+    el_italic = base_font_name in (v.get('i','___'), v.get('bi','___'))
+    is_bold   = run_bold   if run_bold   is not None else el_bold
+    is_italic = run_italic if run_italic is not None else el_italic
+    key = 'bi' if (is_bold and is_italic) else ('b' if is_bold else ('i' if is_italic else 'r'))
+    target = v.get(key, base_font_name)
+    if target == base_font_name:
+        return None
+    path = FONT_MAPPING.get(target)
+    if not path:
+        return None
+    try:
+        return ImageFont.truetype(path, size)
+    except Exception:
+        return None
+
+
+def _expand_runs_to_chars(runs) -> list:
+    """Convierte lista de TextRun en lista de (char, fmt_dict)."""
+    result = []
+    for run in runs:
+        fmt = {
+            'bold_override':   getattr(run, 'bold_override',   None),
+            'italic_override': getattr(run, 'italic_override', None),
+            'font_color':      getattr(run, 'font_color',      None),
+        }
+        for c in (run.text if hasattr(run, 'text') else run.get('text', '')):
+            result.append((c, fmt))
+    return result
+
+
+def _map_runs_to_wrapped(char_fmts: list, wrapped_text: str) -> list:
+    """Mapea formatos de chars al texto word-wrapped (que puede tener \\n insertados)."""
+    orig_idx = 0
+    result   = []
+    for c in wrapped_text:
+        if c == '\n':
+            if orig_idx < len(char_fmts) and char_fmts[orig_idx][0] == '\n':
+                result.append(('\n', char_fmts[orig_idx][1]))
+                orig_idx += 1
+            else:
+                fmt = char_fmts[orig_idx - 1][1] if orig_idx > 0 else {}
+                result.append(('\n', fmt))
+        else:
+            if orig_idx < len(char_fmts):
+                result.append((c, char_fmts[orig_idx][1]))
+                orig_idx += 1
+            else:
+                result.append((c, {}))
+    return result
+
+
+def _compute_runs_bbox(char_fmts_wrapped: list, base_font, base_font_name: str,
+                        font_backend_name, font_size_2x: int,
+                        draw_obj, spacing: float) -> tuple:
+    """Calcula (max_line_width, total_height) para texto con runs inline."""
+    lines: list = []
+    curr:  list = []
+    for c, fmt in char_fmts_wrapped:
+        if c == '\n':
+            lines.append(curr); curr = []
+        else:
+            curr.append((c, fmt))
+    lines.append(curr)
+    max_w   = 0
+    line_h  = base_font.size
+    total_h = 0
+    for line_chars in lines:
+        segs: list = []
+        if line_chars:
+            ct, cf = line_chars[0]
+            for c, fmt in line_chars[1:]:
+                if fmt == cf: ct += c
+                else: segs.append((ct, cf)); ct, cf = c, fmt
+            segs.append((ct, cf))
+        lw = 0
+        for seg_text, seg_fmt in segs:
+            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x) or base_font
+            try:
+                lb = draw_obj.textbbox((0, 0), seg_text, font=sf)
+                lw += lb[2] - lb[0]
+            except Exception:
+                lw += sf.size * max(len(seg_text), 1)
+        max_w   = max(max_w, lw)
+        total_h += line_h + int(spacing)
+    total_h = max(0, total_h - int(spacing))
+    return max_w, total_h
+
+
+def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: list,
+                            base_font, base_font_name: str, font_backend_name,
+                            font_size_2x: int, base_color: tuple, spacing: float,
+                            text_align: str, block_w: int, parse_color_fn) -> None:
+    """Renderiza texto multilinea con formato inline por segmentos (runs)."""
+    x, y  = xy
+    lines: list = []
+    curr:  list = []
+    for c, fmt in char_fmts_wrapped:
+        if c == '\n':
+            lines.append(curr); curr = []
+        else:
+            curr.append((c, fmt))
+    lines.append(curr)
+    line_h = base_font.size
+    curr_y = y
+    for line_chars in lines:
+        segs: list = []
+        if line_chars:
+            ct, cf = line_chars[0]
+            for c, fmt in line_chars[1:]:
+                if fmt == cf: ct += c
+                else: segs.append((ct, cf)); ct, cf = c, fmt
+            segs.append((ct, cf))
+        seg_ws: list = []
+        seg_fs: list = []
+        for seg_text, seg_fmt in segs:
+            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x) or base_font
+            seg_fs.append(sf)
+            try:
+                lb = draw_obj.textbbox((0, 0), seg_text, font=sf)
+                seg_ws.append(lb[2] - lb[0])
+            except Exception:
+                seg_ws.append(sf.size * max(len(seg_text), 1))
+        lw = sum(seg_ws)
+        if text_align == 'center':   sx = x + (block_w - lw) // 2
+        elif text_align == 'right':  sx = x + (block_w - lw)
+        else:                        sx = x
+        cx = sx
+        for i, (seg_text, seg_fmt) in enumerate(segs):
+            if not seg_text:
+                continue
+            sf    = seg_fs[i]
+            color = base_color
+            if seg_fmt.get('font_color'):
+                c2 = parse_color_fn(seg_fmt['font_color'])
+                color = c2 if len(c2) == 4 else c2 + (255,)
+            try:
+                pilmoji_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+            except Exception:
+                draw_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+            cx += seg_ws[i]
+        curr_y += line_h + int(spacing)
+
+
 # ─── Renderizado multilinea manual con Pilmoji ────────────────────────────────
 def pilmoji_multiline(pilmoji_obj, draw_obj, xy, text, font, fill, spacing=0, text_align='center', block_width=None):
     """Renderiza texto multilinea con Pilmoji respetando el spacing explícitamente."""
@@ -856,9 +1021,23 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
         max_wrap_w   = max(1, image.width * SCALE - 2 * pad * SCALE)
         text_to_draw = _wrap_words(text_to_draw, font2x, max_wrap_w, draw)
 
-    bbox        = draw.multiline_textbbox((0, 0), text_to_draw, font=font2x, spacing=spacing, align=text_align)
-    text_width  = bbox[2] - bbox[0]
-    text_height = bbox[3] - bbox[1]
+    # Preparar runs inline si existen
+    _runs      = getattr(text_field, 'text_runs', None) or []
+    _fb_name   = getattr(text_field, 'font_backend', None) or text_field.font_name
+    _char_fmts: list = []
+    if _runs:
+        _raw       = _expand_runs_to_chars(_runs)
+        _char_fmts = _map_runs_to_wrapped(_raw, text_to_draw)
+
+    if _char_fmts:
+        text_width, text_height = _compute_runs_bbox(
+            _char_fmts, font2x, text_field.font_name, _fb_name,
+            int(font2x.size), draw, spacing
+        )
+    else:
+        bbox        = draw.multiline_textbbox((0, 0), text_to_draw, font=font2x, spacing=spacing, align=text_align)
+        text_width  = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
 
     try:
         _lbox      = draw.textbbox((0, 0), "Ag", font=font2x)
@@ -994,40 +1173,56 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
             stroke_width=text_field.stroke_width * SCALE, stroke_fill=stroke_c,
         )
 
-    # 4. TEXTO PRINCIPAL con emojis
+    # 4. TEXTO PRINCIPAL con emojis (con soporte de runs inline)
     tr, tg, tb = final_color[:3]
     text_layer = Image.new("RGBA", (work_w, work_h), (tr, tg, tb, 0))
     tl_draw    = ImageDraw.Draw(text_layer)
     emoji_rendered = False
 
-    try:
-        source = get_emoji_source()
-        with Pilmoji(text_layer, source=source) as pilmoji:
-            pilmoji_multiline(pilmoji, tl_draw, (base_x, base_y), text_to_draw,
-                font=font2x, fill=final_color,
-                spacing=spacing, text_align=text_align, block_width=text_width)
-        emoji_rendered = True
-        logger.info("Emojis renderizados con Twemoji CDN")
-    except Exception as e:
-        logger.warning(f"pilmoji fallo: {e} — intentando EmojiCDNSource como fallback")
-
-    if not emoji_rendered:
+    if _char_fmts:
+        # ── Renderizado con formato inline por runs ──
         try:
-            with Pilmoji(text_layer, source=EmojiCDNSource()) as pilmoji:
+            source = get_emoji_source()
+            with Pilmoji(text_layer, source=source) as pilmoji:
+                _render_runs_multiline(
+                    pilmoji, tl_draw, (base_x, base_y),
+                    _char_fmts, font2x, text_field.font_name, _fb_name,
+                    int(font2x.size), final_color, spacing, text_align, text_width, parse_color
+                )
+            emoji_rendered = True
+        except Exception as e:
+            logger.warning(f"Runs rendering fallo: {e} — fallback a texto plano")
+            _char_fmts = []
+
+    if not _char_fmts:
+        try:
+            source = get_emoji_source()
+            with Pilmoji(text_layer, source=source) as pilmoji:
                 pilmoji_multiline(pilmoji, tl_draw, (base_x, base_y), text_to_draw,
                     font=font2x, fill=final_color,
                     spacing=spacing, text_align=text_align, block_width=text_width)
             emoji_rendered = True
-            logger.info("Emojis renderizados con EmojiCDNSource (fallback)")
-        except Exception as e2:
-            logger.warning(f"EmojiCDNSource tambien fallo: {e2} — usando texto plano")
+            logger.info("Emojis renderizados con Twemoji CDN")
+        except Exception as e:
+            logger.warning(f"pilmoji fallo: {e} — intentando EmojiCDNSource como fallback")
 
-    if not emoji_rendered:
-        tl_draw.multiline_text(
-            (base_x, base_y), text_to_draw,
-            font=font2x, fill=final_color,
-            spacing=spacing, align=text_align,
-        )
+        if not emoji_rendered:
+            try:
+                with Pilmoji(text_layer, source=EmojiCDNSource()) as pilmoji:
+                    pilmoji_multiline(pilmoji, tl_draw, (base_x, base_y), text_to_draw,
+                        font=font2x, fill=final_color,
+                        spacing=spacing, text_align=text_align, block_width=text_width)
+                emoji_rendered = True
+                logger.info("Emojis renderizados con EmojiCDNSource (fallback)")
+            except Exception as e2:
+                logger.warning(f"EmojiCDNSource tambien fallo: {e2} — usando texto plano")
+
+        if not emoji_rendered:
+            tl_draw.multiline_text(
+                (base_x, base_y), text_to_draw,
+                font=font2x, fill=final_color,
+                spacing=spacing, align=text_align,
+            )
 
     layer = Image.alpha_composite(layer, text_layer)
 
