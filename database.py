@@ -135,6 +135,8 @@ def init_db():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_paused BOOLEAN NOT NULL DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url TEXT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS render_api_key TEXT",
+                "UPDATE users SET render_api_key = 'tofr_' || replace(gen_random_uuid()::text, '-', '') WHERE render_api_key IS NULL",
                 # v248 — render events enriquecidos para dashboard
                 "ALTER TABLE renders ADD COLUMN IF NOT EXISTS project_name TEXT",
                 "ALTER TABLE renders ADD COLUMN IF NOT EXISTS template_id TEXT",
