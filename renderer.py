@@ -807,12 +807,14 @@ _RUN_FONT_FAMILIES: dict = {
 }
 
 def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, size: int):
-    """Devuelve ImageFont para un run con bold/italic override, o None si no cambia."""
-    run_bold   = run_fmt.get('bold_override')
-    run_italic = run_fmt.get('italic_override')
-    if run_bold is None and run_italic is None:
+    """Devuelve ImageFont para un run con bold/italic/font override, o None si no cambia."""
+    run_bold      = run_fmt.get('bold_override')
+    run_italic    = run_fmt.get('italic_override')
+    run_font_key  = run_fmt.get('font_backend_run')  # fuente específica para este run
+    if run_bold is None and run_italic is None and run_font_key is None:
         return None
-    fb = font_backend_name or base_font_name
+    # Si el run tiene fuente propia, usarla como base; si no, usar la del campo
+    fb = run_font_key or font_backend_name or base_font_name
     v  = _RUN_FONT_FAMILIES.get(fb, {})
     el_bold   = base_font_name in (v.get('b','___'), v.get('bi','___'))
     el_italic = base_font_name in (v.get('i','___'), v.get('bi','___'))
