@@ -268,11 +268,12 @@ class EditImageRequest(BaseModel):
     reference_images: list = []
 
 class QRRequest(BaseModel):
-    text:        str
-    dark_color:  str = "#000000"
-    light_color: str = "#ffffff"
-    bg_color:    str = "#ffffff"
-    padding:     int = 20
+    text:           str
+    dark_color:     str  = "#000000"
+    light_color:    str  = "#ffffff"
+    bg_color:       str  = "#ffffff"
+    padding:        int  = 20
+    transparent_bg: bool = False
 
 class FeedbackRequest(BaseModel):
     name: str
