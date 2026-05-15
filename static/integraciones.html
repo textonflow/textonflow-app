@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integraciones — TextOnFlow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#07070f;color:#e0e0f0;min-height:100vh;}
+a{color:#667eea;text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:'Fira Code','Courier New',monospace;background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:.88em;color:#a5b4fc;}
+pre{background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:12px;line-height:1.7;color:#c0b8ff;}
+pre code{background:none;padding:0;font-size:inherit;}
+
+/* NAV */
+.topnav{display:flex;align-items:center;gap:12px;padding:14px 24px;background:#0d0d1f;border-bottom:1px solid #1e1e3f;position:sticky;top:0;z-index:100;}
+.topnav .logo{font-weight:800;font-size:15px;color:#fff;letter-spacing:-.3px;}
+.topnav .logo span{color:#667eea;}
+.topnav-links{display:flex;gap:16px;margin-left:auto;font-size:13px;}
+.btn-back{background:#1e1e3f;color:#9ca3ff;border:1px solid #2a2a50;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:600;}
+.btn-back:hover{background:#2a2a50;}
+
+/* HERO */
+.hero{text-align:center;padding:48px 24px 32px;}
+.hero h1{font-size:clamp(22px,4vw,34px);font-weight:800;color:#fff;margin-bottom:10px;}
+.hero p{font-size:14px;color:#9ca3af;max-width:520px;margin:0 auto 24px;}
+.hero-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.badge{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge-green{background:#14301a;color:#4ade80;border:1px solid #1e4a2a;}
+.badge-purple{background:#1e1a3f;color:#a5b4fc;border:1px solid #2a2a5f;}
+.badge-orange{background:#301400;color:#fb923c;border:1px solid #4a2000;}
+
+/* LAYOUT */
+.container{max-width:880px;margin:0 auto;padding:0 20px 60px;}
+
+/* PLATFORM TABS */
+.ptabs{display:flex;gap:6px;margin:0 0 28px;position:sticky;top:57px;z-index:90;background:#07070f;padding:14px 0 10px;}
+.ptab{flex:1;padding:10px 6px;border:1px solid #2a2a50;border-radius:8px;background:#0d0d1f;color:#888;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.ptab.active-zapier{background:#ff4a00;color:#fff;border-color:#ff4a00;}
+.ptab.active-make{background:#5b3fff;color:#fff;border-color:#5b3fff;}
+.ptab.active-boost{background:#0ea5e9;color:#fff;border-color:#0ea5e9;}
+.ptab:not(.active-zapier):not(.active-make):not(.active-boost):hover{border-color:#4a4a70;color:#bbb;}
+
+/* SECTION */
+.platform-panel{display:none;}
+.platform-panel.active{display:block;}
+
+/* STEP CARD */
+.step-block{display:flex;gap:14px;margin-bottom:20px;}
+.step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.step-num-z{background:#ff4a00;color:#fff;}
+.step-num-m{background:#5b3fff;color:#fff;}
+.step-num-b{background:#0ea5e9;color:#fff;}
+.step-body{flex:1;}
+.step-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.step-desc{font-size:12px;color:#9ca3af;line-height:1.6;margin-bottom:8px;}
+
+/* VISUAL MOCKUP */
+.mockup{background:#0d0d1f;border:1px solid #2a2a50;border-radius:10px;overflow:hidden;margin:10px 0;}
+.mockup-bar{background:#1a1a2e;padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #2a2a50;}
+.mockup-dot{width:8px;height:8px;border-radius:50%;}
+.mockup-title{font-size:10px;color:#666;margin-left:4px;}
+.mockup-body{padding:14px;}
+
+/* FIELD ROW */
+.field-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.field-label{font-size:10px;color:#6b7280;width:120px;flex-shrink:0;}
+.field-val{flex:1;background:#080812;border:1px solid #2a2a50;border-radius:5px;padding:5px 8px;font-size:11px;color:#a5b4fc;font-family:monospace;}
+.field-val.green{color:#4ade80;}
+.field-val.orange{color:#fbbf24;}
+.field-val.cyan{color:#67e8f9;}
+.field-arrow{color:#374151;font-size:10px;}
+
+/* FLOW DIAGRAM */
+.flow-dia{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;background:#0a0a18;border-radius:8px;margin:10px 0;}
+.flow-node{background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:600;color:#e0e0f0;text-align:center;flex-shrink:0;}
+.flow-node-z{border-color:#ff4a00;color:#ff7a40;}
+.flow-node-m{border-color:#5b3fff;color:#9c8fff;}
+.flow-node-b{border-color:#0ea5e9;color:#67c8f1;}
+.flow-node-tof{border-color:#667eea;color:#9ca3ff;background:#1a1a3f;}
+.flow-arr{color:#374151;font-size:14px;font-weight:700;}
+.flow-return{font-size:10px;color:#4ade80;margin-top:4px;}
+
+/* DOWNLOAD CARD */
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:20px 0;}
+.dl-card{background:#0d0d1f;border:1px solid #2a2a50;border-radius:10px;padding:14px 16px;}
+.dl-card-icon{font-size:22px;margin-bottom:8px;}
+.dl-card-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+.dl-card-desc{font-size:11px;color:#6b7280;margin-bottom:12px;line-height:1.5;}
+.dl-btn{display:block;width:100%;padding:8px;background:#5b3fff;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
+.dl-btn:hover{background:#7b5fff;}
+.dl-btn-z{background:#ff4a00;}
+.dl-btn-z:hover{background:#ff6a20;}
+.dl-btn-b{background:#0ea5e9;}
+.dl-btn-b:hover{background:#38bdf8;}
+
+/* NOTICE */
+.notice{background:#0d0d1f;border-left:3px solid #667eea;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#9ca3af;line-height:1.6;margin:12px 0;}
+.notice strong{color:#c4b5fd;}
+
+/* API RESPONSE */
+.resp-box{background:#071207;border:1px solid #1e4a1e;border-radius:8px;padding:12px 14px;margin:10px 0;}
+.resp-key{color:#4ade80;font-family:monospace;font-size:11px;}
+.resp-val{color:#86efac;font-family:monospace;font-size:11px;}
+
+/* SECTION DIVIDER */
+.sect-title{font-size:16px;font-weight:800;color:#fff;margin:32px 0 14px;display:flex;align-items:center;gap:8px;}
+.sect-title::after{content:'';flex:1;height:1px;background:#1e1e3f;}
+
+/* TAG */
+.tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:12px;text-transform:uppercase;letter-spacing:.6px;vertical-align:middle;margin-left:6px;}
+.tag-instant{background:#14301a;color:#4ade80;}
+.tag-wait{background:#301400;color:#fb923c;}
+
+/* ENDPOINT HERO */
+.endpoint-hero{background:linear-gradient(135deg,#0d0d1f 0%,#1a1040 100%);border:1px solid #2a2a50;border-radius:12px;padding:16px 18px;margin:0 0 24px;}
+.endpoint-method{display:inline-flex;align-items:center;padding:3px 10px;background:#14301a;color:#4ade80;border-radius:5px;font-size:10px;font-weight:800;letter-spacing:.8px;margin-bottom:8px;}
+.endpoint-url{font-family:monospace;font-size:13px;color:#a5f3a5;word-break:break-all;margin-bottom:8px;}
+.endpoint-copy{background:#1e3a1e;color:#4ade80;border:1px solid #2a5a2a;border-radius:5px;padding:4px 12px;font-size:10px;font-weight:700;cursor:pointer;}
+
+/* ZAPIER MOCKUP SPECIFIC */
+.zap-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #1a1a2e;}
+.zap-row:last-child{border-bottom:none;}
+.zap-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.zap-step-info{flex:1;}
+.zap-step-name{font-size:11px;font-weight:700;color:#fff;}
+.zap-step-app{font-size:10px;color:#6b7280;}
+.zap-status{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.zap-status-ok{background:#14301a;color:#4ade80;}
+.zap-status-setup{background:#301400;color:#fb923c;}
+
+/* MAKE MOCKUP */
+.make-canvas{background:#050510;border-radius:8px;padding:20px;display:flex;align-items:center;gap:0;overflow-x:auto;min-height:80px;}
+.make-module{background:#1a1a2e;border:2px solid #2a2a50;border-radius:10px;width:72px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0;position:relative;}
+.make-module-icon{font-size:22px;}
+.make-module-label{font-size:8px;color:#9ca3af;text-align:center;line-height:1.2;}
+.make-connector{width:32px;height:2px;background:#2a2a50;flex-shrink:0;position:relative;}
+.make-connector::after{content:'▶';position:absolute;right:-5px;top:-7px;font-size:10px;color:#2a2a50;}
+.make-module.active{border-color:#5b3fff;}
+.make-module.active .make-module-label{color:#a5b4fc;}
+.make-module-num{position:absolute;top:-7px;left:-7px;width:14px;height:14px;background:#5b3fff;border-radius:50%;font-size:8px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;}
+
+/* TABS INSIDE PLATFORM */
+.subtabs{display:flex;gap:4px;margin-bottom:14px;}
+.subtab{padding:5px 12px;border:1px solid #2a2a50;border-radius:6px;background:transparent;color:#6b7280;font-size:11px;font-weight:600;cursor:pointer;}
+.subtab.active{background:#1e1e3f;color:#a5b4fc;border-color:#3a3a6f;}
+
+/* SCROLLSPY */
+.toc{background:#0d0d1f;border:1px solid #2a2a50;border-radius:10px;padding:14px 16px;margin-bottom:28px;}
+.toc-title{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.toc ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px;}
+.toc li a{font-size:11px;color:#9ca3ff;background:#1a1a2e;border:1px solid #2a2a50;border-radius:5px;padding:3px 10px;display:block;}
+.toc li a:hover{background:#2a2a50;text-decoration:none;}
+
+.highlight-box{background:#0d1a0d;border:1px solid #1e4a1e;border-radius:8px;padding:12px 14px;margin:10px 0;font-size:12px;color:#86efac;line-height:1.7;}
+.warn-box{background:#1a1000;border:1px solid #4a3000;border-radius:8px;padding:12px 14px;margin:10px 0;font-size:12px;color:#fbbf24;line-height:1.7;}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <span class="logo">Text<span>On</span>Flow</span>
+  <span style="font-size:11px;color:#555;margin-left:4px;">/ Integraciones</span>
+  <div class="topnav-links">
+    <button class="btn-back" onclick="window.history.back()">← Volver al editor</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero" style="padding-top:36px;">
+    <h1>Manual de Integraciones</h1>
+    <p>Conecta TextOnFlow con tus herramientas de automatización. Genera imágenes personalizadas automáticamente desde cualquier flujo de trabajo.</p>
+    <div class="hero-badges">
+      <span class="badge badge-orange">⚡ Zapier</span>
+      <span class="badge badge-purple">🔀 Make</span>
+      <span class="badge badge-green">🚀 BoostSpace</span>
+    </div>
+  </div>
+
+  <!-- ENDPOINT HERO -->
+  <div class="endpoint-hero">
+    <div style="font-size:11px;font-weight:700;color:#9ca3ff;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;">Endpoint universal — funciona en las 3 plataformas</div>
+    <div class="endpoint-method">POST</div>
+    <div class="endpoint-url" id="ep-url">https://www.textonflow.com/webhook/render</div>
+    <button class="endpoint-copy" onclick="navigator.clipboard.writeText('https://www.textonflow.com/webhook/render').then(()=>{this.textContent='✓ Copiado!';setTimeout(()=>this.textContent='📋 Copiar URL',2000)})">📋 Copiar URL</button>
+    <div style="margin-top:10px;font-size:11px;color:#4b5563;">Devuelve JSON con <code>image_url</code> lista para usar en el siguiente paso de tu flujo.</div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">Ir a sección</div>
+    <ul>
+      <li><a href="#zapier">Zapier</a></li>
+      <li><a href="#make">Make</a></li>
+      <li><a href="#boostspace">BoostSpace</a></li>
+      <li><a href="#body-format">Formato del request</a></li>
+      <li><a href="#response">Respuesta API</a></li>
+      <li><a href="#blueprints">Descargar blueprints</a></li>
+      <li><a href="#escenarios">Escenarios listos</a></li>
+    </ul>
+  </div>
+
+  <!-- PLATFORM TABS -->
+  <div class="ptabs">
+    <div class="ptab active-zapier" id="ptab-zapier" onclick="showPlatform('zapier')">⚡ Zapier</div>
+    <div class="ptab" id="ptab-make" onclick="showPlatform('make')">🔀 Make</div>
+    <div class="ptab" id="ptab-boost" onclick="showPlatform('boost')">🚀 BoostSpace</div>
+  </div>
+
+  <!-- ═══════════════════ ZAPIER ═══════════════════ -->
+  <div class="platform-panel active" id="panel-zapier">
+    <div class="sect-title" id="zapier">⚡ Zapier <span class="tag tag-instant">Webhooks by Zapier</span></div>
+
+    <div class="notice">
+      <strong>Requisito:</strong> Plan Zapier con acceso a <strong>Webhooks by Zapier</strong> (disponible desde plan Starter). Tiempo de configuración: ~5 minutos.
+    </div>
+
+    <!-- FLOW DIAGRAM -->
+    <div class="flow-dia">
+      <div class="flow-node flow-node-z">🔔 Trigger<br><span style="font-size:9px;color:#6b7280;">Cualquier app</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-z">⚡ Webhooks by Zapier<br><span style="font-size:9px;color:#6b7280;">POST action</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-tof">🎨 TextOnFlow<br><span style="font-size:9px;color:#6b7280;">Renderiza imagen</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-z">📤 Action<br><span style="font-size:9px;color:#6b7280;">WhatsApp / Email / CRM</span></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-block">
+      <div class="step-num step-num-z">1</div>
+      <div class="step-body">
+        <div class="step-title">Crea un nuevo Zap y elige el trigger</div>
+        <div class="step-desc">En Zapier, haz clic en <strong>"+ Create Zap"</strong>. Elige como trigger la app que dispara el evento (HubSpot, Google Sheets, ActiveCampaign, Typeform, etc.)</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Zapier — Editor de Zap</div>
+          </div>
+          <div class="mockup-body">
+            <div class="zap-row">
+              <div class="zap-icon" style="background:#ff4a0015;">⚡</div>
+              <div class="zap-step-info">
+                <div class="zap-step-name">1. Trigger — Cuando sucede esto...</div>
+                <div class="zap-step-app">Selecciona una app y un evento</div>
+              </div>
+              <span class="zap-status zap-status-setup">Configurar</span>
+            </div>
+            <div style="padding:10px 38px;">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+                <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:7px;padding:6px 10px;font-size:10px;color:#9ca3af;">📊 Google Sheets</div>
+                <div style="background:#1a1a2e;border:1px solid #ff4a00;border-radius:7px;padding:6px 10px;font-size:10px;color:#ff7a40;">🔶 HubSpot</div>
+                <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:7px;padding:6px 10px;font-size:10px;color:#9ca3af;">📋 Typeform</div>
+                <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:7px;padding:6px 10px;font-size:10px;color:#9ca3af;">💌 ActiveCampaign</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-block">
+      <div class="step-num step-num-z">2</div>
+      <div class="step-body">
+        <div class="step-title">Agrega acción: "Webhooks by Zapier" → POST</div>
+        <div class="step-desc">En el paso de acción busca <strong>"Webhooks by Zapier"</strong> y selecciona el evento <strong>"POST"</strong>.</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Zapier — Buscar app de acción</div>
+          </div>
+          <div class="mockup-body">
+            <div style="background:#080812;border:1px solid #2a2a50;border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="color:#555;">🔍</span>
+              <span style="font-size:12px;color:#a5b4fc;">Webhooks by Zapier</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:#1a1a2e;border:2px solid #ff4a00;border-radius:8px;padding:10px 12px;">
+              <div style="width:32px;height:32px;background:#ff4a0020;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🪝</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#fff;">Webhooks by Zapier</div>
+                <div style="font-size:10px;color:#9ca3af;">Receive data or send HTTP requests</div>
+              </div>
+              <div style="margin-left:auto;"><span style="font-size:9px;background:#ff4a00;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;">Seleccionado</span></div>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:#6b7280;margin-bottom:6px;">Evento de acción:</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div style="background:#ff4a0015;border:2px solid #ff4a00;border-radius:6px;padding:6px 12px;font-size:11px;color:#ff7a40;font-weight:700;">POST ✓</div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:6px;padding:6px 12px;font-size:11px;color:#6b7280;">GET</div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:6px;padding:6px 12px;font-size:11px;color:#6b7280;">PUT</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-block">
+      <div class="step-num step-num-z">3</div>
+      <div class="step-body">
+        <div class="step-title">Configura el webhook — campos exactos</div>
+        <div class="step-desc">Rellena los campos de la acción Webhooks by Zapier exactamente así:</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Webhooks by Zapier — Configuración POST</div>
+          </div>
+          <div class="mockup-body">
+            <div class="field-row">
+              <div class="field-label">URL</div>
+              <div class="field-val green">https://www.textonflow.com/webhook/render</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Payload Type</div>
+              <div class="field-val">json</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Data — Key 1</div>
+              <div class="field-val orange">template_id</div>
+              <div class="field-arrow">→</div>
+              <div class="field-val orange">TU_TEMPLATE_ID</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Data — Key 2</div>
+              <div class="field-val cyan">variables.nombre</div>
+              <div class="field-arrow">→</div>
+              <div class="field-val cyan" style="font-style:italic;">First Name (del trigger)</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Data — Key 3</div>
+              <div class="field-val cyan">variables.descuento</div>
+              <div class="field-arrow">→</div>
+              <div class="field-val cyan" style="font-style:italic;">Descuento (del trigger)</div>
+            </div>
+            <div class="notice" style="margin:8px 0 0;font-size:11px;">
+              💡 Zapier soporta notación de punto para estructuras anidadas. <code>variables.nombre</code> se convierte automáticamente en <code>{"variables":{"nombre":"..."}}</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-block">
+      <div class="step-num step-num-z">4</div>
+      <div class="step-body">
+        <div class="step-title">Usa la imagen generada en el siguiente paso</div>
+        <div class="step-desc">Después del paso Webhooks, Zapier recibe la respuesta de TextOnFlow. Mapea el campo <code>image_url</code> al siguiente paso:</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Zapier — Datos de respuesta disponibles</div>
+          </div>
+          <div class="mockup-body">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px;">Variables disponibles del paso anterior:</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #1e4a1e;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#4ade80;background:#14301a;padding:2px 7px;border-radius:4px;">image_url</span>
+                <span style="font-size:10px;color:#9ca3af;flex:1;">https://cdn.textonflow.com/render/abc123.png</span>
+                <span style="font-size:9px;background:#14301a;color:#4ade80;padding:1px 6px;border-radius:8px;font-weight:700;">👈 Usa este</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#a5b4fc;background:#1a1a2e;padding:2px 7px;border-radius:4px;">template</span>
+                <span style="font-size:10px;color:#9ca3af;">Black_Friday_ES</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#a5b4fc;background:#1a1a2e;padding:2px 7px;border-radius:4px;">ts</span>
+                <span style="font-size:10px;color:#9ca3af;">2024-12-01T10:30:00Z</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top:10px;">
+          ✅ Conecta <code>image_url</code> al campo de imagen en ManyChat, WhatsApp Business, Klaviyo, Gmail, Slack o cualquier app de mensajería.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-zapier -->
+
+
+  <!-- ═══════════════════ MAKE ═══════════════════ -->
+  <div class="platform-panel" id="panel-make">
+    <div class="sect-title" id="make">🔀 Make <span class="tag tag-instant">HTTP › Make a request</span></div>
+
+    <div class="notice">
+      <strong>Requisito:</strong> Cuenta en <a href="https://make.com" target="_blank">make.com</a> (plan gratuito incluye HTTP modules). Tiempo de configuración: ~8 minutos.
+    </div>
+
+    <!-- MAKE CANVAS DIAGRAM -->
+    <div class="make-canvas" style="margin:0 0 20px;">
+      <div class="make-module active">
+        <div class="make-module-num">1</div>
+        <div class="make-module-icon">🔔</div>
+        <div class="make-module-label">Trigger<br>(tu app)</div>
+      </div>
+      <div class="make-connector"></div>
+      <div class="make-module active">
+        <div class="make-module-num">2</div>
+        <div class="make-module-icon">🌐</div>
+        <div class="make-module-label">HTTP<br>Request</div>
+      </div>
+      <div class="make-connector"></div>
+      <div class="make-module active">
+        <div class="make-module-num">3</div>
+        <div class="make-module-icon">🔧</div>
+        <div class="make-module-label">Parse JSON<br>(opcional)</div>
+      </div>
+      <div class="make-connector"></div>
+      <div class="make-module active">
+        <div class="make-module-num">4</div>
+        <div class="make-module-icon">📤</div>
+        <div class="make-module-label">Acción<br>(salida)</div>
+      </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-block">
+      <div class="step-num step-num-m">1</div>
+      <div class="step-body">
+        <div class="step-title">Crea un nuevo escenario</div>
+        <div class="step-desc">En Make haz clic en <strong>"Create a new scenario"</strong>. Elige un módulo de trigger: Google Sheets, Webhooks, HubSpot, etc. Para probar rápido, usa <strong>Webhooks → Custom webhook</strong>.</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Make — Selección de módulo</div>
+          </div>
+          <div class="mockup-body">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:8px;">Módulo de inicio del escenario:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <div style="background:#1a1540;border:2px solid #5b3fff;border-radius:8px;padding:8px 12px;font-size:10px;color:#a5b4fc;font-weight:700;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">🪝</div>Webhooks
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">📊</div>Google Sheets
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">🔶</div>HubSpot
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">📋</div>Typeform
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-block">
+      <div class="step-num step-num-m">2</div>
+      <div class="step-body">
+        <div class="step-title">Agrega el módulo HTTP → Make a request</div>
+        <div class="step-desc">Haz clic en el círculo <strong>"+"</strong> para agregar un módulo. Busca <strong>"HTTP"</strong> y selecciona <strong>"Make a request"</strong>.</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Make — Selección HTTP</div>
+          </div>
+          <div class="mockup-body">
+            <div style="background:#080812;border:1px solid #2a2a50;border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="color:#555;">🔍</span>
+              <span style="font-size:12px;color:#a5b4fc;">HTTP</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:#1a1540;border:2px solid #5b3fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;">
+              <div style="width:32px;height:32px;background:#5b3fff20;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;">🌐</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#fff;">HTTP</div>
+                <div style="font-size:10px;color:#a5b4fc;font-weight:600;">Make a request ← Usa este</div>
+              </div>
+            </div>
+            <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;opacity:.5;">
+              <div style="font-size:11px;color:#9ca3af;">Get a file</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-block">
+      <div class="step-num step-num-m">3</div>
+      <div class="step-body">
+        <div class="step-title">Configura el módulo HTTP — campos exactos</div>
+        <div class="step-desc">Rellena el formulario del módulo HTTP exactamente así:</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Make — HTTP: Make a request</div>
+          </div>
+          <div class="mockup-body">
+            <div class="field-row">
+              <div class="field-label">URL</div>
+              <div class="field-val green">https://www.textonflow.com/webhook/render</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Method</div>
+              <div class="field-val">POST</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Body type</div>
+              <div class="field-val">Raw</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Content type</div>
+              <div class="field-val">application/json</div>
+            </div>
+            <div class="field-row" style="align-items:flex-start;">
+              <div class="field-label" style="padding-top:4px;">Request body</div>
+              <div style="flex:1;background:#080812;border:1px solid #2a2a50;border-radius:5px;padding:8px 10px;font-size:10.5px;font-family:monospace;color:#c0b8ff;line-height:1.7;">
+{<br>
+&nbsp;&nbsp;"template_id": "<span style="color:#fbbf24;">TU_TEMPLATE_ID</span>",<br>
+&nbsp;&nbsp;"variables": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"nombre": "<span style="color:#67e8f9;">{{1.nombre}}</span>",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"descuento": "<span style="color:#67e8f9;">{{1.descuento}}</span>"<br>
+&nbsp;&nbsp;}<br>
+}
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Parse response</div>
+              <div class="field-val green">✓ Sí (activar)</div>
+            </div>
+          </div>
+        </div>
+        <div class="notice">
+          💡 <strong>{{1.nombre}}</strong> significa "campo <em>nombre</em> del módulo 1 (trigger)". Cambia el número si tu módulo HTTP está en otra posición.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-block">
+      <div class="step-num step-num-m">4</div>
+      <div class="step-body">
+        <div class="step-title">Usa image_url en el módulo siguiente</div>
+        <div class="step-desc">Con <strong>Parse response</strong> activo, Make descompone el JSON automáticamente. Mapea <code>{{2.data.image_url}}</code> al campo de imagen del siguiente módulo:</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">Make — Mapeo de variables</div>
+          </div>
+          <div class="mockup-body">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:8px;">Variables disponibles del módulo 2 (HTTP):</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #1e4a1e;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#4ade80;background:#14301a;padding:2px 7px;border-radius:4px;">2.data.image_url</span>
+                <span style="font-size:10px;color:#86efac;flex:1;">https://cdn.textonflow.com/...</span>
+                <span style="font-size:9px;background:#14301a;color:#4ade80;padding:1px 6px;border-radius:8px;font-weight:700;">👈 Usa este</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#a5b4fc;background:#1a1a2e;padding:2px 7px;border-radius:4px;">2.data.template</span>
+                <span style="font-size:10px;color:#9ca3af;">Black_Friday_ES</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#a5b4fc;background:#1a1a2e;padding:2px 7px;border-radius:4px;">2.status</span>
+                <span style="font-size:10px;color:#9ca3af;">200</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUEPRINTS MAKE -->
+    <div class="sect-title" id="blueprints">📦 Blueprints Make — Descargar e importar</div>
+    <div class="notice">
+      Importa el blueprint: en Make abre tu escenario → menú <strong>"..."</strong> → <strong>"Import Blueprint"</strong> → sube el archivo JSON.
+    </div>
+    <div class="dl-grid">
+      <div class="dl-card">
+        <div class="dl-card-icon">🌐</div>
+        <div class="dl-card-title">Render Básico (HTTP)</div>
+        <div class="dl-card-desc">Un solo módulo HTTP POST a TextOnFlow. Conecta tu propio trigger.</div>
+        <a href="/static/blueprints/make-basic.json" download="make-basic.json" class="dl-btn">⬇ Descargar Blueprint</a>
+      </div>
+      <div class="dl-card">
+        <div class="dl-card-icon">📊</div>
+        <div class="dl-card-title">Google Sheets → Imagen</div>
+        <div class="dl-card-desc">Detecta filas nuevas en Sheets, genera imagen y guarda la URL en la misma fila.</div>
+        <a href="/static/blueprints/make-sheets-to-image.json" download="make-sheets-to-image.json" class="dl-btn">⬇ Descargar Blueprint</a>
+      </div>
+      <div class="dl-card">
+        <div class="dl-card-icon">🪝</div>
+        <div class="dl-card-title">Webhook Entrante → Render → Responder</div>
+        <div class="dl-card-desc">Recibe webhook, genera imagen y responde con image_url. Ideal para integraciones custom.</div>
+        <a href="/static/blueprints/make-manychat-webhook.json" download="make-manychat-webhook.json" class="dl-btn">⬇ Descargar Blueprint</a>
+      </div>
+    </div>
+
+  </div><!-- /panel-make -->
+
+
+  <!-- ═══════════════════ BOOSTSPACE ═══════════════════ -->
+  <div class="platform-panel" id="panel-boost">
+    <div class="sect-title" id="boostspace">🚀 BoostSpace <span class="tag tag-instant">Flujos de automatización</span></div>
+
+    <div class="notice">
+      <strong>BoostSpace</strong> es la plataforma de automatización líder en LATAM con interfaz en español. Similar a Make/Zapier pero pensada para equipos hispanohablantes. <a href="https://boostspace.io" target="_blank">boostspace.io</a>
+    </div>
+
+    <!-- FLOW DIAGRAM -->
+    <div class="flow-dia">
+      <div class="flow-node flow-node-b">🔔 Trigger<br><span style="font-size:9px;color:#6b7280;">Evento en BoostSpace</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-b">🌐 HTTP Request<br><span style="font-size:9px;color:#6b7280;">Acción integrada</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-tof">🎨 TextOnFlow<br><span style="font-size:9px;color:#6b7280;">Genera imagen</span></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node flow-node-b">💾 Guardar URL<br><span style="font-size:9px;color:#6b7280;">CRM / WhatsApp</span></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-block">
+      <div class="step-num step-num-b">1</div>
+      <div class="step-body">
+        <div class="step-title">Crea un flujo de automatización en BoostSpace</div>
+        <div class="step-desc">Desde el panel de BoostSpace ve a <strong>Automatizaciones → Nuevo flujo</strong>. Ponle un nombre descriptivo como "Generar imagen con TextOnFlow".</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">BoostSpace — Nueva automatización</div>
+          </div>
+          <div class="mockup-body">
+            <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:10px;">Selecciona el trigger del flujo:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <div style="background:#001a30;border:2px solid #0ea5e9;border-radius:8px;padding:8px 12px;font-size:10px;color:#67c8f1;font-weight:700;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">📝</div>Lead nuevo
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">✅</div>Tarea creada
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">🪝</div>Webhook
+              </div>
+              <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:8px 12px;font-size:10px;color:#9ca3af;text-align:center;">
+                <div style="font-size:16px;margin-bottom:2px;">📅</div>Programado
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-block">
+      <div class="step-num step-num-b">2</div>
+      <div class="step-body">
+        <div class="step-title">Agrega la acción HTTP Request</div>
+        <div class="step-desc">En el editor del flujo haz clic en <strong>"+ Agregar acción"</strong> y busca <strong>"HTTP Request"</strong> o <strong>"Solicitud HTTP"</strong>.</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">BoostSpace — Configurar acción HTTP</div>
+          </div>
+          <div class="mockup-body">
+            <div class="field-row">
+              <div class="field-label">URL</div>
+              <div class="field-val green">https://www.textonflow.com/webhook/render</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Método</div>
+              <div class="field-val">POST</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Cabeceras</div>
+              <div class="field-val">Content-Type: application/json</div>
+            </div>
+            <div class="field-row" style="align-items:flex-start;">
+              <div class="field-label" style="padding-top:4px;">Cuerpo / Body</div>
+              <div style="flex:1;background:#080812;border:1px solid #2a2a50;border-radius:5px;padding:8px 10px;font-size:10.5px;font-family:monospace;color:#c0b8ff;line-height:1.7;">
+{<br>
+&nbsp;&nbsp;"template_id": "<span style="color:#fbbf24;">TU_TEMPLATE_ID</span>",<br>
+&nbsp;&nbsp;"variables": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"nombre": "<span style="color:#67e8f9;">{{lead.nombre}}</span>",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"ciudad": "<span style="color:#67e8f9;">{{lead.ciudad}}</span>"<br>
+&nbsp;&nbsp;}<br>
+}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notice">
+          💡 En BoostSpace las variables del trigger se insertan con <code>{"{{"}campo{"}}"}</code>. Usa el botón <strong>"Insertar variable"</strong> dentro del editor para evitar errores de tipeo.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-block">
+      <div class="step-num step-num-b">3</div>
+      <div class="step-body">
+        <div class="step-title">Procesa la respuesta y guarda image_url</div>
+        <div class="step-desc">BoostSpace almacena la respuesta HTTP en una variable. Agrega una acción de <strong>"Actualizar registro"</strong> o <strong>"Enviar mensaje"</strong> y mapea la URL de imagen:</div>
+        <div class="mockup">
+          <div class="mockup-bar">
+            <div class="mockup-dot" style="background:#ff5f57;"></div>
+            <div class="mockup-dot" style="background:#ffbd2e;"></div>
+            <div class="mockup-dot" style="background:#28c840;"></div>
+            <div class="mockup-title">BoostSpace — Variables de respuesta</div>
+          </div>
+          <div class="mockup-body">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:8px;">Variables disponibles de la acción HTTP anterior:</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;align-items:center;gap:8px;background:#001a30;border:1px solid #0369a1;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#38bdf8;background:#001a30;padding:2px 7px;border-radius:4px;">respuesta.image_url</span>
+                <span style="font-size:10px;color:#7dd3fc;flex:1;">https://cdn.textonflow.com/...</span>
+                <span style="font-size:9px;background:#0369a1;color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;">👈 Usa este</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;padding:6px 9px;">
+                <span style="font-size:10px;font-family:monospace;color:#a5b4fc;background:#1a1a2e;padding:2px 7px;border-radius:4px;">respuesta.template</span>
+                <span style="font-size:10px;color:#9ca3af;">Mi_Template</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top:10px;">
+          ✅ Guarda <code>respuesta.image_url</code> en un campo del lead, envíala por WhatsApp Business o inclúyela en el mensaje de seguimiento automático.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-boost -->
+
+
+  <!-- ══ SECCIÓN COMÚN ══════════════════════════════════════ -->
+  <div id="body-format" style="margin-top:36px;">
+    <div class="sect-title">📝 Formato del request</div>
+    <pre>{
+  "template_id": "abc123xyz",         <span style="color:#6b7280;">// ID del template guardado en TextOnFlow</span>
+  "variables": {
+    "nombre":   "María García",        <span style="color:#6b7280;">// cualquier clave que uses en {curly braces}</span>
+    "descuento": "25",
+    "producto":  "Plan Pro",
+    "ciudad":    "CDMX"
+  }
+}</pre>
+  </div>
+
+  <div id="response" style="margin-top:24px;">
+    <div class="sect-title">✅ Respuesta exitosa (200)</div>
+    <div class="resp-box">
+      <pre style="background:transparent;border:none;padding:0;">{
+  "<span class="resp-key">image_url</span>":  "<span class="resp-val">https://cdn.textonflow.com/render/abc123.png</span>",
+  "<span class="resp-key">template</span>":   "<span class="resp-val">Black_Friday_ES</span>",
+  "<span class="resp-key">ts</span>":         "<span class="resp-val">2024-12-01T10:30:00Z</span>",
+  "<span class="resp-key">width</span>":      <span class="resp-val">1080</span>,
+  "<span class="resp-key">height</span>":     <span class="resp-val">1080</span>
+}</pre>
+    </div>
+    <div class="warn-box" style="margin-top:8px;">
+      ⚠️ Si recibes <strong>401</strong> → API Key incorrecta. <strong>404</strong> → template_id no existe. <strong>422</strong> → JSON malformado o campo requerido faltante.
+    </div>
+  </div>
+
+  <!-- ESCENARIOS LISTOS -->
+  <div class="sect-title" id="escenarios" style="margin-top:36px;">🎯 Escenarios de uso listos para copiar</div>
+
+  <div style="display:flex;flex-direction:column;gap:12px;">
+
+    <div class="mockup">
+      <div class="mockup-bar" style="justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#fff;">📊 Google Sheets → TextOnFlow → guardar URL</span>
+        <span style="font-size:9px;background:#1a1540;color:#a5b4fc;padding:2px 8px;border-radius:10px;">Make · Sheets</span>
+      </div>
+      <div class="mockup-body">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Cada vez que se añade una fila nueva con datos del cliente, genera la imagen y guarda la URL en la columna F:</div>
+        <div class="flow-dia">
+          <div class="flow-node" style="font-size:10px;">📊 Google Sheets<br>Watch Rows</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node flow-node-tof" style="font-size:10px;">🎨 TextOnFlow<br>HTTP POST</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node" style="font-size:10px;">📊 Google Sheets<br>Update Row</div>
+        </div>
+        <a href="/static/blueprints/make-sheets-to-image.json" download="make-sheets-to-image.json" style="display:inline-block;margin-top:8px;font-size:11px;background:#5b3fff;color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;">⬇ Blueprint Make</a>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-bar" style="justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#fff;">🪝 Webhook entrante → imagen → responder al instante</span>
+        <span style="font-size:9px;background:#14301a;color:#4ade80;padding:2px 8px;border-radius:10px;">Make · Instant</span>
+      </div>
+      <div class="mockup-body">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">ManyChat o cualquier sistema envía los datos, Make genera la imagen y responde con la URL en menos de 2 segundos:</div>
+        <div class="flow-dia">
+          <div class="flow-node flow-node-z" style="font-size:10px;">🪝 Webhook<br>Entrante</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node flow-node-tof" style="font-size:10px;">🎨 TextOnFlow<br>Render</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node flow-node-m" style="font-size:10px;">📩 Webhook<br>Response</div>
+        </div>
+        <a href="/static/blueprints/make-manychat-webhook.json" download="make-manychat-webhook.json" style="display:inline-block;margin-top:8px;font-size:11px;background:#5b3fff;color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;">⬇ Blueprint Make</a>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-bar" style="justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:#fff;">🎯 HubSpot Deal Ganado → imagen de confirmación</span>
+        <span style="font-size:9px;background:#301400;color:#fb923c;padding:2px 8px;border-radius:10px;">Zapier · HubSpot</span>
+      </div>
+      <div class="mockup-body">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Cuando un deal cambia a "Ganado" en HubSpot, genera automáticamente una imagen de bienvenida personalizada:</div>
+        <div class="flow-dia">
+          <div class="flow-node flow-node-z" style="font-size:10px;">🔶 HubSpot<br>Deal Closed Won</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node flow-node-tof" style="font-size:10px;">🎨 TextOnFlow<br>Render</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node flow-node-z" style="font-size:10px;">💌 Email<br>con imagen</div>
+        </div>
+        <div style="font-size:10px;color:#6b7280;margin-top:8px;">Trigger: HubSpot → Deal Updated · Acción: Webhooks by Zapier POST · Siguiente: Gmail o ActiveCampaign</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #1e1e3f;text-align:center;font-size:11px;color:#4b5563;">
+    <strong style="color:#9ca3ff;">TextOnFlow</strong> · Documentación de Integraciones ·
+    <a href="mailto:soporte@textonflow.com">soporte@textonflow.com</a>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+function showPlatform(name){
+  ['zapier','make','boost'].forEach(function(n){
+    var panel=document.getElementById('panel-'+n);
+    var tab=document.getElementById('ptab-'+n);
+    if(panel) panel.classList.toggle('active',n===name);
+    if(tab){
+      tab.classList.remove('active-zapier','active-make','active-boost');
+      if(n===name){
+        if(name==='zapier') tab.classList.add('active-zapier');
+        else if(name==='make') tab.classList.add('active-make');
+        else tab.classList.add('active-boost');
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
