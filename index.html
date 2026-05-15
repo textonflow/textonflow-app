@@ -2843,6 +2843,7 @@ document.getElementById('auth-modal').addEventListener('click', function(e){
     var res = await fetch('/user/me', { headers: { Authorization: 'Bearer ' + tok } });
     if (res.ok) {
       var data = await res.json();
+      window._tofUserProfile = data;
       _authUpdateBtn(data.email, data.plan);
     } else {
       localStorage.removeItem(_TOF_TOKEN_KEY);
