@@ -123,7 +123,7 @@ class MultiTextRequest(BaseModel):
     render_scale: int = 1  # 1=rápido (ManyChat), 2=alta calidad (editor)
     watermark: bool = False  # Sello TextOnFlow sobre la imagen
     wm_corner:  str   = "br"      # tl | tr | bl | br
-    wm_size:    int   = 22        # altura en px del logo (relativa a 1080px)
+    wm_size:    int   = 55        # altura en px del logo (relativa a 1080px)
     wm_opacity: int   = 55        # 0-100
     wm_color:   str   = "#ffffff" # hex color del logo
     wm_pill:    bool  = True      # mostrar fondo pill detrás del logo
