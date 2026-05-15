@@ -330,14 +330,28 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
             "Authorization": f"Bearer {_sb_key()}",
         }
         response = session.get(request.template_name, timeout=20, headers=_sb_auth_headers)
-        if response.status_code == 404:
+        if response.status_code in (400, 404) or (
+            response.status_code == 200
+            and "application/json" in response.headers.get("Content-Type", "")
+            and b"not found" in response.content.lower()
+        ):
             fname = request.template_name.split("/")[-1].split("?")[0]
             raise HTTPException(
                 status_code=400,
-                detail=f"La imagen de fondo '{fname}' ya no existe en Supabase Storage. "
-                       f"Ábrela en el editor, vuelve a subirla y guarda el template de nuevo en ManyChat.",
+                detail=(
+                    f"Imagen no encontrada en Supabase Storage: '{fname}'. "
+                    f"La imagen fue eliminada o el enlace es inválido. "
+                    f"Ábrela en el editor, vuelve a subirla y actualiza el template en ManyChat."
+                ),
             )
         response.raise_for_status()
+        ct = response.headers.get("Content-Type", "")
+        if "text/" in ct or "application/json" in ct:
+            fname = request.template_name.split("/")[-1].split("?")[0]
+            raise HTTPException(
+                status_code=400,
+                detail=f"La URL de Supabase no devolvió una imagen válida para '{fname}' (Content-Type: {ct}). Vuelve a subir la imagen en el editor.",
+            )
         image = Image.open(BytesIO(response.content)).convert("RGBA")
         logger.info(f"☁️ _render_pil Supabase OK ({len(response.content)//1024} KB)")
     elif request.template_name.startswith(("http://", "https://")):
@@ -709,14 +723,28 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                         request.template_name, timeout=20,
                         headers=_sb_auth_hdrs,
                     )
-                    if _sb_resp.status_code == 404:
+                    if _sb_resp.status_code in (400, 404) or (
+                        _sb_resp.status_code == 200
+                        and "application/json" in _sb_resp.headers.get("Content-Type", "")
+                        and b"not found" in _sb_resp.content.lower()
+                    ):
                         _fname = request.template_name.split("/")[-1].split("?")[0]
                         raise HTTPException(
                             status_code=400,
-                            detail=f"La imagen de fondo '{_fname}' ya no existe en Supabase Storage. "
-                                   f"Ábrela en el editor, vuelve a subirla y guarda el template de nuevo en ManyChat.",
+                            detail=(
+                                f"Imagen no encontrada en Supabase Storage: '{_fname}'. "
+                                f"La imagen fue eliminada o el enlace es inválido. "
+                                f"Ábrela en el editor, vuelve a subirla y actualiza el template en ManyChat."
+                            ),
                         )
                     _sb_resp.raise_for_status()
+                    _ct = _sb_resp.headers.get("Content-Type", "")
+                    if "text/" in _ct or "application/json" in _ct:
+                        _fname = request.template_name.split("/")[-1].split("?")[0]
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"La URL de Supabase no devolvió una imagen válida para '{_fname}' (Content-Type: {_ct}). Vuelve a subir la imagen en el editor.",
+                        )
                     image = Image.open(BytesIO(_sb_resp.content)).convert("RGBA")
                     logger.info(f"☁️ Supabase imagen descargada OK ({len(_sb_resp.content)//1024} KB)")
                 except HTTPException:
