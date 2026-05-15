@@ -1,0 +1,87 @@
+{
+  "name": "TextOnFlow — Google Sheets → Imagen personalizada",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:watchRows",
+      "version": 2,
+      "parameters": {
+        "spreadsheetId": "TU_SPREADSHEET_ID",
+        "sheetId": 0,
+        "limit": 10,
+        "includeEmptyRows": false,
+        "valueRenderOption": "FORMATTED_VALUE",
+        "headerRow": true
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://www.textonflow.com/webhook/render",
+        "method": "post",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "contentType": "application/json",
+        "data": "{\"template_id\":\"TU_TEMPLATE_ID\",\"variables\":{\"nombre\":\"{{1.nombre}}\",\"descuento\":\"{{1.descuento}}\",\"producto\":\"{{1.producto}}\"}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": { "method": { "label": "POST" } },
+        "parameters": [
+          { "name": "handleErrors", "type": "boolean", "label": "Show advanced settings" }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:updateRow",
+      "version": 2,
+      "parameters": {
+        "spreadsheetId": "TU_SPREADSHEET_ID",
+        "sheetId": 0,
+        "valueInputOption": "RAW",
+        "insertDataOption": "OVERWRITE"
+      },
+      "mapper": {
+        "rowNumber": "{{1.__ROW_NUMBER__}}",
+        "values": { "imagen_url": "{{2.data.image_url}}" }
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {}
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "eu1.make.com"
+  }
+}
