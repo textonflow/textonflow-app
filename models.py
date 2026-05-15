@@ -5,6 +5,14 @@ Extraído de main.py (Paso 1 de desfragmentación, 2026-04-28)
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 
+class TextRun(BaseModel):
+    """Segmento de texto con formato propio (inline formatting)."""
+    text: str
+    bold_override:   Optional[bool] = None
+    italic_override: Optional[bool] = None
+    font_color:      Optional[str]  = None
+
+
 class TextField(BaseModel):
     text: str
     x: int
@@ -67,6 +75,9 @@ class TextField(BaseModel):
     countdown_expired_text: Optional[str] = None
     countdown_urgency_color: Optional[str] = None   # color cuando faltan N horas
     countdown_urgency_threshold_h: Optional[float] = 3.0  # horas umbral (default 3)
+    # ── Formato inline (runs por selección) ──────────────────────────────────
+    font_backend: Optional[str] = None                   # familia base: "Arial", "GeomanistRegular", etc.
+    text_runs: Optional[List["TextRun"]] = None          # lista de runs con formato por segmento
 
 class CanvasShape(BaseModel):
     id: str = ""
