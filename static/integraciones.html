@@ -191,10 +191,88 @@ pre code{background:none;padding:0;font-size:inherit;}
     <div style="margin-top:10px;font-size:11px;color:#4b5563;">Devuelve JSON con <code>image_url</code> lista para usar en el siguiente paso de tu flujo.</div>
   </div>
 
+  <!-- ═══ PREGUNTA CLAVE: ¿POR DÓNDE EMPIEZO? ════════════════════════════ -->
+  <div id="por-donde" style="background:linear-gradient(135deg,#0d1a2e 0%,#1a0d2e 100%);border:1px solid #3a3a6f;border-radius:14px;padding:20px 22px;margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:32px;height:32px;background:#667eea;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">❓</div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#fff;">¿Primero el template o primero Make/Zapier?</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:1px;">La pregunta más frecuente — aquí está la respuesta</div>
+      </div>
+    </div>
+
+    <div style="background:#07070f;border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:12px;text-transform:uppercase;letter-spacing:.7px;">✅ El orden correcto siempre es este:</div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a2e;">
+          <div style="width:24px;height:24px;background:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Diseña tu imagen en TextOnFlow</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5;">Abre el editor, sube tu imagen de fondo, agrega las capas de texto que quieres personalizar (nombre, descuento, ciudad, etc.). Usa la pestaña del editor visual hasta que el diseño te guste.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a2e;">
+          <div style="width:24px;height:24px;background:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">2</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Escribe variables en los textos que deben cambiar</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5;">En lugar de escribir "Juan García", escribe <code>{nombre}</code>. En lugar de "30%", escribe <code>{descuento}</code>. Las llaves le dicen a TextOnFlow "este valor viene de afuera".</div>
+            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+              <code style="font-size:11px;">{nombre}</code>
+              <code style="font-size:11px;">{descuento}</code>
+              <code style="font-size:11px;">{ciudad}</code>
+              <code style="font-size:11px;">{producto}</code>
+              <code style="font-size:11px;">{fecha}</code>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a2e;">
+          <div style="width:24px;height:24px;background:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">3</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Guarda el diseño como Template API</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5;">En la sección <strong style="color:#9ca3ff;">API de Render Dinámico</strong> del panel lateral, escribe un nombre para tu template (ej: "Black Friday Clientes VIP") y haz clic en <strong style="color:#9ca3ff;">💾 Guardar Template API</strong>.</div>
+            <div style="margin-top:8px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px;padding:8px 12px;">
+              <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">Se genera automáticamente:</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:10px;color:#fbbf24;font-family:monospace;background:#1a1400;padding:2px 7px;border-radius:4px;">template_id</span><span style="font-size:10px;color:#9ca3af;">— el ID único de tu diseño guardado</span></div>
+                <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:10px;color:#4ade80;font-family:monospace;background:#0d1a0d;padding:2px 7px;border-radius:4px;">api_key</span><span style="font-size:10px;color:#9ca3af;">— tu clave secreta para autenticar llamadas</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a2e;">
+          <div style="width:24px;height:24px;background:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;">4</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Copia el template_id y la API Key</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5;">En la lista de templates guardados verás el <code>template_id</code> y el botón para copiar la <code>api_key</code>. <strong style="color:#f59e0b;">Guárdalos</strong> — los necesitarás en el siguiente paso.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;padding:10px 0;">
+          <div style="width:24px;height:24px;background:#4ade80;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;flex-shrink:0;margin-top:1px;">5</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#4ade80;">Ahora sí: configura Make, Zapier o BoostSpace</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.5;">Con el <code>template_id</code> y la <code>api_key</code> en mano, ve a tu herramienta de automatización y crea el flujo siguiendo las guías de abajo. Cada vez que el flujo se ejecute, TextOnFlow generará la imagen con los datos de ese contacto específico.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="background:#0d1a0d;border:1px solid #1e4a1e;border-radius:8px;padding:10px 14px;font-size:11px;color:#86efac;line-height:1.6;">
+      <strong>Regla de oro:</strong> El template es el molde. Make/Zapier/BoostSpace son los que llenan ese molde con datos reales de cada persona. El molde se crea una vez en TextOnFlow; la automatización lo usa miles de veces.
+    </div>
+  </div>
+
   <!-- TOC -->
   <div class="toc">
     <div class="toc-title">Ir a sección</div>
     <ul>
+      <li><a href="#por-donde">¿Por dónde empiezo?</a></li>
+      <li><a href="#casos-de-uso">Casos de uso</a></li>
       <li><a href="#zapier">Zapier</a></li>
       <li><a href="#make">Make</a></li>
       <li><a href="#boostspace">BoostSpace</a></li>
@@ -203,6 +281,258 @@ pre code{background:none;padding:0;font-size:inherit;}
       <li><a href="#blueprints">Descargar blueprints</a></li>
       <li><a href="#escenarios">Escenarios listos</a></li>
     </ul>
+  </div>
+
+  <!-- ═══ CASOS DE USO ══════════════════════════════════════════════════ -->
+  <div id="casos-de-uso" style="margin-bottom:36px;">
+    <div class="sect-title">🎯 Casos de uso reales</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:20px;line-height:1.6;">Estos son los escenarios más comunes en agencias y negocios que usan TextOnFlow con automatizaciones. Cada uno incluye qué template hacer, qué variables usar y cómo armar el flujo.</div>
+
+    <!-- CASO 1 -->
+    <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1a1a2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a50;">
+        <div style="width:34px;height:34px;background:#ff4a0020;border:1px solid #ff4a0060;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🛍️</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:800;color:#fff;">Cupón de descuento personalizado por WhatsApp</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">E-commerce · Black Friday · Reactivación de clientes</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;background:#301400;color:#fb923c;padding:2px 7px;border-radius:10px;font-weight:700;">Zapier</span>
+          <span style="font-size:9px;background:#1a1540;color:#a5b4fc;padding:2px 7px;border-radius:10px;font-weight:700;">Make</span>
+        </div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">📝 Template a crear</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">Imagen de fondo festiva (ej: negro con destellos dorados). Textos que deben variar:<br>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;gap:6px;"><code>{nombre}</code><span style="color:#6b7280;">→ nombre del cliente</span></div>
+              <div style="display:flex;gap:6px;"><code>{descuento}</code><span style="color:#6b7280;">→ % de descuento</span></div>
+              <div style="display:flex;gap:6px;"><code>{codigo}</code><span style="color:#6b7280;">→ código único del cupón</span></div>
+              <div style="display:flex;gap:6px;"><code>{vence}</code><span style="color:#6b7280;">→ fecha de vencimiento</span></div>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">⚡ Cómo funciona el flujo</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">1.</span>Google Sheets tiene la lista de clientes con nombre, % descuento y código único por fila</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">2.</span>Make detecta filas nuevas o filtra por "estado = enviar"</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">3.</span>HTTP POST a TextOnFlow con esas variables</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">4.</span>image_url se envía por WhatsApp Business API o ManyChat</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#080812;border-radius:8px;padding:10px 12px;font-size:10.5px;font-family:monospace;color:#c0b8ff;line-height:1.7;border:1px solid #1e1e3f;">
+          <span style="color:#6b7280;">// Body del POST a TextOnFlow</span><br>
+          {<br>
+          &nbsp;&nbsp;"template_id": "<span style="color:#fbbf24;">abc123</span>",<br>
+          &nbsp;&nbsp;"variables": {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;"nombre": "<span style="color:#67e8f9;">María García</span>",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;"descuento": "<span style="color:#67e8f9;">25</span>",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;"codigo": "<span style="color:#67e8f9;">BF2024-MG-VIP</span>",<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;"vence": "<span style="color:#67e8f9;">30 nov</span>"<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <div style="margin-top:10px;background:#071207;border:1px solid #1e4a1e;border-radius:6px;padding:8px 12px;font-size:11px;color:#86efac;">
+          <strong>Resultado:</strong> María recibe por WhatsApp una imagen con su nombre, su 25% de descuento exclusivo y su código BF2024-MG-VIP. Sin diseño manual, sin descargas. En segundos.
+        </div>
+      </div>
+    </div>
+
+    <!-- CASO 2 -->
+    <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1a1a2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a50;">
+        <div style="width:34px;height:34px;background:#0ea5e920;border:1px solid #0ea5e960;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎓</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:800;color:#fff;">Certificado o diploma personalizado automático</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">Cursos online · Academias · Eventos · Formaciones</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;background:#301400;color:#fb923c;padding:2px 7px;border-radius:10px;font-weight:700;">Zapier</span>
+          <span style="font-size:9px;background:#001a30;color:#67c8f1;padding:2px 7px;border-radius:10px;font-weight:700;">BoostSpace</span>
+        </div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">📝 Template a crear</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">Diseño de diploma/certificado con logo. Variables:<br>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;gap:6px;"><code>{nombre_completo}</code><span style="color:#6b7280;">→ nombre del alumno</span></div>
+              <div style="display:flex;gap:6px;"><code>{curso}</code><span style="color:#6b7280;">→ nombre del curso</span></div>
+              <div style="display:flex;gap:6px;"><code>{fecha}</code><span style="color:#6b7280;">→ fecha de emisión</span></div>
+              <div style="display:flex;gap:6px;"><code>{horas}</code><span style="color:#6b7280;">→ horas del curso</span></div>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">⚡ Cómo funciona el flujo</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">1.</span>Alumno completa quiz final en Typeform o paga en Hotmart</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">2.</span>Zapier detecta la respuesta / compra completada</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">3.</span>Webhooks POST a TextOnFlow con nombre y curso</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">4.</span>image_url se envía por email + se guarda en Drive</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:4px;background:#071207;border:1px solid #1e4a1e;border-radius:6px;padding:8px 12px;font-size:11px;color:#86efac;">
+          <strong>Resultado:</strong> Carlos completa el examen y en 10 segundos recibe por email su certificado con su nombre, el curso completado y la fecha. Sin intervención manual. Escala a 1.000 alumnos igual que a 10.
+        </div>
+      </div>
+    </div>
+
+    <!-- CASO 3 -->
+    <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1a1a2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a50;">
+        <div style="width:34px;height:34px;background:#5b3fff20;border:1px solid #5b3fff60;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📅</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:800;color:#fff;">Confirmación de cita o reserva con datos personalizados</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">Clínicas · Spas · Restaurantes · Consultorios · Coworkings</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;background:#1a1540;color:#a5b4fc;padding:2px 7px;border-radius:10px;font-weight:700;">Make</span>
+          <span style="font-size:9px;background:#301400;color:#fb923c;padding:2px 7px;border-radius:10px;font-weight:700;">Zapier</span>
+        </div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">📝 Template a crear</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">Tarjeta de confirmación con diseño del negocio. Variables:<br>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;gap:6px;"><code>{nombre}</code><span style="color:#6b7280;">→ nombre del cliente</span></div>
+              <div style="display:flex;gap:6px;"><code>{servicio}</code><span style="color:#6b7280;">→ tipo de servicio</span></div>
+              <div style="display:flex;gap:6px;"><code>{dia}</code><span style="color:#6b7280;">→ día de la cita</span></div>
+              <div style="display:flex;gap:6px;"><code>{hora}</code><span style="color:#6b7280;">→ hora de la cita</span></div>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">⚡ Cómo funciona el flujo</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">1.</span>Cliente agenda en Calendly, TidyCal o Google Calendar</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">2.</span>Make detecta el evento nuevo creado</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">3.</span>HTTP POST a TextOnFlow con nombre, servicio, día y hora</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">4.</span>Se envía por WhatsApp como imagen de confirmación</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:4px;background:#071207;border:1px solid #1e4a1e;border-radius:6px;padding:8px 12px;font-size:11px;color:#86efac;">
+          <strong>Resultado:</strong> Ana agenda su limpieza dental y segundos después recibe en WhatsApp una imagen bonita que dice "Ana, tu cita de Limpieza Dental es el Martes 12 a las 3:00 PM". Reducción de no-shows superior al 40%.
+        </div>
+      </div>
+    </div>
+
+    <!-- CASO 4 -->
+    <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1a1a2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a50;">
+        <div style="width:34px;height:34px;background:#fbbf2420;border:1px solid #fbbf2460;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🏆</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:800;color:#fff;">Tarjeta de bienvenida a cliente nuevo (onboarding)</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">SaaS · Membresías · Agencias · Programas de lealtad</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;background:#1a1540;color:#a5b4fc;padding:2px 7px;border-radius:10px;font-weight:700;">Make</span>
+          <span style="font-size:9px;background:#001a30;color:#67c8f1;padding:2px 7px;border-radius:10px;font-weight:700;">BoostSpace</span>
+        </div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">📝 Template a crear</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">Imagen de bienvenida con estilo de marca. Variables:<br>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;gap:6px;"><code>{nombre}</code><span style="color:#6b7280;">→ nombre del cliente</span></div>
+              <div style="display:flex;gap:6px;"><code>{plan}</code><span style="color:#6b7280;">→ plan contratado</span></div>
+              <div style="display:flex;gap:6px;"><code>{empresa}</code><span style="color:#6b7280;">→ empresa del cliente</span></div>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">⚡ Cómo funciona el flujo</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">1.</span>Cliente completa el pago en Stripe o firma contrato</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">2.</span>Make detecta el evento "payment_intent.succeeded"</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">3.</span>TextOnFlow genera imagen de bienvenida personalizada</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">4.</span>Se envía en email de bienvenida junto al acceso</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:4px;background:#071207;border:1px solid #1e4a1e;border-radius:6px;padding:8px 12px;font-size:11px;color:#86efac;">
+          <strong>Resultado:</strong> Roberto de Acme Corp paga el Plan Agency y recibe un email con "Bienvenido Roberto, tu Plan Agency de Acme Corp está activado". Impacto en la primera impresión del cliente.
+        </div>
+      </div>
+    </div>
+
+    <!-- CASO 5 -->
+    <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1a1a2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a50;">
+        <div style="width:34px;height:34px;background:#ec489920;border:1px solid #ec489960;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📊</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:800;color:#fff;">Reporte o resultado personalizado por cliente</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">Marketing digital · Finanzas · Seguros · Real estate</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;background:#301400;color:#fb923c;padding:2px 7px;border-radius:10px;font-weight:700;">Zapier</span>
+          <span style="font-size:9px;background:#1a1540;color:#a5b4fc;padding:2px 7px;border-radius:10px;font-weight:700;">Make</span>
+        </div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">📝 Template a crear</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">Imagen tipo "resumen de resultados" o "tu portafolio este mes". Variables:<br>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;gap:6px;"><code>{nombre}</code><span style="color:#6b7280;">→ nombre del cliente</span></div>
+              <div style="display:flex;gap:6px;"><code>{roi}</code><span style="color:#6b7280;">→ % de retorno</span></div>
+              <div style="display:flex;gap:6px;"><code>{ganancia}</code><span style="color:#6b7280;">→ monto ganado</span></div>
+              <div style="display:flex;gap:6px;"><code>{periodo}</code><span style="color:#6b7280;">→ mes o período</span></div>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">⚡ Cómo funciona el flujo</div>
+            <div style="font-size:11px;color:#d1d5db;line-height:1.6;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">1.</span>Cada primer día del mes, Make se activa (trigger programado)</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">2.</span>Lee la hoja de Google Sheets con resultados de cada cliente</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">3.</span>Por cada fila, genera una imagen de reporte con TextOnFlow</div>
+                <div style="display:flex;gap:6px;align-items:flex-start;"><span style="color:#667eea;font-weight:700;flex-shrink:0;">4.</span>Envía cada imagen por WhatsApp o email al cliente correspondiente</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:4px;background:#071207;border:1px solid #1e4a1e;border-radius:6px;padding:8px 12px;font-size:11px;color:#86efac;">
+          <strong>Resultado:</strong> 50 clientes reciben su reporte visual personalizado el 1° de cada mes de forma automática. La agencia no abre Photoshop ni Canva. El flujo hace todo el trabajo.
+        </div>
+      </div>
+    </div>
+
+    <!-- RESUMEN DE VARIABLES -->
+    <div style="background:#0d1a0d;border:1px solid #1e4a1e;border-radius:10px;padding:16px 18px;margin-top:4px;">
+      <div style="font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;">💡 Variables más usadas en templates</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px;">
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{nombre}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Nombre del contacto</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{apellido}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Apellido del contacto</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{empresa}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Empresa del cliente</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{descuento}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">% o valor de descuento</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{codigo}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Código único de cupón</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{producto}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Nombre del producto</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{fecha}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Fecha del evento/cita</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{ciudad}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Ciudad del usuario</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{plan}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Plan o membresía</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{roi}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Retorno de inversión</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{hora}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Hora de la cita</div></div>
+        <div style="background:#0a120a;border:1px solid #1e3a1e;border-radius:6px;padding:6px 10px;font-size:11px;"><code style="color:#4ade80;">{curso}</code><div style="color:#6b7280;font-size:10px;margin-top:2px;">Nombre del curso</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#6b7280;">Puedes usar cualquier nombre de variable — solo asegúrate de que coincida exactamente (mayúsculas/minúsculas) en el template y en el JSON del request.</div>
+    </div>
   </div>
 
   <!-- PLATFORM TABS -->
