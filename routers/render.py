@@ -58,6 +58,7 @@ from user_limits import (
     USER_PLAN_LIMITS, TRIAL_DAYS,
     _get_current_user, _require_user,
     _should_apply_watermark, _check_user_render_limit, _increment_user_renders,
+    _get_user_id_by_render_key,
 )
 from utils import _get_base_url
 
@@ -659,6 +660,15 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     _user_payload = _get_current_user(http_req)
     _user_id      = _user_payload["sub"] if _user_payload else None
     _ip           = _get_client_ip(http_req)
+    # Si no hay JWT, intentar autenticar por render_api_key (body o header X-API-Key)
+    if not _user_id:
+        _rkey = (request.render_api_key or
+                 http_req.headers.get("X-API-Key") or
+                 http_req.query_params.get("render_api_key"))
+        if _rkey:
+            _uid_from_key = _get_user_id_by_render_key(_rkey)
+            if _uid_from_key:
+                _user_id = _uid_from_key
 
     _plan = "admin"
     if _is_superadmin(http_req):
