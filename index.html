@@ -1338,6 +1338,31 @@
                                     </div>
                                 </div>
 
+                                <!-- Fondo transparente toggle -->
+                                <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+                                    <label class="tof-toggle-wrap" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                                        <input type="checkbox" id="qr-transparent-bg" style="display:none;"
+                                            onchange="(function(){var t=document.getElementById('qr-transparent-bg').checked;['qr-color-light','qr-color-bg'].forEach(function(id){var el=document.getElementById(id);if(el){el.disabled=t;el.parentElement.style.opacity=t?'0.35':'1';}});updateQRPreview();})()">
+                                        <span id="qr-trans-knob" style="display:inline-flex;width:32px;height:18px;border-radius:9px;background:#2a2a50;border:1px solid #4a3a90;transition:background .2s;position:relative;flex-shrink:0;">
+                                            <span style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6b7280;transition:transform .2s,background .2s;" id="qr-trans-dot"></span>
+                                        </span>
+                                        <span style="font-size:12px;font-weight:700;color:#e8e8e8;">Fondo transparente</span>
+                                    </label>
+                                </div>
+                                <script>
+                                (function(){
+                                    var chk=document.getElementById('qr-transparent-bg');
+                                    if(!chk)return;
+                                    chk.addEventListener('change',function(){
+                                        var on=chk.checked;
+                                        var knob=document.getElementById('qr-trans-knob');
+                                        var dot=document.getElementById('qr-trans-dot');
+                                        if(knob)knob.style.background=on?'#16a34a':'#2a2a50';
+                                        if(dot){dot.style.transform=on?'translateX(14px)':'translateX(0)';dot.style.background=on?'#fff':'#6b7280';}
+                                    });
+                                })();
+                                </script>
+
                                 <!-- Padding -->
                                 <div style="margin-top:8px;">
                                     <label style="font-size:12px;font-weight:700;color:#e8e8e8;">Padding marco: <span id="qr-pad-val">20</span>px</label>
