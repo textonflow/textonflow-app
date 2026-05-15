@@ -807,12 +807,15 @@ _RUN_FONT_FAMILIES: dict = {
 }
 
 def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, size: int):
-    """Devuelve ImageFont para un run con bold/italic/font override, o None si no cambia."""
+    """Devuelve ImageFont para un run con bold/italic/font/size override, o None si no cambia."""
     run_bold      = run_fmt.get('bold_override')
     run_italic    = run_fmt.get('italic_override')
-    run_font_key  = run_fmt.get('font_backend_run')  # fuente específica para este run
-    if run_bold is None and run_italic is None and run_font_key is None:
+    run_font_key  = run_fmt.get('font_backend_run')   # fuente específica para este run
+    run_size_px   = run_fmt.get('font_size_run')      # tamaño específico para este run (display px)
+    if run_bold is None and run_italic is None and run_font_key is None and run_size_px is None:
         return None
+    # Tamaño efectivo: si el run tiene tamaño propio, usarlo ×2 (render 2x); si no, el del campo
+    eff_size = int(run_size_px * 2) if run_size_px else size
     # Si el run tiene fuente propia, usarla como base; si no, usar la del campo
     fb = run_font_key or font_backend_name or base_font_name
     v  = _RUN_FONT_FAMILIES.get(fb, {})
@@ -821,14 +824,15 @@ def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, siz
     is_bold   = run_bold   if run_bold   is not None else el_bold
     is_italic = run_italic if run_italic is not None else el_italic
     key = 'bi' if (is_bold and is_italic) else ('b' if is_bold else ('i' if is_italic else 'r'))
-    target = v.get(key, base_font_name)
-    if target == base_font_name:
-        return None
-    path = FONT_MAPPING.get(target)
+    target = v.get(key, fb)
+    path = FONT_MAPPING.get(target) or FONT_MAPPING.get(fb)
+    if not path:
+        # Solo cambia tamaño — usar la fuente base original
+        path = FONT_MAPPING.get(base_font_name)
     if not path:
         return None
     try:
-        return ImageFont.truetype(path, size)
+        return ImageFont.truetype(path, eff_size)
     except Exception:
         return None
 
