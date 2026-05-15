@@ -1,0 +1,78 @@
+{
+  "name": "TextOnFlow — Webhook entrante → Render → Respuesta",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": { "hook": "TU_WEBHOOK_ID", "maxResults": 1 },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": {}
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": { "handleErrors": false },
+      "mapper": {
+        "url": "https://www.textonflow.com/webhook/render",
+        "method": "post",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "parseResponse": true,
+        "rejectUnauthorized": true,
+        "followRedirect": true,
+        "gzip": true,
+        "contentType": "application/json",
+        "data": "{\"template_id\":\"TU_TEMPLATE_ID\",\"variables\":{\"nombre\":\"{{1.nombre}}\",\"ciudad\":\"{{1.ciudad}}\",\"codigo\":\"{{1.codigo}}\"}}"
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": { "method": { "label": "POST" } },
+        "parameters": [
+          { "name": "handleErrors", "type": "boolean", "label": "Show advanced settings" }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "status": "200",
+        "headers": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": "{\"image_url\":\"{{2.data.image_url}}\"}"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {}
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": { "orphans": [] },
+    "zone": "eu1.make.com"
+  }
+}
