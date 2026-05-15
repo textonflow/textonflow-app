@@ -121,6 +121,7 @@ class MultiTextRequest(BaseModel):
     shapes: Optional[List[CanvasShape]] = []
     filter_name: str = "none"
     render_scale: int = 1  # 1=rápido (ManyChat), 2=alta calidad (editor)
+    render_api_key: Optional[str] = None  # Clave de usuario para autenticar sin JWT
     watermark: bool = False  # Sello TextOnFlow sobre la imagen
     wm_corner:  str   = "br"      # tl | tr | bl | br
     wm_size:    int   = 55        # altura en px del logo (relativa a 1080px)
