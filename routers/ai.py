@@ -686,14 +686,28 @@ async def generate_qr(req: QRRequest):
     qr.add_data(req.text.strip())
     qr.make(fit=True)
 
-    qr_img = qr.make_image(fill_color=dark_rgb, back_color=light_rgb).convert("RGB")
-
-    if pad > 0:
-        w, h = qr_img.size
-        new_w, new_h = w + pad * 2, h + pad * 2
-        bg = Image.new("RGB", (new_w, new_h), bg_rgb)
-        bg.paste(qr_img, (pad, pad))
-        qr_img = bg
+    if req.transparent_bg:
+        # Generar en RGBA y hacer transparente el fondo (píxeles claros → alpha=0)
+        qr_img = qr.make_image(fill_color=dark_rgb, back_color=light_rgb).convert("RGBA")
+        data   = qr_img.getdata()
+        thresh = 200
+        new_data = [
+            (r, g, b, 0) if (r > thresh and g > thresh and b > thresh) else (r, g, b, a)
+            for r, g, b, a in data
+        ]
+        qr_img.putdata(new_data)
+        if pad > 0:
+            w, h   = qr_img.size
+            canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+            canvas.paste(qr_img, (pad, pad), qr_img)
+            qr_img = canvas
+    else:
+        qr_img = qr.make_image(fill_color=dark_rgb, back_color=light_rgb).convert("RGB")
+        if pad > 0:
+            w, h   = qr_img.size
+            bg     = Image.new("RGB", (w + pad * 2, h + pad * 2), bg_rgb)
+            bg.paste(qr_img, (pad, pad))
+            qr_img = bg
 
     buf = BytesIO()
     qr_img.save(buf, format="PNG")
