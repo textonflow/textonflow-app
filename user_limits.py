@@ -61,6 +61,22 @@ def _get_user_profile(user_id: str) -> dict:
         return {"plan": "unknown", "renders_used": 0, "renders_limit": 999999,
                 "watermark_exempt": False, "json_exports_used": 0, "is_active": True}
 
+def _get_user_id_by_render_key(api_key: str) -> Optional[str]:
+    """Devuelve el user_id correspondiente al render_api_key, o None si no existe."""
+    if not api_key or not api_key.startswith("tofr_"):
+        return None
+    conn = get_db()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT id FROM users WHERE render_api_key = %s", (api_key,))
+            row = cur.fetchone()
+        return str(row["id"]) if row else None
+    except Exception as e:
+        logger.error(f"Error en _get_user_id_by_render_key: {e}")
+        return None
+
 def _should_apply_watermark(user_id: Optional[str]) -> bool:
     """True si el render debe llevar sello TextOnFlow (plan trial sin exención)."""
     if not user_id:
