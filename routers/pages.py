@@ -141,6 +141,11 @@ async def casos_page():
     return FileResponse("static/casos.html", media_type="text/html")
 
 
+@pages_router.get("/integraciones")
+async def integraciones_page():
+    return FileResponse("static/integraciones.html", media_type="text/html")
+
+
 # ─── Archivos de sistema ──────────────────────────────────────────────────────
 
 @pages_router.get("/.well-known/sg-hosted-ping")
