@@ -1973,6 +1973,147 @@
                     </div>
                 </div>
 
+                <!-- ══ INTEGRACIONES: ZAPIER / MAKE / BOOSTSPACE ══════════════════ -->
+                <div class="dapi-section" id="integr-panel" style="margin-top:12px;">
+                    <div class="dapi-header" onclick="toggleIntegrPanel()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;user-select:none;">
+                        <span style="font-size:14px;">⚡</span>
+                        <span class="dapi-title">Integraciones — Zapier · Make · BoostSpace</span>
+                        <span class="dapi-chevron" id="integr-chevron" style="margin-left:auto;color:#666;font-size:11px;transition:transform .2s;">▼</span>
+                    </div>
+                    <div id="integr-body" style="display:none;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 8px 8px;padding:12px;">
+
+                        <!-- Endpoint card -->
+                        <div style="background:#0d0d1f;border:1px solid #1e3a1e;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+                            <div style="font-size:10px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Endpoint universal</div>
+                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                <span style="font-size:10px;font-weight:700;background:#1e3a1e;color:#4ade80;border-radius:4px;padding:2px 7px;">POST</span>
+                                <code id="integr-endpoint-url" style="font-size:11px;color:#a5f3a5;font-family:monospace;flex:1;word-break:break-all;">https://www.textonflow.com/webhook/render</code>
+                                <button onclick="navigator.clipboard.writeText('https://www.textonflow.com/webhook/render').then(()=>showNotif('URL copiada','success'))" style="background:#1e3a1e;border:1px solid #2a5a2a;color:#4ade80;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap;">Copiar</button>
+                            </div>
+                        </div>
+
+                        <!-- Body format card -->
+                        <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+                            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Cuerpo del request (JSON)</div>
+                            <pre style="font-size:10.5px;color:#c0b8ff;font-family:monospace;margin:0;line-height:1.6;white-space:pre-wrap;">{
+  "template_id": "<span style="color:#fbbf24;">TU_TEMPLATE_ID</span>",
+  "variables": {
+    "nombre": "{{first name}}",
+    "descuento": "30",
+    "producto": "{{custom field}}"
+  }
+}</pre>
+                            <div style="margin-top:8px;font-size:10px;color:#4b5563;">
+                                Obtén el <code style="color:#9ca3ff;">template_id</code> desde la sección <strong style="color:#888;">API de Render Dinámico</strong> → guarda tu template → aparece en la URL.
+                            </div>
+                        </div>
+
+                        <!-- Platform tabs -->
+                        <div style="display:flex;gap:4px;margin-bottom:12px;" id="integr-tabs">
+                            <button onclick="switchIntegrTab('zapier',this)" id="itab-zapier"
+                                style="flex:1;padding:6px 4px;background:#ff4a00;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:1;">
+                                ⚡ Zapier
+                            </button>
+                            <button onclick="switchIntegrTab('make',this)" id="itab-make"
+                                style="flex:1;padding:6px 4px;background:#2a2a50;color:#9ca3ff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:.7;">
+                                🔀 Make
+                            </button>
+                            <button onclick="switchIntegrTab('boostspace',this)" id="itab-boostspace"
+                                style="flex:1;padding:6px 4px;background:#2a2a50;color:#9ca3ff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:.7;">
+                                🚀 BoostSpace
+                            </button>
+                        </div>
+
+                        <!-- ZAPIER -->
+                        <div id="integr-tab-zapier">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 1 — Trigger</div>
+                                    <div style="font-size:11px;color:#d1b08a;">Elige cualquier trigger: <strong>HubSpot</strong>, <strong>ActiveCampaign</strong>, <strong>Shopify</strong>, formulario, etc.</div>
+                                </div>
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 2 — Acción: "Webhooks by Zapier"</div>
+                                    <div style="font-size:11px;color:#d1b08a;">Busca <strong>Webhooks by Zapier</strong> → acción <strong>"POST"</strong></div>
+                                    <div style="margin-top:6px;background:#0d0800;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#ffd580;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Payload Type: <span style="color:#a3e635;">json</span><br>
+                                        Data: template_id | <span style="color:#fbbf24;">TU_TEMPLATE_ID</span><br>
+                                        Data: variables.nombre | <span style="color:#93c5fd;">(campo del trigger)</span>
+                                    </div>
+                                </div>
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 3 — Usa la imagen generada</div>
+                                    <div style="font-size:11px;color:#d1b08a;">La respuesta incluye <code style="color:#fbbf24;">image_url</code>. Úsala en el siguiente paso (enviar por WhatsApp, email, Slack, etc.)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MAKE -->
+                        <div id="integr-tab-make" style="display:none;">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 1 — Trigger de tu sistema</div>
+                                    <div style="font-size:11px;color:#9090c0;">Conecta cualquier app: <strong>Google Sheets</strong>, <strong>Typeform</strong>, <strong>Pipedrive</strong>, etc.</div>
+                                </div>
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 2 — HTTP › Make a request</div>
+                                    <div style="font-size:11px;color:#9090c0;">Agrega el módulo <strong>HTTP → Make a request</strong> y configura:</div>
+                                    <div style="margin-top:6px;background:#060610;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#a5b4fc;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Method: <span style="color:#a3e635;">POST</span><br>
+                                        Body type: <span style="color:#a3e635;">Raw</span><br>
+                                        Content type: <span style="color:#a3e635;">application/json</span><br>
+                                        Body: {"{"}template_id":"<span style="color:#fbbf24;">ID</span>","variables":{"{"}...{"}"}{"}"}
+                                    </div>
+                                </div>
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 3 — Procesa image_url</div>
+                                    <div style="font-size:11px;color:#9090c0;">Parsea el JSON de respuesta y mapea <code style="color:#a5b4fc;">image_url</code> al siguiente módulo (WhatsApp Business, Klaviyo, etc.)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOOSTSPACE -->
+                        <div id="integr-tab-boostspace" style="display:none;">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 1 — Crea un flujo en BoostSpace</div>
+                                    <div style="font-size:11px;color:#90b0c0;">En <strong>BoostSpace Automation</strong> crea un nuevo flujo. Usa como trigger cualquier evento: lead nuevo, tarea creada, etc.</div>
+                                </div>
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 2 — Acción: HTTP Request / Webhook</div>
+                                    <div style="font-size:11px;color:#90b0c0;">Agrega la acción <strong>"HTTP Request"</strong> o <strong>"Send Webhook"</strong>:</div>
+                                    <div style="margin-top:6px;background:#060a10;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#7dd3fc;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Method: <span style="color:#a3e635;">POST</span><br>
+                                        Headers: Content-Type: application/json<br>
+                                        Body:<br>
+                                        {"{"}"template_id":"<span style="color:#fbbf24;">TU_ID</span>",<br>
+                                        &nbsp;"variables":{"{"}{"}"}{"}"}
+                                    </div>
+                                </div>
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 3 — Usa la respuesta</div>
+                                    <div style="font-size:11px;color:#90b0c0;">BoostSpace recibe el <code style="color:#7dd3fc;">image_url</code> en la respuesta JSON. Mapealo a un campo de tu CRM o úsalo en un mensaje de WhatsApp.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Webhook de salida -->
+                        <div style="margin-top:14px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;">
+                            <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Webhook de salida (render.done)</div>
+                            <div style="font-size:11px;color:#aaa;margin-bottom:8px;">TextOnFlow puede notificar a tu sistema al terminar cada render. Configura tu URL de destino:</div>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <input id="integr-webhook-url" type="url" placeholder="https://hook.zapier.com/... o tu endpoint"
+                                    style="flex:1;min-width:0;background:#080812;border:1px solid #2a2a50;border-radius:6px;padding:6px 9px;color:#e0e0f0;font-size:11px;outline:none;">
+                                <button onclick="saveIncomingWebhook()" style="background:#f59e0b;color:#000;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">Guardar</button>
+                            </div>
+                            <div style="font-size:10px;color:#555;margin-top:6px;">Payload recibido: <code style="color:#666;">{"{"}"event":"render.done","image_url":"...","template":"...","ts":"..."{"}"}</code></div>
+                        </div>
+
+                    </div>
+                </div><!-- /integr-panel -->
+
                 </div><!-- /tab-design -->
 
                 <div id="resultModal" onclick="closeResultModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;">
