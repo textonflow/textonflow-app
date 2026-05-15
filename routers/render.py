@@ -68,10 +68,9 @@ render_router = APIRouter()
 # ── Watermark logo helper ──────────────────────────────────────────────────────
 def _apply_wm_logo(image: Image.Image,
                    corner: str = "br", size_px: int = 22,
-                   opacity_pct: int = 55, color_hex: str = "#ffffff") -> Image.Image:
-    """Pega el logo de TextOnFlow sobre la imagen con posición y estilo configurables.
-    Añade un fondo oscuro semitransparente detrás del logo para garantizar
-    visibilidad sobre cualquier color de fondo."""
+                   opacity_pct: int = 55, color_hex: str = "#ffffff",
+                   pill: bool = True) -> Image.Image:
+    """Pega el logo de TextOnFlow sobre la imagen con posición y estilo configurables."""
     try:
         if image.mode != "RGBA":
             image = image.convert("RGBA")
@@ -107,32 +106,43 @@ def _apply_wm_logo(image: Image.Image,
               for (r, g, b, a) in logo.getdata()]
         logo.putdata(px)
 
-        # Fondo pill oscuro semitransparente (asegura contraste sobre cualquier imagen)
-        pad_x = max(6, int(logo_h * 0.4))
-        pad_y = max(4, int(logo_h * 0.25))
-        pill_w = logo_w + pad_x * 2
-        pill_h = logo_h + pad_y * 2
-        pill_alpha = int(160 * logo_op)          # mismo factor de opacidad que el logo
-        pill = Image.new("RGBA", (pill_w, pill_h), (0, 0, 0, 0))
-        pill_draw = ImageDraw.Draw(pill)
-        radius = pill_h // 2
-        pill_draw.rounded_rectangle(
-            [(0, 0), (pill_w - 1, pill_h - 1)],
-            radius=radius,
-            fill=(0, 0, 0, pill_alpha),
-        )
-
-        # Posición de la pill (y del logo dentro de ella)
         margin = max(10, int(img_w * 0.018))
-        px_pos = margin if corner in ("tl", "bl") else img_w - pill_w - margin
-        py_pos = margin if corner in ("tl", "tr") else img_h - pill_h - margin
-
         overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
-        overlay.paste(pill, (px_pos, py_pos), pill)
-        overlay.paste(logo, (px_pos + pad_x, py_pos + pad_y), logo)
+
+        if pill:
+            # Fondo pill oscuro semitransparente
+            pad_x = max(6, int(logo_h * 0.4))
+            pad_y = max(4, int(logo_h * 0.25))
+            pill_w = logo_w + pad_x * 2
+            pill_h = logo_h + pad_y * 2
+            pill_alpha = int(160 * logo_op)
+            pill_img = Image.new("RGBA", (pill_w, pill_h), (0, 0, 0, 0))
+            pill_draw = ImageDraw.Draw(pill_img)
+            radius = pill_h // 2
+            # Color de pill: oscuro si logo es claro, claro si logo es oscuro
+            hex_c2 = color_hex.lstrip("#")
+            try:
+                _rl = int(hex_c2[0:2],16)/255; _gl = int(hex_c2[2:4],16)/255; _bl = int(hex_c2[4:6],16)/255
+                _lum = 0.2126*_rl + 0.7152*_gl + 0.0722*_bl
+                pill_rgb = (255,255,255) if _lum < 0.5 else (0,0,0)
+            except Exception:
+                pill_rgb = (0,0,0)
+            pill_draw.rounded_rectangle([(0,0),(pill_w-1,pill_h-1)], radius=radius,
+                                        fill=(*pill_rgb, pill_alpha))
+            px_pos = margin if corner in ("tl","bl") else img_w - pill_w - margin
+            py_pos = margin if corner in ("tl","tr") else img_h - pill_h - margin
+            overlay.paste(pill_img, (px_pos, py_pos), pill_img)
+            overlay.paste(logo, (px_pos + pad_x, py_pos + pad_y), logo)
+        else:
+            # Sin fondo: logo directo
+            logo_w2, logo_h2 = logo.size
+            px_pos = margin if corner in ("tl","bl") else img_w - logo_w2 - margin
+            py_pos = margin if corner in ("tl","tr") else img_h - logo_h2 - margin
+            overlay.paste(logo, (px_pos, py_pos), logo)
+
         image = Image.alpha_composite(image, overlay)
-        logger.info("✦ Watermark logo aplicado corner=%s size=%s op=%s pill=(%dx%d)",
-                    corner, size_px, opacity_pct, pill_w, pill_h)
+        logger.info("✦ Watermark logo aplicado corner=%s size=%s op=%s pill=%s",
+                    corner, size_px, opacity_pct, pill)
     except Exception as _e:
         logger.warning("⚠️ Watermark error: %s", _e)
     return image
@@ -570,6 +580,7 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
             size_px=getattr(request, "wm_size", 22),
             opacity_pct=getattr(request, "wm_opacity", 55),
             color_hex=getattr(request, "wm_color", "#ffffff"),
+            pill=getattr(request, "wm_pill", True),
         )
 
     return image
@@ -989,6 +1000,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 size_px=getattr(request, "wm_size", 22),
                 opacity_pct=getattr(request, "wm_opacity", 55),
                 color_hex=getattr(request, "wm_color", "#ffffff"),
+                pill=getattr(request, "wm_pill", True),
             )
 
         # Convertir a RGB y guardar como JPEG
@@ -1369,6 +1381,7 @@ async def render_api_template(template_id: str, request: Request):
         wm_size          = data.get("wm_size",           22),
         wm_opacity       = data.get("wm_opacity",        55),
         wm_color         = data.get("wm_color",          "#ffffff"),
+        wm_pill          = data.get("wm_pill",           True),
         vignette_enabled = data.get("vignette_enabled",  False),
         vignette_color   = data.get("vignette_color",    "#000000"),
         vignette_opacity = data.get("vignette_opacity",  0.6),
@@ -1457,6 +1470,7 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
         wm_size          = data.get("wm_size",          22),
         wm_opacity       = data.get("wm_opacity",       55),
         wm_color         = data.get("wm_color",         "#ffffff"),
+        wm_pill          = data.get("wm_pill",          True),
         vignette_enabled = data.get("vignette_enabled", False),
         vignette_color   = data.get("vignette_color",   "#000000"),
         vignette_opacity = data.get("vignette_opacity", 0.6),
