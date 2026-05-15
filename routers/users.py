@@ -177,7 +177,8 @@ async def user_me(request: Request):
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute("""
                 SELECT id, email, plan, renders_used, renders_limit, gemini_api_key,
-                       stripe_customer_id, watermark_exempt, is_active, created_at
+                       stripe_customer_id, watermark_exempt, is_active, created_at,
+                       render_api_key
                 FROM users WHERE id = %s
             """, (payload["sub"],))
             user = cur.fetchone()
@@ -217,6 +218,7 @@ async def user_me(request: Request):
         "watermark_active": watermark_active,
         "watermark_exempt": bool(user.get("watermark_exempt", False)),
         "can_export_json": can_export_json,
+        "render_api_key": user.get("render_api_key") or "",
         "is_active": user.get("is_active", True),
         "created_at": user["created_at"].isoformat() if user["created_at"] else None,
         "trial_expires_at": trial_expires_at,
