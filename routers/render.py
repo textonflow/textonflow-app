@@ -75,8 +75,8 @@ def _apply_wm_logo(image: Image.Image,
         if image.mode != "RGBA":
             image = image.convert("RGBA")
         img_w, img_h = image.size
-        scale = img_w / 1080.0
-        logo_h = max(16, int(size_px * scale))
+        scale = min(img_w, img_h) / 1080.0
+        logo_h = max(20, int(size_px * scale))
 
         # Busca el logo blanco (mejor sobre cualquier fondo)
         logo = None
