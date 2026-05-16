@@ -11,3 +11,5 @@ function cdHelpTab(tab){
     document.getElementById('cd-help-pane-'+t).style.display=t===tab?'':'none';
   });
 }
+window.cdHelpModal = cdHelpModal;
+window.cdHelpTab   = cdHelpTab;
