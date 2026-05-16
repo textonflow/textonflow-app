@@ -571,23 +571,7 @@ function _renderTypographySection(index,text){return`<!-- ══ TIPOGRAFÍA —
                                 <button onmousedown="event.preventDefault()" onclick="_toggleTextFormat('underline_override')" title="Subrayado (Ctrl+U)" style="width:22px;height:22px;padding:0;border-radius:3px;border:1px solid #ccc;cursor:pointer;font-size:11px;text-decoration:underline;font-family:serif;flex-shrink:0;background:${text.underline_override?'#667eea':'#fff'};color:${text.underline_override?'#fff':'#444'};">U</button>
                                 <!-- Indicador de selección activa -->
                                 <div id="tof-sel-ind-${index}" style="display:none;align-items:center;gap:6px;padding:3px 8px;background:#fdf4ff;border:1px solid #f9a8d4;border-radius:6px;font-size:11px;color:#be185d;margin-bottom:4px;"><span style="font-weight:700;">✦ Selección:</span><span id="tof-sel-txt-${index}" style="font-style:italic;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span><button onmousedown="event.preventDefault()" onclick="_clearRunFormat(${index})" style="margin-left:auto;font-size:10px;border:1px solid #f9a8d4;background:#fff;color:#be185d;border-radius:4px;padding:1px 7px;cursor:pointer;">✕ Quitar</button></div>
-                                <!-- Interlineado -->
-                                <span title="Interlineado — separación entre líneas" style="font-size:13px;color:#666;flex-shrink:0;cursor:default;user-select:none;letter-spacing:-1px;">↕</span>
-                                <input type="range" id="linespacing-slider-${index}" min="-20" max="60" value="${text.line_spacing ?? -20}"
-                                    oninput="updateTextProp(${index}, 'line_spacing', parseInt(this.value)); document.getElementById('linespacing-input-${index}').value = this.value;"
-                                    style="width:60px;flex-shrink:0;" title="Interlineado">
-                                <input type="number" inputmode="numeric" id="linespacing-input-${index}" min="-20" max="60" value="${text.line_spacing ?? -20}"
-                                    oninput="updateTextProp(${index}, 'line_spacing', parseInt(this.value) || 0); document.getElementById('linespacing-slider-${index}').value = this.value;"
-                                    style="width:36px;padding:2px;font-size:10px;text-align:center;border:1px solid #ddd;border-radius:3px;flex-shrink:0;" title="Interlineado">
-                                <!-- Kerning -->
-                                <span title="Kerning — espacio entre letras" style="font-size:13px;color:#666;flex-shrink:0;cursor:default;user-select:none;letter-spacing:-1px;">↔</span>
-                                <input type="range" id="kerning-slider-${index}" min="-20" max="120" value="${text.letter_spacing ?? 0}"
-                                    onmousedown="event.stopPropagation()"
-                                    oninput="updateTextProp(${index}, 'letter_spacing', parseInt(this.value)); document.getElementById('kerning-input-${index}').value = this.value;"
-                                    style="width:60px;flex-shrink:0;" title="Kerning">
-                                <input type="number" inputmode="numeric" id="kerning-input-${index}" min="-20" max="120" value="${text.letter_spacing ?? 0}"
-                                    oninput="updateTextProp(${index}, 'letter_spacing', parseInt(this.value) || 0); document.getElementById('kerning-slider-${index}').value = this.value;"
-                                    style="width:36px;padding:2px;font-size:10px;text-align:center;border:1px solid #ddd;border-radius:3px;flex-shrink:0;" title="Kerning">
+
                                 <!-- Alineación del párrafo -->
                                 <div style="display:flex;gap:2px;flex-shrink:0;" title="Alineación del párrafo">
                                 ${['left','center','right'].map(a => {
@@ -612,7 +596,33 @@ function _renderSkewSection(index,text){const sliderStyle='flex:1;min-width:0;he
                             <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:8px;">↗ Distorsionar Texto</div>
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center;">
 
-                                <!-- Columna 1: Inclinación X -->
+                                <!-- Separación de renglones -->
+                                <div style="${cellStyle}">
+                                    <span style="${lblStyle}">↕ Renglones</span>
+                                    <input type="range" id="linespacing-slider-${index}" min="-20" max="60" value="${text.line_spacing ?? -20}"
+                                        oninput="updateTextProp(${index},'line_spacing',parseInt(this.value));document.getElementById('linespacing-input-${index}').value=this.value;"
+                                        style="${sliderStyle}">
+                                    <input type="number" inputmode="numeric" id="linespacing-input-${index}" min="-20" max="60" value="${text.line_spacing ?? -20}"
+                                        oninput="updateTextProp(${index},'line_spacing',parseInt(this.value)||0);document.getElementById('linespacing-slider-${index}').value=this.value;"
+                                        style="${nbStyle}">
+                                    <button onclick="updateTextProp(${index},'line_spacing',-16);document.getElementById('linespacing-sl-${index}') && (document.getElementById('linespacing-slider-${index}').value=-16);document.getElementById('linespacing-input-${index}').value=-16;"
+                                        title="Reset Renglones" style="${rstStyle}">↺</button>
+                                </div>
+
+                                <!-- Kerning -->
+                                <div style="${cellStyle}">
+                                    <span style="${lblStyle}">↔ Kerning</span>
+                                    <input type="range" id="kerning-slider-${index}" min="-20" max="120" value="${text.letter_spacing ?? 0}"
+                                        oninput="updateTextProp(${index},'letter_spacing',parseInt(this.value));document.getElementById('kerning-input-${index}').value=this.value;"
+                                        style="${sliderStyle}">
+                                    <input type="number" inputmode="numeric" id="kerning-input-${index}" min="-20" max="120" value="${text.letter_spacing ?? 0}"
+                                        oninput="updateTextProp(${index},'letter_spacing',parseInt(this.value)||0);document.getElementById('kerning-slider-${index}').value=this.value;"
+                                        style="${nbStyle}">
+                                    <button onclick="updateTextProp(${index},'letter_spacing',0);document.getElementById('kerning-slider-${index}').value=0;document.getElementById('kerning-input-${index}').value=0;"
+                                        title="Reset Kerning" style="${rstStyle}">↺</button>
+                                </div>
+
+                                <!-- Inclinación X -->
                                 <div style="${cellStyle}">
                                     <span style="${lblStyle}">↗X</span>
                                     <input type="range" id="skx-sl-${index}" min="-60" max="60" step="1" value="${text.skew_x||0}"
@@ -625,7 +635,7 @@ function _renderSkewSection(index,text){const sliderStyle='flex:1;min-width:0;he
                                         title="Reset X" style="${rstStyle}">↺</button>
                                 </div>
 
-                                <!-- Columna 3: Inclinación Y -->
+                                <!-- Inclinación Y -->
                                 <div style="${cellStyle}">
                                     <span style="${lblStyle}">Y</span>
                                     <input type="range" id="sky-sl-${index}" min="-60" max="60" step="1" value="${text.skew_y||0}"
