@@ -155,6 +155,7 @@ class MultiTextRequest(BaseModel):
     img_brightness: float = 100.0   # 0-200, 100=sin cambio
     img_contrast:   float = 100.0   # 0-200, 100=sin cambio
     img_saturation: float = 100.0   # 0-200, 100=sin cambio
+    render_job_id:   Optional[str] = None       # Para tracking de progreso en tiempo real
     # ── Multi-formato: artboard crop/zoom ─────────────────────────────────────
     format_width:  Optional[int]   = None  # Ancho del artboard del formato (px)
     format_height: Optional[int]   = None  # Alto del artboard del formato (px)
