@@ -838,6 +838,9 @@
                             style="width:30px;height:26px;border:none;border-left:1px solid #333345;background:#1e1e2e;cursor:pointer;font-size:15px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
                             onmouseover="if(!this.disabled){this.style.background='#2a2a4a';this.style.color='#ccc';}" onmouseout="this.style.background='#1e1e2e';this.style.color=this.disabled?'#333':'#aaa';">↪</button>
                     </div>
+                    <button id="btn-hist-toggle" onclick="toggleHistPanel()" title="Historial visual (miniaturas)"
+                        style="width:30px;height:26px;border:none;background:#1e1e2e;cursor:pointer;font-size:14px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color .15s,background .15s;flex-shrink:0;"
+                        onmouseover="this.style.background='#2a2a4a';this.style.color='#9c8fff';" onmouseout="if(document.getElementById('tof-hist-panel')?.style.display!=='none'){this.style.background='#1a1a38';this.style.color='#7c6eff';}else{this.style.background='#1e1e2e';this.style.color='#555';}">🕐</button>
                     <span id="tof-history-lbl" style="font-size:10px;color:#383850;white-space:nowrap;user-select:none;flex-shrink:0;">sin cambios</span>
                     <div style="flex:1;"></div>
                     <div style="display:flex;align-items:center;gap:1px;border:1px solid #252535;border-radius:5px;overflow:hidden;background:#1e1e2e;">
@@ -4131,5 +4134,8 @@ function closeShortcuts(){
 }
 </script>
 
+
+    <!-- ══ HISTORIAL VISUAL DE VERSIONES ══════════════════════════════════════ -->
+    <div id="tof-hist-panel" style="display:none;"></div>
 </body>
 </html>
