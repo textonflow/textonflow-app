@@ -241,27 +241,42 @@ def proxy_image(url: str):
 # ─── Endpoint de descarga de estáticos (usado por Railway en startup) ─────────
 
 _DOWNLOAD_FILES = {
-    "app.js":              "static/app.js",
-    "styles.css":          "static/styles.css",
-    "index.html":          "index.html",
-    "favicon.png":         "static/favicon.png",
-    "logo-blanco.webp":    "static/logo-blanco.webp",
-    "logo-negro.webp":     "static/logo-negro.webp",
-    "logo-negro-new.png":  "static/logo-negro-new.png",
-    "logo-blanco-new.png": "static/logo-blanco-new.png",
-    "manual.html":         "static/manual.html",
-    "privacidad.html":     "static/privacidad.html",
-    "terminos.html":       "static/terminos.html",
-    "faq.html":            "static/faq.html",
-    "docs.html":           "static/docs.html",
-    "precios.html":        "static/precios.html",
-    "casos.html":          "static/casos.html",
+    # ── JS / Frontend ─────────────────────────────────────────────────────────
+    "app.js":         "static/app.js",
+    "feedback.js":    "static/feedback.js",
+    "auth.js":        "static/auth.js",
+    "projects.js":    "static/projects.js",
+    "ai-panel.js":    "static/ai-panel.js",
+    "cd-help.js":     "static/cd-help.js",
+    "shortcuts.js":   "static/shortcuts.js",
+    # ── HTML ──────────────────────────────────────────────────────────────────
+    "index.html":       "index.html",
+    "manual.html":      "static/manual.html",
+    "privacidad.html":  "static/privacidad.html",
+    "terminos.html":    "static/terminos.html",
+    "faq.html":         "static/faq.html",
+    "docs.html":        "static/docs.html",
+    "precios.html":     "static/precios.html",
+    "casos.html":       "static/casos.html",
+    # ── CSS ───────────────────────────────────────────────────────────────────
+    "base.css":         "static/base.css",
+    "layout.css":       "static/layout.css",
+    "components.css":   "static/components.css",
+    "editor.css":       "static/editor.css",
+    # ── Assets ────────────────────────────────────────────────────────────────
+    "favicon.png":           "static/favicon.png",
+    "logo-blanco.webp":      "static/logo-blanco.webp",
+    "logo-negro.webp":       "static/logo-negro.webp",
+    "logo-negro-new.png":    "static/logo-negro-new.png",
+    "logo-blanco-new.png":   "static/logo-blanco-new.png",
     "previews/biblica.jpg":  "static/previews/biblica.jpg",
     "previews/plumilla.jpg": "static/previews/plumilla.jpg",
-    "render.py": "routers/render.py",
-    "mc.py":     "routers/mc.py",
-    "ai.py":     "routers/ai.py",
-    "batch.py":  "routers/batch.py",
+    # ── Python routers ────────────────────────────────────────────────────────
+    "render.py":         "routers/render.py",
+    "render_helpers.py": "routers/render_helpers.py",
+    "mc.py":             "routers/mc.py",
+    "ai.py":             "routers/ai.py",
+    "batch.py":          "routers/batch.py",
 }
 
 @pages_router.get("/api/download")
