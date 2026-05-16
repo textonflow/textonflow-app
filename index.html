@@ -845,6 +845,8 @@
                         <span id="tof-zoom-lbl" style="font-size:10px;color:#555;min-width:34px;text-align:center;cursor:pointer;user-select:none;padding:0 2px;" onclick="_cvZoomReset()" title="Clic = 100%">100%</span>
                         <button onclick="_cvZoomStep(1)"  title="Acercar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">+</button>
                     </div>
+                    <!-- Atajos -->
+                    <button onclick="toggleShortcuts()" id="btn-shortcuts" title="Atajos de teclado (?)" style="width:22px;height:22px;border:1px solid #2a2a3a;border-radius:50%;background:#1e1e2e;color:#444;cursor:pointer;font-size:11px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .12s,border-color .12s;" onmouseover="this.style.color='#9ca3ff';this.style.borderColor='#6366f1';" onmouseout="this.style.color='#444';this.style.borderColor='#2a2a3a';">?</button>
                 </div>
 
                 <!-- ══ Diseño ══ -->
@@ -3981,5 +3983,85 @@ function cdHelpTab(tab){
 @keyframes tofModalIn{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 #tof-modal-overlay.active{display:flex!important;}
 </style>
+
+<!-- ══ MODAL ATAJOS DE TECLADO ══════════════════════════════════════════ -->
+<div id="tof-shortcuts-overlay" style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeShortcuts()">
+  <div style="background:#12121e;border:1px solid #2a2a4a;border-radius:16px;padding:0;width:min(700px,94vw);max-height:82vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.8);animation:tofModalIn .18s ease;display:flex;flex-direction:column;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 14px;border-bottom:1px solid #1e1e30;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:#1e1e3a;border:1px solid #3a3a60;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:800;color:#9ca3ff;letter-spacing:.8px;">ATAJOS</span>
+        <span style="font-size:13px;font-weight:700;color:#c8c8e8;">Chuleta de teclado</span>
+      </div>
+      <button onclick="closeShortcuts()" style="width:28px;height:28px;border:1px solid #2a2a40;border-radius:7px;background:#1e1e2e;color:#666;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color .12s;" onmouseover="this.style.color='#f00'" onmouseout="this.style.color='#666'">✕</button>
+    </div>
+    <!-- Body: 3 columnas -->
+    <div style="overflow-y:auto;padding:18px 22px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px 20px;">
+
+      <!-- Columna 1: Edición -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Edición</div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Z</kbd><span class="tof-sk-desc">Deshacer</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Y</kbd><span class="tof-sk-desc">Rehacer</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>D</kbd><span class="tof-sk-desc">Duplicar campo</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>B</kbd><span class="tof-sk-desc">Negrita</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>I</kbd><span class="tof-sk-desc">Cursiva</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>U</kbd><span class="tof-sk-desc">Subrayado</span></div>
+        <div class="tof-sk-row"><kbd>Del</kbd><span>/</span><kbd>⌫</kbd><span class="tof-sk-desc">Eliminar campo activo</span></div>
+      </div>
+
+      <!-- Columna 2: Canvas & Texto -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Canvas & Texto</div>
+        <div class="tof-sk-row"><kbd>Flechas</kbd><span class="tof-sk-desc">Mover texto (1px)</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>↑↓←→</kbd><span class="tof-sk-desc">Mover texto (10px)</span></div>
+        <div class="tof-sk-row"><kbd>Space</kbd><span>+</span><kbd>Drag</kbd><span class="tof-sk-desc">Pan del canvas</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Scroll</kbd><span class="tof-sk-desc">Zoom del canvas</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>Drag img</kbd><span class="tof-sk-desc">Mover imagen de fondo</span></div>
+        <div class="tof-sk-row"><kbd>Clic derecho</kbd><span class="tof-sk-desc">Menú contextual</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>Clic</kbd><span class="tof-sk-desc">Multi-selección</span></div>
+        <div class="tof-sk-row"><kbd>Drag vacío</kbd><span class="tof-sk-desc">Selección en área</span></div>
+      </div>
+
+      <!-- Columna 3: Interfaz -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Interfaz</div>
+        <div class="tof-sk-row"><kbd>?</kbd><span class="tof-sk-desc">Esta chuleta</span></div>
+        <div class="tof-sk-row"><kbd>Escape</kbd><span class="tof-sk-desc">Cerrar modales</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Scroll panel</kbd><span class="tof-sk-desc">Zoom de interfaz</span></div>
+        <div class="tof-sk-row"><kbd>↩</kbd><span class="tof-sk-desc">Deshacer (barra)</span></div>
+        <div class="tof-sk-row"><kbd>↪</kbd><span class="tof-sk-desc">Rehacer (barra)</span></div>
+        <div class="tof-sk-row"><kbd>−</kbd><span>/</span><kbd>+</kbd><span class="tof-sk-desc">Zoom canvas (barra)</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Z</kbd><span class="tof-sk-desc">Rehacer (alt)</span></div>
+      </div>
+
+    </div>
+    <!-- Footer -->
+    <div style="padding:10px 22px;border-top:1px solid #1e1e30;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:10px;color:#383850;">Presiona <kbd style="background:#1e1e30;border:1px solid #2a2a50;border-radius:4px;padding:1px 5px;font-size:10px;color:#888;">?</kbd> para abrir/cerrar en cualquier momento</span>
+      <button onclick="closeShortcuts()" style="padding:5px 14px;background:#6366f1;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#5254cc'" onmouseout="this.style.background='#6366f1'">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.tof-sk-row{display:flex;align-items:center;gap:3px;margin-bottom:7px;flex-wrap:wrap;}
+.tof-sk-row kbd{background:#1a1a2e;border:1px solid #2e2e4e;border-bottom:2px solid #1a1a3a;border-radius:5px;padding:2px 6px;font-size:10px;color:#9ca3ff;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.tof-sk-row .tof-sk-desc{font-size:11px;color:#606080;margin-left:5px;flex:1;}
+.tof-sk-row span:not(.tof-sk-desc){font-size:10px;color:#383850;flex-shrink:0;}
+</style>
+
+<script>
+function toggleShortcuts(){
+  var el=document.getElementById('tof-shortcuts-overlay');
+  if(!el)return;
+  el.style.display=el.style.display==='flex'?'none':'flex';
+}
+function closeShortcuts(){
+  var el=document.getElementById('tof-shortcuts-overlay');
+  if(el)el.style.display='none';
+}
+</script>
+
 </body>
 </html>
