@@ -516,7 +516,7 @@ function _renderTypographySection(index,text){return`<!-- ══ TIPOGRAFÍA —
                                             ? `<div class="font-picker-divider font-picker-divider-brand">✦ Biblia — Brand Fonts</div>`
                                             : `<div class="font-picker-divider">${g}</div>`;
                                         return divider +
-                                            items.map(f => `<div class="font-picker-option${f.value === text.font_value ? ' selected' : ''}"style="${f.css}"onclick="selectFont(${index},'${f.value}',event)">${f.display}</div>`).join('');
+                                            items.map(f => `<div class="font-picker-option${f.value === text.font_value ? ' selected' : ''}" style="${f.css}" onclick="selectFont(${index},'${f.value}',event)" title="${f.display}"><span class="fp-opt-name">${f.display}</span><span class="fp-opt-prev">AaBbCc 123</span></div>`).join('');
                                     }).join('');
                                     return `<div class="font-picker"id="fp-${index}"style="width:100%;"><button class="font-picker-btn"onclick="toggleFontPicker(${index},event)"type="button"style="width:100%;"><span class="font-picker-label"style="${cur.css};max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;">${cur.display}</span><span class="fp-arrow">▼</span></button><div class="font-picker-dropdown"id="fp-list-${index}">${options}</div></div>`;
                                 })()}
