@@ -912,7 +912,8 @@ def _compute_runs_bbox(char_fmts_wrapped: list, base_font, base_font_name: str,
 def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: list,
                             base_font, base_font_name: str, font_backend_name,
                             font_size_2x: int, base_color: tuple, spacing: float,
-                            text_align: str, block_w: int, parse_color_fn) -> None:
+                            text_align: str, block_w: int, parse_color_fn,
+                            letter_spacing: float = 0) -> None:
     """Renderiza texto multilinea con formato inline por segmentos (runs)."""
     x, y  = xy
     lines: list = []
@@ -938,9 +939,12 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
         for seg_text, seg_fmt in segs:
             sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x) or base_font
             seg_fs.append(sf)
+            _seg_ls = seg_fmt.get('letter_spacing_run', None)
+            _seg_ls = int(_seg_ls) if _seg_ls is not None else int(letter_spacing)
             try:
                 lb = draw_obj.textbbox((0, 0), seg_text, font=sf)
-                seg_ws.append(lb[2] - lb[0])
+                _base_w = lb[2] - lb[0]
+                seg_ws.append(_base_w + _seg_ls * max(0, len(seg_text) - 1))
             except Exception:
                 seg_ws.append(sf.size * max(len(seg_text), 1))
         lw = sum(seg_ws)
@@ -956,16 +960,30 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
             if seg_fmt.get('font_color'):
                 c2 = parse_color_fn(seg_fmt['font_color'])
                 color = c2 if len(c2) == 4 else c2 + (255,)
-            try:
-                pilmoji_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
-            except Exception:
-                draw_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
-            cx += seg_ws[i]
+            _dls = seg_fmt.get('letter_spacing_run', None)
+            _dls = int(_dls) if _dls is not None else int(letter_spacing)
+            if _dls != 0:
+                _ccx = cx
+                for _ch in seg_text:
+                    try:
+                        pilmoji_obj.text((_ccx, curr_y), _ch, font=sf, fill=color)
+                        _clb = draw_obj.textbbox((0, 0), _ch, font=sf)
+                        _ccx += (_clb[2] - _clb[0]) + _dls
+                    except Exception:
+                        draw_obj.text((_ccx, curr_y), _ch, font=sf, fill=color)
+                        _ccx += sf.size // 2 + _dls
+                cx = _ccx
+            else:
+                try:
+                    pilmoji_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+                except Exception:
+                    draw_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+                cx += seg_ws[i]
         curr_y += line_h + int(spacing)
 
 
 # ─── Renderizado multilinea manual con Pilmoji ────────────────────────────────
-def pilmoji_multiline(pilmoji_obj, draw_obj, xy, text, font, fill, spacing=0, text_align='center', block_width=None):
+def pilmoji_multiline(pilmoji_obj, draw_obj, xy, text, font, fill, spacing=0, text_align='center', block_width=None, letter_spacing=0):
     """Renderiza texto multilinea con Pilmoji respetando el spacing explícitamente."""
     lines = text.split('\n')
     x, y  = xy
@@ -990,10 +1008,21 @@ def pilmoji_multiline(pilmoji_obj, draw_obj, xy, text, font, fill, spacing=0, te
         else:
             lx = x
 
-        try:
-            pilmoji_obj.text((lx, y), ln, font=font, fill=fill)
-        except Exception:
-            draw_obj.text((lx, y), ln, font=font, fill=fill)
+        if letter_spacing != 0:
+            _pmcx = lx
+            for _pmc in ln:
+                try:
+                    pilmoji_obj.text((_pmcx, y), _pmc, font=font, fill=fill)
+                    _pmlb = draw_obj.textbbox((0, 0), _pmc, font=font)
+                    _pmcx += (_pmlb[2] - _pmlb[0]) + int(letter_spacing)
+                except Exception:
+                    draw_obj.text((_pmcx, y), _pmc, font=font, fill=fill)
+                    _pmcx += font.size // 2 + int(letter_spacing)
+        else:
+            try:
+                pilmoji_obj.text((lx, y), ln, font=font, fill=fill)
+            except Exception:
+                draw_obj.text((lx, y), ln, font=font, fill=fill)
 
         y += line_h + spacing
 
@@ -1019,7 +1048,8 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
     text_to_draw = text_field.text
     color        = parse_color(text_field.font_color)
     final_color  = color if len(color) == 4 else color + (255,)
-    spacing      = text_field.line_spacing * SCALE
+    spacing         = text_field.line_spacing * SCALE
+    letter_spacing  = getattr(text_field, 'letter_spacing', 0) * SCALE
     text_align   = text_field.text_align if text_field.text_align in ("left", "center", "right") else "left"
 
     if getattr(text_field, 'text_wrap_enabled', False):
@@ -1144,7 +1174,7 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
             with Pilmoji(shadow_src, source=_src) as _p:
                 pilmoji_multiline(_p, _sd, (base_x, base_y), text_to_draw,
                     font=font2x, fill=(255, 255, 255, 255),
-                    spacing=spacing, text_align=text_align, block_width=text_width)
+                    spacing=spacing, text_align=text_align, block_width=text_width, letter_spacing=letter_spacing)
         except Exception:
             _sd.multiline_text(
                 (base_x, base_y), text_to_draw,
@@ -1193,7 +1223,8 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
                 _render_runs_multiline(
                     pilmoji, tl_draw, (base_x, base_y),
                     _char_fmts, font2x, text_field.font_name, _fb_name,
-                    int(font2x.size), final_color, spacing, text_align, text_width, parse_color
+                    int(font2x.size), final_color, spacing, text_align, text_width, parse_color,
+                    letter_spacing=letter_spacing
                 )
             emoji_rendered = True
         except Exception as e:
@@ -1206,7 +1237,7 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
             with Pilmoji(text_layer, source=source) as pilmoji:
                 pilmoji_multiline(pilmoji, tl_draw, (base_x, base_y), text_to_draw,
                     font=font2x, fill=final_color,
-                    spacing=spacing, text_align=text_align, block_width=text_width)
+                    spacing=spacing, text_align=text_align, block_width=text_width, letter_spacing=letter_spacing)
             emoji_rendered = True
             logger.info("Emojis renderizados con Twemoji CDN")
         except Exception as e:
@@ -1217,7 +1248,7 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
                 with Pilmoji(text_layer, source=EmojiCDNSource()) as pilmoji:
                     pilmoji_multiline(pilmoji, tl_draw, (base_x, base_y), text_to_draw,
                         font=font2x, fill=final_color,
-                        spacing=spacing, text_align=text_align, block_width=text_width)
+                        spacing=spacing, text_align=text_align, block_width=text_width, letter_spacing=letter_spacing)
                 emoji_rendered = True
                 logger.info("Emojis renderizados con EmojiCDNSource (fallback)")
             except Exception as e2:
