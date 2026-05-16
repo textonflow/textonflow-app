@@ -511,6 +511,13 @@
             border: none; cursor: pointer; font-weight: 700;
         }
         .tab-close:hover { color: #f87171; background: rgba(239,68,68,0.15); }
+        .tab-eye {
+            flex-shrink: 0; color: var(--text-muted); font-size: 12px; line-height: 1;
+            padding: 2px 3px; border-radius: 4px; background: none;
+            border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: opacity .15s, background .12s;
+        }
+        .tab-eye:hover { background: rgba(99,102,241,0.18); opacity: 1 !important; }
         .tab-add-btn {
             padding: 5px 11px; cursor: pointer;
             border: 1.5px dashed var(--border-light); border-bottom: none;
