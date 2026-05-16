@@ -575,3 +575,19 @@ async function exportAnimatedGIF() {
     btn.innerHTML = origContent;
   }
 }
+window.iacSetTab            = iacSetTab;
+window.iacGenerateDesign    = iacGenerateDesign;
+window.iacApplyDesign       = iacApplyDesign;
+window.iacGetCopySuggestions= iacGetCopySuggestions;
+window.iacApplyCopy         = iacApplyCopy;
+window.openIacBrandKit      = openIacBrandKit;
+window.closeIacBrandKit     = closeIacBrandKit;
+window.iacExtractBrandKit   = iacExtractBrandKit;
+window.iacApplyBrandKit     = iacApplyBrandKit;
+window.closeIacAB           = closeIacAB;
+window.iacGenerateVariants  = iacGenerateVariants;
+window.iacApplyVariant      = iacApplyVariant;
+window.openOnboarding       = openOnboarding;
+window.showOnboarding       = showOnboarding;
+window.sendToManyChat       = sendToManyChat;
+window.exportAnimatedGIF    = exportAnimatedGIF;
