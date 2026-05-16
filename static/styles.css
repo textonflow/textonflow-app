@@ -518,6 +518,13 @@
             transition: opacity .15s, background .12s;
         }
         .tab-eye:hover { background: rgba(99,102,241,0.18); opacity: 1 !important; }
+        body.fp-active .text-tab:not(.active) {
+            border-color: rgba(245,158,11,0.6) !important;
+            box-shadow: 0 0 5px rgba(245,158,11,0.2);
+        }
+        body.fp-active .text-tab:not(.active):hover {
+            background: rgba(245,158,11,0.12) !important;
+        }
         .tab-add-btn {
             padding: 5px 11px; cursor: pointer;
             border: 1.5px dashed var(--border-light); border-bottom: none;
