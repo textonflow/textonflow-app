@@ -171,3 +171,9 @@ async function deleteProject(id, name){
 document.getElementById('projects-modal').addEventListener('click',function(e){
   if(e.target===this) closeProjectsModal();
 });
+window.openProjectsModal  = openProjectsModal;
+window.closeProjectsModal = closeProjectsModal;
+window.saveCurrentProject = saveCurrentProject;
+window.deleteProject      = deleteProject;
+window.openProject        = openProject;
+window.renderProjectsList = renderProjectsList;
