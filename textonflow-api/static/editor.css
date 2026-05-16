@@ -1,0 +1,1622 @@
+/* ══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — v75
+   Mejoras adicionales por encima de las media queries base (768/480)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── 900 px: reducir padding del canvas ─── */
+@media (max-width: 900px) {
+    .canvas-area { padding-top: 16px; }
+}
+
+/* ─── 768 px: layout principal + splash + controles ─── */
+@media (max-width: 768px) {
+
+    /* ── Corte de overflow horizontal ── */
+    body { overflow-x: hidden; }
+
+    /* ── Ocultar botones de escritorio que sobresalen en móvil ── */
+    #chrome-ext-fab { display: none !important; }
+    #rec-wrapper    { display: none !important; }
+
+    /* ── Tab de feedback: ocultar en móvil (no queda sobre el input) ── */
+    #fb-tab { display: none !important; }
+
+    /* ── Burbuja de chat: subirla para que no quede bajo el footer ── */
+    #fb-bubble { bottom: 72px !important; right: 14px !important; }
+    #fb-panel  { bottom: 132px !important; right: 14px !important; width: calc(100vw - 28px) !important; }
+
+    /* Container vuelve a fluir */
+    .container { height: auto; min-height: 100dvh; overflow: visible; }
+
+    /* Grid apilado */
+    .main-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        height: auto;
+        overflow: visible;
+    }
+    .panel-resizer { display: none; }
+
+    /* ── Canvas area ── */
+    .canvas-area {
+        padding: 16px 10px 14px 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        min-height: auto;
+        max-height: none;   /* anula el 70vw del bloque base */
+        overflow: visible;
+        align-items: center;
+    }
+
+    /* Canvas-wrapper y canvas escalan al ancho */
+    .canvas-wrapper {
+        max-width: 100%;
+        /* width es controlado por JS (applyImageToCanvas/_applyFormatLayout) */
+    }
+    #preview-canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+
+    /* ── Controls panel ── */
+    .controls-panel {
+        height: auto;
+        max-height: none;
+        overflow-y: visible;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding: 12px 12px 16px 12px;
+    }
+
+    /* Acordeón: targets de toque más altos */
+    .acc-header { min-height: 48px; padding: 12px 14px; }
+
+    /* ── Splash screen ── */
+    .splash-title {
+        white-space: normal;
+        font-size: clamp(20px, 7vw, 32px);
+        line-height: 1.15;
+    }
+    .splash-inner { max-width: 100%; padding: 0 18px; }
+    .splash-mode-tabs { flex-wrap: wrap; gap: 6px; }
+
+    /* Input row apilado */
+    .splash-input-row {
+        flex-direction: column;
+        border-radius: 12px;
+        overflow: visible;
+        box-shadow: none;
+    }
+    .splash-input-row input {
+        border-radius: 10px 10px 0 0;
+        box-shadow: 0 0 0 1px rgba(102,126,234,0.35);
+    }
+    .splash-input-row button {
+        border-radius: 0 0 10px 10px;
+        padding: 14px 20px;
+        box-shadow: 0 0 0 1px rgba(102,126,234,0.35);
+    }
+
+    /* Drop-zone de imagen AI */
+    #splash-drop-zone { min-height: 90px; }
+
+    /* ── Grid de estilos AI: 4 cols → 2 cols ── */
+    .ai-styles-section-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* ── Ratio grid más compacto ── */
+    .ai-ratio-card { min-width: 56px; padding: 6px 8px; font-size: 11px; }
+
+    /* ── Modales ── */
+    .modal-box {
+        max-width: 96vw !important;
+        max-height: 88vh !important;
+        overflow-y: auto;
+    }
+    .cs-form-panel {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        border-radius: 14px;
+    }
+
+    /* ── JSON output ── */
+    .json-output { max-height: 140px; font-size: 11px; }
+
+    /* Upload zone más compacta */
+    .upload-zone { min-height: 90px; }
+
+    /* ── Botones de forma ── */
+    .upload-btn { font-size: 12px; padding: 10px; }
+
+    /* Sello: corner grid 2×2 → 4×1 en pequeño */
+    .wm-corner-grid { gap: 4px; }
+
+    /* Form controls */
+    .form-group label { font-size: 11px; }
+    .form-group input, .form-group select, .form-group textarea { font-size: 12px; }
+
+    /* Context menu bigger tap targets */
+    .ctx-item { padding: 12px 16px; font-size: 14px; }
+}
+
+/* ─── 480 px: ajustes finos extra ─── */
+@media (max-width: 480px) {
+
+    /* Canvas */
+    .canvas-area { padding: 16px 6px 12px 6px; }
+    .canvas-wrapper { max-width: 100%; }
+
+    /* Controls */
+    .controls-panel { padding: 10px 10px 80px 10px; }
+
+    /* Splash */
+    .splash-title {
+        white-space: nowrap;
+        font-size: min(4.8vw, 20px);
+        letter-spacing: -0.3px;
+    }
+    .splash-inner {
+        padding: 0 12px;
+        max-width: 100vw;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+    #splash-screen { overflow-x: hidden; }
+    .splash-tab { padding: 8px 14px; font-size: 12px; }
+    .splash-subtitle { font-size: 13px; margin-bottom: 10px; }
+    .splash-logo { margin-bottom: 10px; }
+    .splash-title { margin-bottom: 8px !important; }
+    #fb-tab { display: none !important; }
+
+    /* Acc header */
+    .acc-header { padding: 11px 12px; }
+
+    /* Ratio grid 3 cols tight */
+    .ai-ratio-card { min-width: 48px; padding: 5px 6px; }
+
+    /* Tabs de acordeón de tono */
+    .rdtr-tone-btn { padding: 7px 10px; font-size: 11px; }
+
+    /* Watermark options compacto */
+    #tof-sello-opts { font-size: 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FLOWBOT — Widget de Asistente Virtual  (v76)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── Burbuja flotante (FAB) ─── */
+#fb-bubble {
+    position: fixed;
+    bottom: 50px;
+    right: 24px;
+    z-index: 9900;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.55);
+    transition: transform 0.2s, box-shadow 0.2s;
+    user-select: none;
+}
+#fb-bubble:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 26px rgba(102,126,234,0.7);
+}
+#fb-bubble.fb-open {
+    transform: rotate(0deg) scale(1);
+}
+#fb-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    background: #f87171;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    animation: fb-pulse 1.8s infinite;
+}
+@keyframes fb-pulse {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* ─── Panel de chat ─── */
+#fb-panel {
+    position: fixed;
+    bottom: 114px;
+    right: 24px;
+    z-index: 9901;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    max-height: 72vh;
+    background: #111827;
+    border-radius: 18px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.65);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(102,126,234,0.25);
+    transform: scale(0.92) translateY(16px);
+    transform-origin: bottom right;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+#fb-panel.fb-panel-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1) translateY(0);
+}
+
+/* ─── Header ─── */
+#fb-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+#fb-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.22);
+    font-size: 12px;
+    font-weight: 900;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+#fb-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s;
+}
+#fb-close:hover { background: rgba(255,255,255,0.28); }
+
+/* ─── Mensajes ─── */
+#fb-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 14px 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #2d3748 transparent;
+}
+.fb-msg {
+    display: flex;
+    max-width: 88%;
+    animation: fb-msgIn 0.18s ease;
+}
+@keyframes fb-msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fb-msg span {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.fb-msg-bot { align-self: flex-start; }
+.fb-msg-bot span {
+    background: #1e2a3a;
+    color: #d1e0f0;
+    border-radius: 4px 14px 14px 14px;
+}
+.fb-msg-user { align-self: flex-end; }
+.fb-msg-user span {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 14px 4px 14px 14px;
+}
+
+/* ─── Typing indicator ─── */
+#fb-typing {
+    display: none;
+    align-self: flex-start;
+    padding: 10px 14px;
+    background: #1e2a3a;
+    border-radius: 4px 14px 14px 14px;
+    gap: 5px;
+    align-items: center;
+}
+#fb-typing.fb-show { display: flex; }
+#fb-typing span {
+    width: 7px;
+    height: 7px;
+    background: #667eea;
+    border-radius: 50%;
+    display: inline-block;
+    animation: fb-bounce 1.2s infinite;
+}
+#fb-typing span:nth-child(2) { animation-delay: 0.2s; }
+#fb-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes fb-bounce {
+    0%,80%,100% { transform: translateY(0); }
+    40%          { transform: translateY(-6px); }
+}
+
+/* ─── Chips de respuesta rápida ─── */
+#fb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.fb-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(102,126,234,0.45);
+    background: rgba(102,126,234,0.08);
+    color: #a0b4f0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+.fb-chip:hover {
+    background: rgba(102,126,234,0.22);
+    border-color: #667eea;
+    color: #fff;
+}
+
+/* ─── Input row ─── */
+#fb-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    background: #0f1621;
+    flex-shrink: 0;
+}
+#fb-input {
+    flex: 1;
+    background: #1e2a3a;
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 10px;
+    color: #d1e0f0;
+    font-size: 13px;
+    padding: 9px 12px;
+    resize: none;
+    outline: none;
+    min-height: 38px;
+    max-height: 100px;
+    line-height: 1.4;
+    transition: border-color 0.15s;
+    scrollbar-width: thin;
+    scrollbar-color: #2d3748 transparent;
+    font-family: inherit;
+}
+#fb-input:focus { border-color: #667eea; }
+#fb-input::placeholder { color: #4a5568; }
+#fb-send {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s;
+}
+#fb-send:hover { opacity: 0.85; }
+#fb-send:disabled { opacity: 0.4; cursor: default; }
+
+/* ─── Límite de mensajes ─── */
+#fb-limit-msg {
+    text-align: center;
+    font-size: 11px;
+    color: #6b7280;
+    padding: 6px 14px 10px;
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 480px) {
+    #fb-bubble { bottom: 16px; right: 16px; width: 50px; height: 50px; }
+    #fb-panel  { bottom: 76px; right: 16px; width: calc(100vw - 32px); max-height: 78vh; border-radius: 16px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RECURSOS — Menú desplegable (v77)
+   ══════════════════════════════════════════════════════════════ */
+
+#rec-wrapper {
+    position: fixed;
+    top: 62px;
+    bottom: auto;
+    right: 20px;
+    z-index: 9800;
+}
+
+#rec-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(20, 20, 36, 0.88);
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 30px;
+    color: #a0a8c8;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+}
+#rec-btn:hover {
+    background: rgba(40, 40, 70, 0.95);
+    border-color: rgba(102,126,234,0.6);
+    color: #d0d8f8;
+}
+#rec-btn.rec-open {
+    background: rgba(40, 40, 70, 0.98);
+    border-color: #667eea;
+    color: #fff;
+}
+#rec-chevron {
+    font-size: 10px;
+    display: inline-block;
+    transition: transform 0.2s;
+    margin-left: 2px;
+}
+#rec-btn.rec-open #rec-chevron { transform: rotate(180deg); }
+
+#rec-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    bottom: auto;
+    right: 0;
+    min-width: 210px;
+    background: #13131f;
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+    padding: 8px 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+#rec-dropdown.rec-dd-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.rec-group-label {
+    padding: 6px 14px 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #4a5280;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+}
+
+.rec-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    cursor: pointer;
+}
+.rec-item:hover {
+    background: rgba(102,126,234,0.1);
+    color: #e2e8f0;
+}
+.rec-item svg { flex-shrink: 0; opacity: 0.7; }
+
+.rec-item-accent { color: #a5b4fc; }
+.rec-item-accent:hover { color: #c4b5fd; }
+
+.rec-item-gold { color: #fbbf24; }
+.rec-item-gold:hover { color: #fcd34d; }
+
+.rec-item-purple { color: #c084fc; }
+.rec-item-purple:hover { color: #e879f9; }
+
+.rec-item-chrome { color: #67e8f9; }
+.rec-item-chrome:hover { color: #a5f3fc; }
+
+.rec-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 6px 0;
+}
+
+@media (max-width: 480px) {
+    #rec-wrapper { top: 54px; right: 12px; }
+    #rec-btn { padding: 6px 11px; font-size: 11px; }
+    #rec-dropdown { min-width: 190px; }
+    #chrome-ext-fab { top: 12px; right: 12px; font-size: 11px; padding: 6px 11px; }
+}
+
+/* ── Extensión Chrome — botón fijo (arriba de Recursos) ── */
+#chrome-ext-fab {
+    position: fixed;
+    top: 16px;
+    bottom: auto;
+    right: 20px;
+    z-index: 9800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(20, 20, 36, 0.88);
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 30px;
+    color: #a0a8c8;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+#chrome-ext-fab:hover {
+    background: rgba(40, 40, 70, 0.95);
+    border-color: rgba(102,126,234,0.6);
+    color: #d0d8f8;
+    text-decoration: none;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FLOWBOT — Pasos: Transcript + Rating  (v78)
+   ══════════════════════════════════════════════════════════════ */
+
+.fb-step-card {
+    background: #1a2540;
+    border: 1px solid rgba(102,126,234,0.22);
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    animation: fb-msgIn 0.22s ease;
+    flex-shrink: 0;
+}
+.fb-step-text {
+    font-size: 13px;
+    color: #8ab4d4;
+    margin: 0 0 11px 0;
+    line-height: 1.5;
+}
+.fb-yesno-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.fb-yesno-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+.fb-yesno-btn:hover { opacity: 0.82; }
+.fb-yes-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.fb-no-btn  { background: #2d3748; color: #94a3b8; }
+
+.fb-form-field {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0f1621;
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 8px;
+    color: #d1e0f0;
+    font-size: 12px;
+    font-family: inherit;
+    padding: 9px 11px;
+    margin-bottom: 8px;
+    outline: none;
+    display: block;
+    transition: border-color 0.15s;
+}
+.fb-form-field:focus { border-color: #667eea; }
+.fb-form-field::placeholder { color: #3d4f6a; }
+
+/* ─── Estrellas ─── */
+.fb-star-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 2px 0 8px;
+}
+.fb-star {
+    background: none;
+    border: none;
+    font-size: 30px;
+    color: #2a3550;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 4px;
+    transition: color 0.12s, transform 0.12s;
+    user-select: none;
+}
+.fb-star:hover, .fb-star.fb-star-lit {
+    color: #fbbf24;
+    transform: scale(1.18);
+}
+.fb-star-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #a0b4f0;
+    min-height: 16px;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+}
+
+/* ── Solo visibles en pantalla inicial (splash) ── */
+body:has(#splash-screen.fade-out) #rec-wrapper,
+body:has(#splash-screen.fade-out) #chrome-ext-fab {
+    display: none !important;
+}
+
+/* ══════════════════════════════════════════════════
+   DYNAMIC IMAGE API — Panel
+══════════════════════════════════════════════════ */
+.dapi-section {
+    margin: 12px 0 0 0;
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(10,10,26,0.6);
+}
+.dapi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    background: linear-gradient(90deg, rgba(102,126,234,0.12), rgba(139,92,246,0.08));
+    border-bottom: 1px solid rgba(102,126,234,0.15);
+    user-select: none;
+    transition: background 0.15s;
+}
+.dapi-header:hover { background: linear-gradient(90deg, rgba(102,126,234,0.20), rgba(139,92,246,0.14)); }
+.dapi-title { font-size: 12px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.3px; flex: 1; }
+.dapi-badge {
+    font-size: 9px; font-weight: 700; color: #7dd3fc; background: rgba(125,211,252,0.12);
+    border: 1px solid rgba(125,211,252,0.3); border-radius: 20px; padding: 1px 6px; letter-spacing: 0.5px;
+}
+.dapi-chevron { font-size: 10px; color: #6b7280; }
+
+.dapi-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* How it works */
+.dapi-how {
+    background: rgba(102,126,234,0.07);
+    border: 1px solid rgba(102,126,234,0.18);
+    border-radius: 8px;
+    padding: 12px;
+}
+.dapi-how-title { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.dapi-flow { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.dapi-flow-step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dapi-flow-icon { font-size: 20px; }
+.dapi-flow-label { font-size: 10px; color: #9ca3af; text-align: center; line-height: 1.3; }
+.dapi-flow-arrow { font-size: 16px; color: #4f46e5; font-weight: 700; }
+.dapi-how-example { font-size: 10px; color: #6b7280; margin-top: 8px; text-align: center; line-height: 1.4; }
+.dapi-how-example strong { color: #a5b4fc; }
+
+/* Steps */
+.dapi-step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    transition: opacity 0.2s;
+}
+.dapi-step-num {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+}
+.dapi-step-content { flex: 1; }
+.dapi-step-title { font-size: 12px; font-weight: 700; color: #c4b5fd; margin-bottom: 4px; }
+.dapi-step-desc { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+
+.dapi-vars-example { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.dapi-vars-example code {
+    background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 4px; padding: 2px 7px; font-size: 11px; color: #c4b5fd;
+    font-family: 'Courier New', monospace;
+}
+.dapi-vars-found { margin-top: 6px; padding: 8px; background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; }
+.dapi-var-chip {
+    background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 20px; padding: 1px 8px; font-size: 10px; color: #86efac;
+    font-family: 'Courier New', monospace; font-weight: 600;
+}
+
+.dapi-save-btn {
+    width: 100%; padding: 8px 12px; border: none; border-radius: 7px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.15s;
+}
+.dapi-save-btn:hover { opacity: 0.85; }
+
+/* URL box */
+.dapi-url-box {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 6px; padding: 6px 8px; margin: 6px 0;
+}
+.dapi-url-text {
+    flex: 1; font-size: 10px; color: #7dd3fc; font-family: 'Courier New', monospace;
+    word-break: break-all; line-height: 1.4;
+}
+.dapi-copy-btn {
+    flex-shrink: 0; padding: 4px 8px; border: none; border-radius: 5px;
+    background: rgba(102,126,234,0.2); color: #a5b4fc; font-size: 13px; cursor: pointer;
+}
+.dapi-copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.dapi-copy-btn:not(:disabled):hover { background: rgba(102,126,234,0.35); }
+.dapi-url-hint { font-size: 10px; color: #4b5563; line-height: 1.5; }
+.dapi-url-hint code { color: #818cf8; font-size: 9px; }
+
+/* Saved templates list */
+.dapi-templates-list { margin-top: 4px; }
+.dapi-list-title { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.dapi-template-row {
+    display: flex; align-items: flex-start; gap: 8px; padding: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 7px; margin-bottom: 6px;
+}
+.dapi-template-info { flex: 1; min-width: 0; }
+.dapi-template-name { font-size: 12px; font-weight: 600; color: #e0e0f0; }
+.dapi-template-url {
+    font-size: 9px; color: #4b5563; font-family: 'Courier New', monospace;
+    margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dapi-action-btn {
+    padding: 4px 7px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05); border-radius: 5px; cursor: pointer; font-size: 12px;
+}
+.dapi-action-btn:hover { background: rgba(255,255,255,0.1); }
+.dapi-delete-btn { border-color: rgba(239,68,68,0.25); }
+.dapi-delete-btn:hover { background: rgba(239,68,68,0.15) !important; }
+
+/* Template card (extended) */
+.dapi-template-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 9px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Stats row */
+.dapi-stats-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    background: rgba(0,0,0,0.25);
+    border-radius: 7px;
+    padding: 7px 10px;
+}
+.dapi-stat { flex: 1; text-align: center; }
+.dapi-stat-num { font-size: 18px; font-weight: 800; color: #e0e0f0; line-height: 1; margin-bottom: 3px; }
+.dapi-stat-green { color: #4ade80; }
+.dapi-stat-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* API key row */
+.dapi-key-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(79,70,229,0.06);
+    border: 1px solid rgba(79,70,229,0.15);
+    border-radius: 6px;
+    padding: 7px 10px;
+    flex-wrap: wrap;
+}
+.dapi-key-masked {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #818cf8;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    padding: 2px 7px;
+}
+.dapi-key-btn {
+    padding: 3px 7px;
+    border: 1px solid rgba(99,102,241,0.3);
+    background: rgba(99,102,241,0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #a5b4fc;
+    transition: background 0.12s;
+}
+.dapi-key-btn:hover { background: rgba(99,102,241,0.2); }
+.dapi-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* Rate limit row */
+.dapi-rl-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.dapi-rl-select {
+    background: #1a1a2e;
+    border: 1px solid #3d3d6b;
+    border-radius: 5px;
+    color: #9ca3af;
+    font-size: 11px;
+    padding: 3px 6px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════
+   MULTI-FORMATO TABS
+══════════════════════════════════════════════════ */
+.fmt-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #1a1a2a;
+    border: 1.5px solid #2d2d45;
+    border-radius: 7px;
+    color: #ccd0f0;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    letter-spacing: .3px;
+    position: relative;
+}
+.fmt-tab:hover {
+    background: #21213a;
+    color: #fff;
+    border-color: #4a4a70;
+}
+.fmt-tab.active {
+    background: linear-gradient(135deg, #1e1e50, #28184a);
+    border-color: #667eea;
+    color: #a5b4fc;
+    box-shadow: 0 2px 10px rgba(102,126,234,.25);
+}
+.fmt-tab.has-state::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #7c6eff;
+}
+/* Borrador IA — estado activo */
+.fmt-tab.eraser-tab.active {
+    background: linear-gradient(135deg, #3a0a0a, #2a1010);
+    border-color: #ff4444;
+    color: #ff9090;
+    box-shadow: 0 2px 10px rgba(255,60,60,.30);
+}
+.fmt-tab.eraser-tab:hover {
+    color: #ffaaaa;
+    border-color: #ff6060;
+}
+.fmt-tab-icon {
+    line-height: 0;
+    display: inline-flex;
+    align-items: center;
+}
+.fmt-tab-sep {
+    color: #5a5a7a;
+    font-size: 13px;
+    margin: 0 3px;
+    align-self: center;
+    user-select: none;
+}
+/* Canvas en modo borrador — borde rojo + cursor hidden */
+.canvas-wrapper.eraser-mode {
+    cursor: none !important;
+    box-shadow: 0 0 0 3px rgba(255,60,60,0.55), 0 8px 40px rgba(0,0,0,.6) !important;
+}
+/* Spinner del Borrador IA */
+.eraser-spinner {
+    width: 52px;
+    height: 52px;
+    border: 5px solid rgba(255,255,255,0.18);
+    border-top-color: #ff5c5c;
+    border-radius: 50%;
+    animation: eraser-spin 0.75s linear infinite;
+    box-shadow: 0 0 18px rgba(255,60,60,0.35);
+}
+@keyframes eraser-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Artboard frame cuando hay formato activo */
+.canvas-wrapper.format-mode {
+    box-shadow: 0 0 0 2.5px #667eea, 0 8px 40px rgba(0,0,0,.6) !important;
+    outline: none;
+}
+
+/* Botones imagen-capa */
+.img-layer-btn {
+    background: #1e1e30;
+    border: 1px solid #333350;
+    color: #999;
+    border-radius: 5px;
+    padding: 3px 7px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .12s;
+    line-height: 1;
+}
+.img-layer-btn:hover {
+    background: #28284a;
+    color: #bbb;
+    border-color: #667eea;
+}
+.img-layer-pct {
+    font-size: 11px;
+    color: #666;
+    min-width: 36px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ══════════════════════════════════════════════════
+   FORMAT HUD — toolbar pegada al tope del canvas
+══════════════════════════════════════════════════ */
+#format-hud {
+    /* Fondo degradado oscuro que se desvanece hacia abajo */
+    background: linear-gradient(
+        to bottom,
+        rgba(4, 4, 14, 0.96) 0%,
+        rgba(4, 4, 14, 0.90) 55%,
+        rgba(4, 4, 14, 0.0)  100%
+    );
+    /* Extra padding debajo para que el degradado tenga espacio */
+    padding-bottom: 18px;
+    /* Ocultar cuando no hay hijos visibles lo maneja JS (display:none en los hijos) */
+}
+
+/* Cuando el HUD tiene hijos visibles, el format-wrapper del canvas no necesita
+   border-radius extra: el overflow:hidden del canvas-wrapper ya lo aplica. */
+
+/* Sombra sutil debajo del texto de los tabs para legibilidad sobre la imagen */
+#format-tabs-bar .fmt-tab {
+    text-shadow: 0 1px 3px rgba(0,0,0,.8);
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+#format-tabs-bar .fmt-tab-sep {
+    text-shadow: none;
+    opacity: .4;
+}
+
+/* ══════════════════════════════════════════════════
+   CANVAS STACK — barras + canvas como una sola unidad
+══════════════════════════════════════════════════ */
+#canvas-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* centra el canvas-wrapper horizontalmente */
+    width: max-content;     /* se encoge al ancho del canvas-wrapper */
+    margin: 0 auto;         /* centrado horizontal garantizado */
+}
+
+/* Barra de tabs de formato — FIJA arriba, a la derecha del logo */
+#format-tabs-bar {
+    /* display: flex lo pone JS */
+    position: fixed;
+    top: 6px;
+    left: 180px;   /* logo en left:12px (~90px ancho) + ~78px sep → ~100px desde borde logo */
+    right: calc(var(--panel-w, 320px) + 14px);
+    z-index: 350;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    justify-content: flex-start;
+    width: auto;
+    max-width: calc(100vw - 180px - var(--panel-w, 320px) - 28px);
+    box-sizing: border-box;
+    padding: 6px 14px;
+    background: rgba(10, 10, 22, 0.92);
+    border-radius: 9px;
+    border: 1px solid rgba(102,126,234,0.20);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    user-select: none;
+}
+#format-tabs-bar::-webkit-scrollbar { display: none; }
+#format-tabs-bar.grabbing { cursor: grabbing; }
+#format-tabs-bar .fmt-tab { flex-shrink: 0; }
+#format-tabs-bar .fmt-tab-sep { flex-shrink: 0; }
+
+/* Barra de controles imagen-capa — sticky en canvas-area, debajo de la barra fija */
+#img-layer-controls {
+    /* display: flex lo pone JS */
+    position: sticky;
+    top: 8px;
+    z-index: 39;
+    align-self: center;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    box-sizing: border-box;
+    padding: 5px 14px;
+    background: rgba(8, 8, 18, 0.90);
+    border-radius: 8px;
+    border: 1px solid rgba(102,126,234,0.14);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+}
+
+/* ══════════════════════════════════════════════════
+   BOTÓN FLOTANTE "VISUALIZAR IMAGEN" — bajo el canvas
+══════════════════════════════════════════════════ */
+#canvas-gen-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+#canvas-gen-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.40);
+    letter-spacing: 0.4px;
+    transition: transform .12s, box-shadow .12s, opacity .12s;
+    animation: gen-btn-glow 3s ease-in-out infinite;
+    width: 100%;
+}
+@keyframes gen-btn-glow {
+    0%, 100% { box-shadow: 0 4px 20px rgba(34,197,94,0.40); }
+    50%       { box-shadow: 0 4px 32px rgba(34,197,94,0.70); }
+}
+#canvas-gen-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(34,197,94,0.65);
+    animation: none;
+}
+#canvas-gen-btn:active {
+    transform: translateY(0);
+    opacity: .85;
+    animation: none;
+}
+#canvas-gen-btn:disabled {
+    opacity: .55;
+    cursor: wait;
+    transform: none;
+    animation: none;
+}
+#canvas-gen-hint {
+    text-align: center;
+    font-size: 10px;
+    color: #4ade80;
+    margin-top: 5px;
+    letter-spacing: 0.2px;
+    opacity: 0.75;
+}
+
+/* ══════════════════════════════════════════════════
+   AI RATIO — tarjeta "Personalizado" con inputs W×H
+══════════════════════════════════════════════════ */
+.ai-ratio-card--custom {
+    min-width: 100px !important;
+    max-width: 120px;
+    padding: 8px 6px 10px !important;
+    flex-shrink: 0;
+}
+.ai-ratio-thumb--custom {
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102,126,234,0.08);
+    border-radius: 6px;
+    margin: 0 auto 2px;
+    color: #667eea;
+}
+.ai-custom-dims {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: center;
+    margin-top: 5px;
+    flex-wrap: nowrap;
+}
+.ai-dim-input {
+    width: 46px;
+    padding: 3px 4px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 5px;
+    color: #c9d1f8;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    -moz-appearance: textfield;
+    outline: none;
+}
+.ai-dim-input::-webkit-outer-spin-button,
+.ai-dim-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.ai-dim-input:focus { border-color: #667eea; background: rgba(102,126,234,0.12); }
+.ai-dim-sep {
+    color: #445;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.ai-dim-unit {
+    color: #445;
+    font-size: 9px;
+    margin-left: 1px;
+    flex-shrink: 0;
+}
+.ai-ratio-card--custom.selected .ai-dim-input {
+    border-color: #667eea;
+    background: rgba(102,126,234,0.15);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TEXTONFLOW — Mobile Responsive v2.0  (dashboard + editor)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── 640 px: toolbar del editor en 2 filas ─── */
+@media (max-width: 640px) {
+
+    /* Fila título + botones se apila */
+    .tof-toolbar-row {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Contenedor de botones: ocupa toda la línea, alineado a la izquierda */
+    .tof-toolbar-btns {
+        margin-left: 0 !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+
+    /* Ocultar bg-cycle (desktop-only) */
+    #bg-cycle-btn { display: none !important; }
+}
+
+/* ─── 480 px: ajustes finos del editor ─── */
+@media (max-width: 480px) {
+
+    /* Ocultar zoom A+/A− (desktop-only) — es el div justo después de bg-cycle-btn */
+    #bg-cycle-btn + div { display: none !important; }
+
+    /* Botones toolbar más compactos */
+    .tof-toolbar-btn {
+        padding: 3px 7px !important;
+        font-size: 10px !important;
+    }
+
+    /* Modal de resultado: ancho pleno en móvil */
+    .result-modal-box {
+        width: 96vw !important;
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Imagen resultado: menos alto para dejar espacio a los botones */
+    #result-image {
+        max-height: 32vh !important;
+    }
+
+    /* Botones de acción del resultado: centrado multi-línea */
+    .result-modal-box > div:nth-child(2) {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+
+    /* Controls panel: padding lateral mínimo */
+    .controls-panel { padding-left: 8px !important; padding-right: 8px !important; }
+
+    /* Splash: ocultar hint largo */
+    #canvas-gen-hint { font-size: 11px; }
+}
+
+/* ─── 360 px: pantallas muy pequeñas ─── */
+@media (max-width: 360px) {
+    .tof-toolbar-btn { padding: 3px 5px !important; font-size: 9px !important; }
+    .result-modal-box { padding: 10px !important; }
+    #result-image { max-height: 28vh !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CANVAS-GEN-BAR sticky en móvil
+
+/* ══ TEMAS DE FONDO (Oscuro / Gris / Blanco) — toda la pantalla ══ */
+body.tof-bg-white {
+    background: #f0f0f5 !important;
+}
+body.tof-bg-white .container,
+body.tof-bg-white .main-content {
+    background: #f0f0f5 !important;
+}
+body.tof-bg-white .canvas-area {
+    background: #f0f0f5 !important;
+    background-image: radial-gradient(circle, #c8c8d8 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
+}
+
+body.tof-bg-grey {
+    background: #d2d2dc !important;
+}
+body.tof-bg-grey .container,
+body.tof-bg-grey .main-content {
+    background: #d2d2dc !important;
+}
+body.tof-bg-grey .canvas-area {
+    background: #d2d2dc !important;
+    background-image: radial-gradient(circle, #b0b0c0 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
+}
+
+body.tof-bg-dark {
+    background: #0f0f1a !important;
+}
+body.tof-bg-dark .container,
+body.tof-bg-dark .main-content {
+    background: #0f0f1a !important;
+}
+body.tof-bg-dark .canvas-area {
+    background: #141414 !important;
+    background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px) !important;
+    background-size: 22px 22px !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   MÓVIL COMPACTO — Panel de controles y acordeones
+   Aplica a ≤ 480 px (iPhone y similares)
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+    /* ── Controls panel: padding y fuente base reducidos ── */
+    .controls-panel {
+        font-size: 13px !important;
+        padding: 8px 8px 80px 8px !important;
+    }
+
+    /* ── Acordeón headers: altura mínima reducida ── */
+    .acc-header {
+        min-height: 40px !important;
+        padding: 7px 10px !important;
+    }
+    .acc-title {
+        gap: 5px !important;
+        font-size: 12px !important;
+    }
+    .acc-icon { width: 14px !important; height: 14px !important; }
+    .acc-icon svg { width: 14px !important; height: 14px !important; }
+    .acc-add-btn {
+        font-size: 12px !important;
+        min-width: 20px !important;
+        height: 20px !important;
+    }
+    .acc-chevron { font-size: 10px !important; }
+
+    /* ── Accordion body: padding reducido ── */
+    .acc-body {
+        padding: 5px 8px 5px !important;
+    }
+
+    /* ── Range inputs más delgados ── */
+    input[type="range"] {
+        height: 22px !important;
+        margin: 1px 0 !important;
+    }
+
+    /* ── Font picker compacto ── */
+    .font-picker-btn {
+        padding: 5px 8px !important;
+        min-height: 32px !important;
+    }
+    .font-picker-dropdown {
+        max-height: 220px !important;
+    }
+
+    /* ── API de Render Dinámico ── */
+    .dapi-header { padding: 7px 10px !important; }
+    .dapi-title  { font-size: 11px !important; }
+    .dapi-badge  { font-size: 8px !important; padding: 1px 5px !important; }
+
+    /* ── Sello textonflow.com row ── */
+    #tof-sello-hdr { padding: 6px 10px !important; }
+    #tof-sello-opts { font-size: 11px !important; }
+
+    /* ── IA Core acordeón (fondo especial) ── */
+    #acc-ia-core .acc-header {
+        padding: 7px 10px !important;
+        min-height: 40px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   MÓVIL — Botones AI en grid 2×2 (canvas sizing: ver app.js)
+
+@media (max-width: 480px) {
+
+    /* Botones de resultado AI: 2 columnas en vez de 4 en fila
+       evita que el último botón quede cortado */
+    .ai-result-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .ai-use-btn,
+    .ai-regen-btn,
+    .ai-download-btn {
+        flex: unset !important;
+        width: 100% !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL — Handles de rotación más grandes (mínimo 44px táctil)
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL — Barra de formatos en 1 fila (scroll horizontal)
+
+/* ══════════════════════════════════════════════════════════
+   BLOQUES 5-6: Polish móvil
+
+/* ══ MEDIA (max-width: 768px) — Consolidated mobile overrides (B1-B6) ══ */
+@media (max-width: 768px) {
+
+    /* Botón Visualizar: sticky al fondo de la pantalla en móvil */
+    #canvas-gen-bar {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 200 !important;
+        background: var(--bg-surface, #0d0d1a) !important;
+        border-top: 1px solid var(--border, #1e2035) !important;
+        margin: 0 -10px !important;
+        padding: 10px 14px 14px !important;
+        border-radius: 0 !important;
+    }
+
+    #canvas-gen-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        padding: 14px 20px !important;
+    }
+
+    /* Canvas sizing corregido en JS (applyImageToCanvas / _applyFormatLayout)
+       usando maxW = innerWidth - 24 en mobile. No sobreescribir con CSS. */
+    #preview-canvas {
+        max-height: none !important;
+    }
+
+    /* Handle de rotación de TEXTO */
+    .txt-rot-handle {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 18px !important;
+    }
+
+    /* Handle de rotación de STICKERS/LOGOS */
+    .ov-rot-handle {
+        width: 36px !important;
+        height: 36px !important;
+        top: -38px !important;
+        right: -38px !important;
+        font-size: 18px !important;
+    }
+
+    /* Puntos de control de texto: visibles más grandes */
+    .text-control-point {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Menú contextual: fuente y targets más grandes en touch */
+    #ctx-menu button {
+        padding: 11px 18px !important;
+        font-size: 15px !important;
+        min-height: 44px !important;
+    }
+
+    /* En móvil: barra vuelve a sticky dentro del canvas-area */
+    #format-tabs-bar {
+        position: sticky !important;
+        top: 8px !important;
+        left: auto !important;
+        right: auto !important;
+        width: calc(100vw - 32px) !important;
+        max-width: calc(100vw - 32px) !important;
+        align-self: center !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        justify-content: flex-start !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        padding: 5px 10px !important;
+        gap: 5px !important;
+        z-index: 40 !important;
+    }
+    #format-tabs-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+    #format-tabs-bar .fmt-tab {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+    #format-tabs-bar .fmt-tab-sep {
+        flex-shrink: 0 !important;
+    }
+
+    /* B5 — Separación extra al final del panel de controles para
+       que el último acordeón no quede tapado por el botón sticky */
+    .controls-panel {
+        padding-bottom: calc(110px + env(safe-area-inset-bottom, 12px)) !important;
+    }
+
+    /* B5 — Etiqueta "Visualizar" sticky: sube sobre safe-area */
+    #canvas-gen-bar {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* B6 — Sliders: track más alto, thumb más grande para dedo */
+    input[type="range"] {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        height: 28px !important;
+        background: transparent !important;
+        touch-action: pan-x !important;  /* scroll vertical no interfiere */
+        cursor: pointer !important;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px !important;
+        border-radius: 3px !important;
+        background: linear-gradient(90deg, #6366f1 var(--val, 50%), #2d2d4a var(--val, 50%)) !important;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none !important;
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 50% !important;
+        background: #6366f1 !important;
+        border: 2.5px solid #fff !important;
+        box-shadow: 0 1px 6px rgba(99,102,241,.5) !important;
+        margin-top: -8px !important;
+        cursor: pointer !important;
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 50% !important;
+        background: #6366f1 !important;
+        border: 2.5px solid #fff !important;
+        box-shadow: 0 1px 6px rgba(99,102,241,.5) !important;
+        cursor: pointer !important;
+    }
+    input[type="range"]::-moz-range-track {
+        height: 6px !important;
+        border-radius: 3px !important;
+        background: #2d2d4a !important;
+    }
+
+    /* B6 — Inputs numéricos: texto más grande, fácil de tocar */
+    .controls-panel input[type="number"],
+    .controls-panel input[inputmode="numeric"] {
+        font-size: 16px !important;   /* evita zoom automático en iOS */
+        height: 38px !important;
+        min-width: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+
+    /* B6 — Evitar zoom automático en iOS en TODOS los inputs (global) */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="password"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    /* B6 — Botones de acción (añadir texto, stickers, etc.):
+       más altos y separados para dedo */
+    .controls-panel .btn-sm,
+    .controls-panel button:not(.fmt-tab):not(.tab-close):not(.ctx-menu-item):not(.ai-ratio-card) {
+        min-height: 36px !important;
+    }
+
+}
