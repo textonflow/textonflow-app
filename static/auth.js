@@ -208,3 +208,8 @@ document.getElementById('auth-modal').addEventListener('click', function(e){
 })();
 // Exponer para 429 handler
 window.openAuthModal = openAuthModal;
+window.closeAuthModal   = closeAuthModal;
+window.authSwitchTab    = authSwitchTab;
+window.authForgotSubmit = authForgotSubmit;
+window.authSubmit       = authSubmit;
+window.handleAuthBtn    = handleAuthBtn;
