@@ -1030,6 +1030,35 @@
                             <span id="filter-opacity-label" style="font-size:10px;color:#e8e8e8;min-width:30px;text-align:right;">100%</span>
                         </div>
                     </div>
+
+                    <!-- Ajustes de imagen: Brillo / Contraste / Saturación -->
+                    <div id="img-adj-panel" style="display:flex;flex-direction:column;gap:5px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:7px 10px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                            <span style="font-size:10px;font-weight:700;color:#a0a0a0;text-transform:uppercase;letter-spacing:.4px;">Ajustes imagen</span>
+                            <button onclick="_resetImgAdj()" title="Restablecer ajustes" style="background:none;border:none;color:#555;cursor:pointer;font-size:10px;padding:0 2px;">↺ Reset</button>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">☀ Brillo</span>
+                            <input type="range" id="adj-brightness-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('brightness',this.value)"
+                                style="flex:1;accent-color:#f59e0b;cursor:pointer;height:4px;">
+                            <span id="adj-brightness-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">◑ Contraste</span>
+                            <input type="range" id="adj-contrast-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('contrast',this.value)"
+                                style="flex:1;accent-color:#7c6eff;cursor:pointer;height:4px;">
+                            <span id="adj-contrast-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">🎨 Satur.</span>
+                            <input type="range" id="adj-saturation-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('saturation',this.value)"
+                                style="flex:1;accent-color:#34d399;cursor:pointer;height:4px;">
+                            <span id="adj-saturation-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                    </div>
                     <!-- Guías (solo on/off) -->
                     <div style="display:flex;align-items:center;gap:5px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:6px 10px;white-space:nowrap;flex-shrink:0;">
                         <span style="font-size:11px;font-weight:700;color:#a0a0a0;" data-i18n="guides_label">Guías</span>
