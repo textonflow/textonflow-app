@@ -523,6 +523,10 @@
             box-shadow: 0 0 5px rgba(245,158,11,0.2);
         }
         .tab-lock { margin-left: -1px; }
+        /* ── BRAND KIT ─────────────────────────────── */
+        .acc-brand-kit-hdr { border-left: 3px solid rgba(251,191,36,0.5) !important; }
+        #brand-swatches .brand-swatch { width:22px; height:22px; border-radius:5px; }
+        #brand-fonts { }
         body.fp-active .text-tab:not(.active):hover {
             background: rgba(245,158,11,0.12) !important;
         }
