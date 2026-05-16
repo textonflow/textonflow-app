@@ -68,7 +68,7 @@ logger = logging.getLogger("textonflow")
 render_router = APIRouter()
 
 # ── Helpers (definidos en render_helpers.py) ─────────────────────────
-from routers.render_helpers import (
+from .render_helpers import (
     _RENDER_EXECUTOR,
     _RENDER_JOBS,
     _SB_BUCKET,
