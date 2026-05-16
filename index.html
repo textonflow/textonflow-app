@@ -845,6 +845,11 @@
                         <span id="tof-zoom-lbl" style="font-size:10px;color:#555;min-width:34px;text-align:center;cursor:pointer;user-select:none;padding:0 2px;" onclick="_cvZoomReset()" title="Clic = 100%">100%</span>
                         <button onclick="_cvZoomStep(1)"  title="Acercar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">+</button>
                     </div>
+                    <!-- Pincel de formato -->
+                    <button onclick="_fpToggle()" id="btn-fp" title="Pincel de formato — copia estilo del campo activo"
+                        style="width:24px;height:24px;border:1px solid #2a2a3a;border-radius:5px;background:#1e1e2e;color:#555;cursor:pointer;font-size:13px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,border-color .15s,background .15s,box-shadow .15s;"
+                        onmouseover="if(!window._fpMode){this.style.color='#f59e0b';this.style.borderColor='#f59e0b';}"
+                        onmouseout="if(!window._fpMode){this.style.color='#555';this.style.borderColor='#2a2a3a';}">&#9874;</button>
                     <!-- Atajos -->
                     <button onclick="toggleShortcuts()" id="btn-shortcuts" title="Atajos de teclado (?)" style="width:22px;height:22px;border:1px solid #2a2a3a;border-radius:50%;background:#1e1e2e;color:#444;cursor:pointer;font-size:11px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .12s,border-color .12s;" onmouseover="this.style.color='#9ca3ff';this.style.borderColor='#6366f1';" onmouseout="this.style.color='#444';this.style.borderColor='#2a2a3a';">?</button>
                 </div>
