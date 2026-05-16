@@ -16,12 +16,12 @@ import time
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse, Response
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 try:
     import numpy as np
     _NUMPY_OK = True
@@ -33,7 +33,7 @@ from auth import (
     _is_superadmin, _get_client_ip,
     _check_rate_limit, _check_minute_limit, _increment_ip_usage,
 )
-from database import get_db
+from database import get_db, log_render_event, get_user_render_stats
 from fonts import (
     FONT_MAPPING, FONT_SIZE_SCALE, NOTO_EMOJI_PATHS,
     get_noto_emoji_font, build_retry_session, RetryTwitterEmojiSource,
@@ -58,355 +58,30 @@ from user_limits import (
     USER_PLAN_LIMITS, TRIAL_DAYS,
     _get_current_user, _require_user,
     _should_apply_watermark, _check_user_render_limit, _increment_user_renders,
+    _get_user_id_by_render_key,
 )
 from utils import _get_base_url
 
 logger = logging.getLogger("textonflow")
 
+# ── Router ────────────────────────────────────────────────────────────
 render_router = APIRouter()
 
-# ── Supabase Storage (imágenes de salida permanentes) ─────────────────────────
-_SB_URL    = os.getenv("SUPABASE_URL",              "https://dluzcrfqqieprudfeuyk.supabase.co")
-_SB_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET",  "textonflow-uploads")
-def _sb_key() -> str:
-    import base64 as _b64
-    return os.getenv("SUPABASE_SERVICE_ROLE_KEY") or _b64.b64decode(
-        "c2Jfc2VjcmV0X1gxWEloNVp0ekEyTFd0VG9pV2thUGdfc21Pd1ZiM0Y=").decode()
-
-def _upload_output_to_supabase(filepath: str, filename: str) -> str | None:
-    """Sube la imagen renderizada a Supabase Storage. Retorna URL pública o None si falla."""
-    try:
-        import urllib.request as _ureq
-        key = _sb_key()
-        if not key:
-            return None
-        with open(filepath, "rb") as f:
-            data = f.read()
-        url = f"{_SB_URL}/storage/v1/object/{_SB_BUCKET}/{filename}"
-        req = _ureq.Request(url, data=data, method="POST")
-        req.add_header("apikey",        key)
-        req.add_header("Authorization", f"Bearer {key}")
-        req.add_header("Content-Type",  "image/jpeg")
-        req.add_header("x-upsert",      "true")
-        with _ureq.urlopen(req, timeout=30) as r:
-            r.read()
-        public_url = f"{_SB_URL}/storage/v1/object/public/{_SB_BUCKET}/{filename}"
-        logger.info(f"☁️  Output → Supabase: {public_url}")
-        return public_url
-    except Exception as _e:
-        logger.warning(f"⚠️  Output Supabase upload failed (usando URL local): {_e}")
-        return None
-
-# ── Constantes de almacenamiento ───────────────────────────────────────────────
-STORAGE_DIR       = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
-TEMPLATES_API_DIR = os.getenv("TEMPLATES_API_PATH", os.path.join(STORAGE_DIR, "api_templates"))
-os.makedirs(STORAGE_DIR,       exist_ok=True)
-os.makedirs(TEMPLATES_API_DIR, exist_ok=True)
-os.makedirs("output",          exist_ok=True)
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  GENERADOR DE IMÁGENES (módulo Design)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def _render_pil(request: "MultiTextRequest") -> "Image.Image":
-    """Pipeline de render puro: carga imagen, aplica efectos/textos/shapes/overlays.
-    Devuelve PIL Image (RGBA). No hace rate-limit ni guarda en disco."""
-    # Cargar imagen
-    if request.template_name.startswith(("http://", "https://")):
-        local_path = None
-        # Supabase Storage URLs → siempre descargar via HTTP (no leer del disco local)
-        if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
-            fname = request.template_name.split("/storage/")[-1].split("?")[0]
-            local_path = os.path.join(STORAGE_DIR, fname)
-        elif "/static/temp/" in request.template_name:
-            fname = request.template_name.split("/static/temp/")[-1].split("?")[0]
-            local_path = os.path.join("static", "temp", fname)
-        if local_path:
-            if os.path.exists(local_path):
-                logger.info(f"📂 Leyendo imagen del storage local: {local_path}")
-                image = Image.open(local_path).convert("RGBA")
-            else:
-                # Archivo no encontrado localmente (storage efímero en Railway) → fallback HTTP
-                logger.warning(f"⚠️ Archivo local no encontrado ({local_path}), descargando via HTTP: {request.template_name}")
-                session = build_retry_session()
-                response = session.get(request.template_name, timeout=15)
-                response.raise_for_status()
-                image = Image.open(BytesIO(response.content)).convert("RGBA")
-        else:
-            logger.info(f"🔵 Descargando imagen: {request.template_name}")
-            session = build_retry_session()
-            response = session.get(request.template_name, timeout=15)
-            response.raise_for_status()
-            image = Image.open(BytesIO(response.content)).convert("RGBA")
-    else:
-        template_path = os.path.join("templates", request.template_name)
-        if not os.path.exists(template_path):
-            raise HTTPException(status_code=404, detail=f"Imagen no encontrada: {request.template_name}")
-        image = Image.open(template_path).convert("RGBA")
-
-    width, height = image.size
-    logger.info(f"📐 Dimensiones: {width}x{height}")
-
-    # Multi-formato
-    if request.format_width and request.format_height:
-        fw, fh = request.format_width, request.format_height
-        zoom = max(0.01, request.img_zoom)
-        pan_x = int(round(request.img_pan_x))
-        pan_y = int(round(request.img_pan_y))
-        new_w = max(1, int(round(width * zoom)))
-        new_h = max(1, int(round(height * zoom)))
-        img_scaled = image.resize((new_w, new_h), Image.LANCZOS)
-        artboard = Image.new("RGBA", (fw, fh), (0, 0, 0, 255))
-        artboard.paste(img_scaled, (pan_x, pan_y), img_scaled)
-        image = artboard
-        width, height = fw, fh
-        logger.info(f"🖼️ Artboard formato {fw}x{fh} · zoom={zoom:.2f} · pan=({pan_x},{pan_y})")
-
-    # Filtro
-    if request.filter_name and request.filter_name != "none":
-        logger.info(f"🎨 Aplicando filtro: {request.filter_name}")
-        image = apply_filter(image, request.filter_name)
-
-    # Viñeta
-    if request.vignette_enabled:
-        sides = request.vignette_sides or ["top", "right", "bottom", "left"]
-        logger.info(f"🎞️ Viñeta: color={request.vignette_color} op={request.vignette_opacity} size={request.vignette_size}")
-        image = apply_vignette(image, color=request.vignette_color, opacity=request.vignette_opacity,
-                               size=request.vignette_size, sides=sides, tone=request.vignette_filter)
-
-    # Sustituir variables {varname}
-    if request.vars:
-        sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
-        for text_field in request.texts:
-            for key in sorted_keys:
-                text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
-
-    # Formas (z_index ordenado)
-    sorted_shapes = sorted(request.shapes or [], key=lambda s: s.z_index)
-    for shape in sorted_shapes:
-        try:
-            _render_canvas_shape(image, shape)
-            logger.info(f"🔷 Forma renderizada: {shape.shape_type} en ({shape.x},{shape.y})")
-        except Exception as e:
-            logger.warning(f"⚠️ Error forma: {e}")
-
-    # Textos
-    for idx, text_field in enumerate(request.texts):
-        if text_field.countdown_mode:
-            now_utc = datetime.now(timezone.utc)
-            cd_fmt = text_field.countdown_format or "HH:MM:SS"
-            cd_exp = text_field.countdown_expired_text or "¡Oferta expirada!"
-            try:
-                if text_field.countdown_mode == "event" and text_field.countdown_event_end_utc:
-                    end_utc = datetime.strptime(
-                        text_field.countdown_event_end_utc, "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=timezone.utc)
-                    seconds_left = max(0.0, (end_utc - now_utc).total_seconds())
-                elif text_field.countdown_mode == "urgency":
-                    ts_var_name = text_field.countdown_ts_var or "timer_final"
-                    ts_value = (request.vars or {}).get(ts_var_name, "")
-                    _MAX_FUTURE_S = 366 * 24 * 3600
-                    try:
-                        ts_int = int(float(str(ts_value)))
-                        end_utc = datetime.fromtimestamp(ts_int, tz=timezone.utc)
-                        raw_left = (end_utc - now_utc).total_seconds()
-                        if raw_left > _MAX_FUTURE_S:
-                            logger.warning(f"⚠️ timer_final={ts_int} muy en el futuro")
-                        seconds_left = max(0.0, raw_left)
-                    except (ValueError, TypeError, OSError):
-                        seconds_left = 86400
-                else:
-                    seconds_left = 0.0
-            except Exception as ce:
-                logger.warning(f"⚠️ Error countdown: {ce}")
-                seconds_left = 0.0
-            text_field.text = _format_countdown(seconds_left, cd_fmt, cd_exp)
-            if (text_field.countdown_urgency_color and seconds_left > 0
-                    and seconds_left <= (text_field.countdown_urgency_threshold_h or 3.0) * 3600):
-                text_field.font_color = text_field.countdown_urgency_color
-            logger.info(f"⏱ Countdown: '{text_field.text}' ({seconds_left:.0f}s)")
-
-        logger.info(f"Texto {idx+1}: '{text_field.text[:50]}'" if len(text_field.text) <= 50 else f"Texto {idx+1}: '{text_field.text[:50]}...'")
-        logger.info(f"  → font_size={text_field.font_size}  align={text_field.alignment}")
-        font_path = get_font_path(text_field.font_name)
-        try:
-            fs_scale = FONT_SIZE_SCALE.get(text_field.font_name, 1.0)
-            scaled_size = max(1, int(round(text_field.font_size * fs_scale)))
-            if fs_scale != 1.0:
-                logger.info(f"  → Escala fuente '{text_field.font_name}': {fs_scale}× → {scaled_size}px")
-            font = ImageFont.truetype(font_path, scaled_size)
-        except Exception as e:
-            logger.warning(f"⚠️ Fuente: {e}")
-            font = ImageFont.load_default()
-        image = draw_text_with_effects(image, text_field, font, render_scale=request.render_scale)
-
-    # Overlays (logos, stickers, badges)
-    for ov in (request.overlays or []):
-        try:
-            if ov.src.startswith("data:"):
-                _, data = ov.src.split(",", 1)
-                ov_img = Image.open(BytesIO(base64.b64decode(data))).convert("RGBA")
-            else:
-                session2 = build_retry_session()
-                ov_resp = session2.get(ov.src, timeout=10)
-                ov_resp.raise_for_status()
-                ov_img = Image.open(BytesIO(ov_resp.content)).convert("RGBA")
-            ov_w, ov_h = max(1, ov.width), max(1, ov.height)
-            mask_type = getattr(ov, 'mask_type', 'none') or 'none'
-            auto_fit  = getattr(ov, 'mask_auto_fit', True)
-            mask_rad  = getattr(ov, 'mask_radius', 0) or 0
-            rotation  = getattr(ov, 'rotation', 0) or 0
-            border_w  = getattr(ov, 'mask_border_width', 0) or 0
-            border_c  = parse_color_with_opacity(getattr(ov, 'mask_border_color', '#ffffff'), getattr(ov, 'mask_border_opacity', 100))
-            shadow_en = getattr(ov, 'mask_shadow_enabled', False)
-            shadow_c  = getattr(ov, 'mask_shadow_color', '#000000')
-            shadow_op = getattr(ov, 'mask_shadow_opacity', 70)
-            shadow_bl = getattr(ov, 'mask_shadow_blur', 8)
-            shadow_dx = getattr(ov, 'mask_shadow_x', 0)
-            shadow_dy = getattr(ov, 'mask_shadow_y', 4)
-            if auto_fit and mask_type != "none":
-                ov_img = _auto_fit_overlay(ov_img, mask_type, ov_w, ov_h)
-            else:
-                ov_img = ov_img.resize((ov_w, ov_h), Image.LANCZOS)
-            if mask_type != "none":
-                ov_img = _apply_overlay_mask(ov_img, mask_type, mask_rad)
-            border_exp = 0
-            if border_w > 0:
-                ov_img, border_exp = _apply_overlay_border(ov_img, mask_type, border_w, border_c, mask_rad)
-            pre_rot_w, pre_rot_h = ov_img.width, ov_img.height
-            paste_x, paste_y = ov.x - border_exp, ov.y - border_exp
-            if rotation:
-                ov_img = ov_img.rotate(-rotation, expand=True, resample=Image.BICUBIC)
-                new_w, new_h = ov_img.size
-                paste_x = ov.x - border_exp + (pre_rot_w - new_w) // 2
-                paste_y = ov.y - border_exp + (pre_rot_h - new_h) // 2
-            if ov.opacity < 1.0:
-                r2, g2, b2, a2 = ov_img.split()
-                a2 = a2.point(lambda p: int(p * ov.opacity))
-                ov_img.putalpha(a2)
-            if shadow_en:
-                rs, gs, bs, _ = parse_color_with_opacity(shadow_c, shadow_op)
-                _, _, _, alpha_ch = ov_img.split()
-                pad = int(shadow_bl * 3) + abs(shadow_dx) + abs(shadow_dy) + 4
-                pad_w = ov_img.width + pad * 2
-                pad_h = ov_img.height + pad * 2
-                sh_alpha_pad = Image.new("L", (pad_w, pad_h), 0)
-                sh_alpha_src = alpha_ch.point(lambda p: int(p * shadow_op / 100))
-                sh_alpha_pad.paste(sh_alpha_src, (pad, pad))
-                sh_img = Image.new("RGBA", (pad_w, pad_h), (rs, gs, bs, 0))
-                sh_img.putalpha(sh_alpha_pad)
-                if shadow_bl > 0:
-                    sh_img = sh_img.filter(ImageFilter.GaussianBlur(shadow_bl))
-                sh_x = paste_x + shadow_dx - pad
-                sh_y = paste_y + shadow_dy - pad
-                src_x1 = max(0, -sh_x)
-                src_y1 = max(0, -sh_y)
-                dst_x  = max(0, sh_x)
-                dst_y  = max(0, sh_y)
-                src_x2 = src_x1 + min(sh_img.width  - src_x1, image.width  - dst_x)
-                src_y2 = src_y1 + min(sh_img.height - src_y1, image.height - dst_y)
-                if src_x2 > src_x1 and src_y2 > src_y1:
-                    sh_crop = sh_img.crop((src_x1, src_y1, src_x2, src_y2))
-                    image.paste(sh_crop, (dst_x, dst_y), sh_crop)
-            image.paste(ov_img, (paste_x, paste_y), ov_img)
-            logger.info(f"🖼️ Overlay ({paste_x},{paste_y}) máscara={mask_type} rot={rotation}")
-        except Exception as e:
-            logger.warning(f"⚠️ Error overlay: {e}")
-
-    # Watermark
-    if request.watermark:
-        try:
-            if image.mode != "RGBA":
-                image = image.convert("RGBA")
-            img_w, img_h = image.size
-            wm_font_size = max(13, min(28, img_w // 55))
-            wm_font = None
-            for _fp in [
-                "fonts/PassionOne-Regular.ttf",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            ]:
-                try:
-                    wm_font = ImageFont.truetype(_fp, wm_font_size)
-                    break
-                except Exception:
-                    pass
-            if wm_font is None:
-                wm_font = ImageFont.load_default()
-            wm_text = "\u2756 textonflow.com"
-            _tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-            _bb = _tmp.textbbox((0, 0), wm_text, font=wm_font)
-            tw, th = _bb[2] - _bb[0], _bb[3] - _bb[1]
-            margin = max(8, img_w // 90)
-            pad_x, pad_y = 9, 5
-            rx1 = img_w - tw - pad_x * 2 - margin
-            ry1 = img_h - th - pad_y * 2 - margin
-            rx2 = img_w - margin
-            ry2 = img_h - margin
-            overlay_wm = Image.new("RGBA", image.size, (0, 0, 0, 0))
-            od = ImageDraw.Draw(overlay_wm)
-            od.rounded_rectangle([rx1, ry1, rx2, ry2], radius=5, fill=(0, 0, 0, 155))
-            image = Image.alpha_composite(image, overlay_wm)
-            ImageDraw.Draw(image).text((rx1 + pad_x, ry1 + pad_y), wm_text, font=wm_font, fill=(255, 255, 255, 215))
-            logger.info("✦ Watermark aplicado")
-        except Exception as _wm_err:
-            logger.warning(f"⚠️ Error watermark: {_wm_err}")
-
-    return image
-
-
-# ─── Webhook de salida por usuario ───────────────────────────────────────────
-def _fire_user_webhook(user_id: str, image_url: str, template: str) -> None:
-    """Lanza un POST al webhook_url del usuario en segundo plano (no bloquea la respuesta)."""
-    def _do():
-        conn = get_db()
-        if not conn:
-            return
-        try:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute("SELECT webhook_url FROM users WHERE id = %s", (user_id,))
-                row = cur.fetchone()
-            if not row or not row["webhook_url"]:
-                return
-            url = row["webhook_url"]
-            payload = {
-                "event": "render.done",
-                "image_url": image_url,
-                "template": template,
-                "ts": datetime.utcnow().isoformat() + "Z",
-            }
-            resp = requests.post(url, json=payload, timeout=8)
-            logger.info(f"🔔 Webhook → {url} [{resp.status_code}]")
-        except Exception as e:
-            logger.warning(f"⚠️ Webhook error ({user_id}): {e}")
-    threading.Thread(target=_do, daemon=True).start()
-
-
-# ─── Cola de renderizado simplificada (T005) ──────────────────────────────────
-_RENDER_JOBS: dict = {}          # job_id → {status, result, error, created_at}
-_RENDER_EXECUTOR = _futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="tof-render")
-
-def _run_render_job(job_id: str, req_data: dict, auth_header: str) -> None:
-    """Ejecuta el render en un hilo del pool y guarda el resultado en _RENDER_JOBS."""
-    _RENDER_JOBS[job_id]["status"] = "processing"
-    try:
-        port = int(os.environ.get("PORT", 8000))
-        hdrs = {"Content-Type": "application/json"}
-        if auth_header:
-            hdrs["Authorization"] = auth_header
-        resp = requests.post(
-            f"http://127.0.0.1:{port}/generate-multi",
-            json=req_data, headers=hdrs, timeout=120
-        )
-        if resp.status_code == 200:
-            _RENDER_JOBS[job_id].update({"status": "done", "result": resp.json()})
-        else:
-            _RENDER_JOBS[job_id].update({"status": "error", "error": resp.text[:500]})
-        logger.info(f"✅ Job {job_id} → HTTP {resp.status_code}")
-    except Exception as e:
-        _RENDER_JOBS[job_id].update({"status": "error", "error": str(e)})
-        logger.error(f"💥 Job {job_id} falló: {e}")
-
+# ── Helpers (definidos en render_helpers.py) ─────────────────────────
+from routers.render_helpers import (
+    _RENDER_EXECUTOR,
+    _RENDER_JOBS,
+    _SB_BUCKET,
+    _SB_URL,
+    _apply_wm_logo,
+    _fetch_mapbox_tile,
+    _fire_user_webhook,
+    _render_pil,
+    _rj_update,
+    _run_render_job,
+    _sb_key,
+    _upload_output_to_supabase
+)
 
 @render_router.post("/generate-multi")
 async def generate_multi_text(request: MultiTextRequest, http_req: Request):
@@ -414,6 +89,15 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     _user_payload = _get_current_user(http_req)
     _user_id      = _user_payload["sub"] if _user_payload else None
     _ip           = _get_client_ip(http_req)
+    # Si no hay JWT, intentar autenticar por render_api_key (body o header X-API-Key)
+    if not _user_id:
+        _rkey = (request.render_api_key or
+                 http_req.headers.get("X-API-Key") or
+                 http_req.query_params.get("render_api_key"))
+        if _rkey:
+            _uid_from_key = _get_user_id_by_render_key(_rkey)
+            if _uid_from_key:
+                _user_id = _uid_from_key
 
     _plan = "admin"
     if _is_superadmin(http_req):
@@ -449,7 +133,11 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         if not _min_ok:
             raise HTTPException(status_code=429, detail="Demasiados renders por minuto. Crea una cuenta gratis para más velocidad.")
     try:
-        # Cargar imagen (URL o local)
+        # ── Progreso en tiempo real: registrar job si viene con render_job_id ──
+        if getattr(request, 'render_job_id', None):
+            _RENDER_JOBS[request.render_job_id] = {"status": "processing", "progress": 5, "progress_msg": "Iniciando render…"}
+        _rjid = getattr(request, 'render_job_id', None)
+                # Cargar imagen (URL o local)
         # ── Prioridad 1: base64 enviada por el frontend (evita fetch externo) ──────
         if request.template_image_b64:
             try:
@@ -464,12 +152,56 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             image = None
 
         if image is None:
-            if request.template_name.startswith(("http://", "https://")):
+            # ── SUPABASE: descarga directa, sin chequeo de storage local ─────────
+            if "supabase.co" in request.template_name:
+                try:
+                    _sb_session = build_retry_session()
+                    _sb_auth_hdrs = {
+                        "User-Agent": "TextOnFlow/1.0",
+                        "Accept": "image/*,*/*;q=0.8",
+                        "apikey": _sb_key(),
+                        "Authorization": f"Bearer {_sb_key()}",
+                    }
+                    _sb_resp = _sb_session.get(
+                        request.template_name, timeout=20,
+                        headers=_sb_auth_hdrs,
+                    )
+                    if _sb_resp.status_code in (400, 404) or (
+                        _sb_resp.status_code == 200
+                        and "application/json" in _sb_resp.headers.get("Content-Type", "")
+                        and b"not found" in _sb_resp.content.lower()
+                    ):
+                        _fname = request.template_name.split("/")[-1].split("?")[0]
+                        raise HTTPException(
+                            status_code=400,
+                            detail=(
+                                f"Imagen no encontrada en Supabase Storage: '{_fname}'. "
+                                f"La imagen fue eliminada o el enlace es inválido. "
+                                f"Ábrela en el editor, vuelve a subirla y actualiza el template en ManyChat."
+                            ),
+                        )
+                    _sb_resp.raise_for_status()
+                    _ct = _sb_resp.headers.get("Content-Type", "")
+                    if "text/" in _ct or "application/json" in _ct:
+                        _fname = request.template_name.split("/")[-1].split("?")[0]
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"La URL de Supabase no devolvió una imagen válida para '{_fname}' (Content-Type: {_ct}). Vuelve a subir la imagen en el editor.",
+                        )
+                    image = Image.open(BytesIO(_sb_resp.content)).convert("RGBA")
+                    logger.info(f"☁️ Supabase imagen descargada OK ({len(_sb_resp.content)//1024} KB)")
+                except HTTPException:
+                    raise
+                except Exception as _sb_err:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Error descargando imagen de Supabase: {_sb_err}",
+                    )
+            elif request.template_name.startswith(("http://", "https://")):
                 # Si la URL apunta a nuestro propio /storage/ o /static/temp/, leer del disco
                 # (Railway bloquea peticiones HTTPS circulares al mismo host)
-                # EXCEPCIÓN: URLs de Supabase Storage → siempre descargar via HTTP
                 local_path = None
-                if "/storage/" in request.template_name and "supabase.co" not in request.template_name:
+                if "/storage/" in request.template_name:
                     fname = request.template_name.split("/storage/")[-1].split("?")[0]
                     local_path = os.path.join(STORAGE_DIR, fname)
                 elif "/static/temp/" in request.template_name:
@@ -543,6 +275,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         if request.filter_name and request.filter_name != "none":
             logger.info(f"🎨 Aplicando filtro: {request.filter_name}")
             image = apply_filter(image, request.filter_name)
+        _rj_update(_rjid, 30, "Filtro aplicado")
 
         # Aplicar viñeta (encima del filtro, antes de los textos)
         if request.vignette_enabled:
@@ -557,11 +290,12 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 tone    = request.vignette_filter,
             )
 
-        # Sustituir variables {varname} con los valores de request.vars
+        # Sustituir variables {varname} y {{varname}} (formato ManyChat)
         if request.vars:
             sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
             for text_field in request.texts:
                 for key in sorted_keys:
+                    text_field.text = text_field.text.replace(f"{{{{{key}}}}}", request.vars[key])
                     text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
 
         # Renderizar Formas de canvas (ordenadas por z_index) — ANTES que los textos
@@ -573,6 +307,8 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             except Exception as e:
                 logger.warning(f"⚠️ Error renderizando forma: {e}")
 
+        _rj_update(_rjid, 42, "Preparando textos…")
+        _n_texts = max(1, len(request.texts))
         for idx, text_field in enumerate(request.texts):
             # ── Countdown: calcular texto antes de renderizar ──────────────────
             if text_field.countdown_mode:
@@ -632,11 +368,24 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 font = ImageFont.load_default()
 
             image = draw_text_with_effects(image, text_field, font, render_scale=request.render_scale)
+            _rj_update(_rjid, 42 + int(46*(idx+1)/_n_texts), f"Texto {idx+1}/{_n_texts}")
 
-        # Aplicar overlays de imagen (logos, firmas, badges)
+        # Aplicar overlays de imagen (logos, firmas, badges, mapas)
         for ov in (request.overlays or []):
             try:
-                if ov.src.startswith("data:"):
+                map_location = getattr(ov, 'map_location', None)
+                if map_location:
+                    ov_img = _fetch_mapbox_tile(
+                        location=map_location,
+                        zoom=getattr(ov, 'map_zoom', 13),
+                        style=getattr(ov, 'map_style', 'streets-v12'),
+                        width=max(1, ov.width),
+                        height=max(1, ov.height),
+                        marker=getattr(ov, 'map_marker', True),
+                        vars_dict=getattr(request, 'vars', None) or {},
+                        from_location=getattr(ov, 'map_from_location', None) or None,
+                    )
+                elif ov.src.startswith("data:"):
                     _, data = ov.src.split(",", 1)
                     ov_img = Image.open(BytesIO(base64.b64decode(data))).convert("RGBA")
                 else:
@@ -720,44 +469,14 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         # Se aplica si: (a) el request lo pide, (b) plan trial sin exención admin
         _apply_wm = request.watermark or _should_apply_watermark(_user_id)
         if _apply_wm:
-            try:
-                if image.mode != "RGBA":
-                    image = image.convert("RGBA")
-                img_w, img_h = image.size
-                wm_font_size = max(13, min(28, img_w // 55))
-                wm_font = None
-                for _fp in [
-                    "fonts/PassionOne-Regular.ttf",
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-                ]:
-                    try:
-                        wm_font = ImageFont.truetype(_fp, wm_font_size)
-                        break
-                    except Exception:
-                        pass
-                if wm_font is None:
-                    wm_font = ImageFont.load_default()
-                wm_text = "\u2756 textonflow.com"
-                _tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-                _bb = _tmp.textbbox((0, 0), wm_text, font=wm_font)
-                tw, th = _bb[2] - _bb[0], _bb[3] - _bb[1]
-                margin = max(8, img_w // 90)
-                pad_x, pad_y = 9, 5
-                rx1 = img_w - tw - pad_x * 2 - margin
-                ry1 = img_h - th - pad_y * 2 - margin
-                rx2 = img_w - margin
-                ry2 = img_h - margin
-                overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
-                od = ImageDraw.Draw(overlay)
-                od.rounded_rectangle([rx1, ry1, rx2, ry2], radius=5, fill=(0, 0, 0, 155))
-                image = Image.alpha_composite(image, overlay)
-                ImageDraw.Draw(image).text(
-                    (rx1 + pad_x, ry1 + pad_y), wm_text, font=wm_font, fill=(255, 255, 255, 215)
-                )
-                logger.info("✦ Watermark aplicado")
-            except Exception as _wm_err:
-                logger.warning(f"⚠️ Error en watermark: {_wm_err}")
+            image = _apply_wm_logo(
+                image,
+                corner=getattr(request, "wm_corner", "br"),
+                size_px=getattr(request, "wm_size", 22),
+                opacity_pct=getattr(request, "wm_opacity", 55),
+                color_hex=getattr(request, "wm_color", "#ffffff"),
+                pill=getattr(request, "wm_pill", True),
+            )
 
         # Convertir a RGB y guardar como JPEG
         if image.mode == "RGBA":
@@ -774,11 +493,13 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         local_path = os.path.join("output", output_filename)
         os.makedirs("output", exist_ok=True)
         image.save(local_path, "JPEG", quality=95, subsampling=0)
+        _rj_update(_rjid, 90, "Guardando imagen…")
 
         # ── Subir output a Supabase (URL permanente — sobrevive redeploys Railway) ──
         sb_out_url = _upload_output_to_supabase(storage_path, output_filename)
         base_url = _get_base_url(http_req)
         image_url = sb_out_url if sb_out_url else f"{base_url}/storage/{output_filename}"
+        _rj_update(_rjid, 99, "Casi listo…")
         logger.info(f"✅ Imagen generada: {output_filename} → {image_url[:60]}")
 
         # ── Contadores ────────────────────────────────────────────────────────
@@ -787,6 +508,13 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             _increment_user_renders(_user_id)
             _used_after = _used + 1
             _lim        = _limit
+            # Log para dashboard de estadísticas (fire-and-forget)
+            threading.Thread(
+                target=log_render_event,
+                args=(_user_id,),
+                kwargs={"project_name": getattr(request, "project_name", None), "endpoint": "generate-multi"},
+                daemon=True,
+            ).start()
         else:
             _used_after, _lim = _increment_ip_usage(_ip)
 
@@ -928,10 +656,13 @@ async def save_api_template(template: ApiTemplateRequest):
     data = template.model_dump()
     data["id"] = tid
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
     vars_found = set()
     for t in data.get("texts", []):
-        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+        txt = t.get("text", "")
+        for m in re.findall(r'\{\{(\w+)\}\}', txt):
+            vars_found.add(m)
+        for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
     data["variables"] = sorted(vars_found)
     data["api_key"] = secrets.token_urlsafe(20)
@@ -968,10 +699,13 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
     data["require_api_key"]     = existing.get("require_api_key", False)
     data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
     data["updated_at"]          = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
     vars_found = set()
     for t in data.get("texts", []):
-        for m in re.findall(r'\{(\w+)\}', t.get("text", "")):
+        txt = t.get("text", "")
+        for m in re.findall(r'\{\{(\w+)\}\}', txt):
+            vars_found.add(m)
+        for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
     data["variables"] = sorted(vars_found)
     with open(path, "w") as f:
@@ -1120,6 +854,11 @@ async def render_api_template(template_id: str, request: Request):
         filter_name      = data.get("filter_name",       "none"),
         render_scale     = data.get("render_scale",      2),
         watermark        = data.get("watermark",         False),
+        wm_corner        = data.get("wm_corner",         "br"),
+        wm_size          = data.get("wm_size",           22),
+        wm_opacity       = data.get("wm_opacity",        55),
+        wm_color         = data.get("wm_color",          "#ffffff"),
+        wm_pill          = data.get("wm_pill",           True),
         vignette_enabled = data.get("vignette_enabled",  False),
         vignette_color   = data.get("vignette_color",    "#000000"),
         vignette_opacity = data.get("vignette_opacity",  0.6),
@@ -1204,6 +943,11 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
         filter_name      = data.get("filter_name",      "none"),
         render_scale     = data.get("render_scale",     2),
         watermark        = data.get("watermark",        False),
+        wm_corner        = data.get("wm_corner",        "br"),
+        wm_size          = data.get("wm_size",          22),
+        wm_opacity       = data.get("wm_opacity",       55),
+        wm_color         = data.get("wm_color",         "#ffffff"),
+        wm_pill          = data.get("wm_pill",          True),
         vignette_enabled = data.get("vignette_enabled", False),
         vignette_color   = data.get("vignette_color",   "#000000"),
         vignette_opacity = data.get("vignette_opacity", 0.6),
@@ -1295,3 +1039,196 @@ async def get_image(filename: str):
             "Expires": "0",
         }
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DASHBOARD DE ESTADÍSTICAS  /api/stats
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@render_router.get("/api/render-stats")
+async def get_render_stats(request: Request):
+    """Devuelve estadísticas de renders del usuario autenticado (dashboard)."""
+    user = _require_user(request)
+    stats = get_user_render_stats(user["sub"])
+    return stats
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  GIF ANIMADO  /api/gif/generate
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class _GifRequest(MultiTextRequest):
+    """Igual que MultiTextRequest + parámetros de animación."""
+    animation_type: str = "typewriter"       # typewriter | fade | bounce
+    animated_text_index: int = 0             # Índice del texto a animar
+    gif_fps: int = 12                        # Frames por segundo
+    hold_seconds: float = 1.5               # Segundos para mantener el frame final
+    gif_loop: int = 0                        # 0 = loop infinito
+
+
+@render_router.post("/api/gif/generate")
+async def generate_gif(req: _GifRequest, http_req: Request):
+    """Genera un GIF animado (typewriter o fade) a partir de un diseño TextOnFlow."""
+    _user_payload = _get_current_user(http_req)
+    _user_id      = _user_payload["sub"] if _user_payload else None
+    _ip           = _get_client_ip(http_req)
+
+    # Rate limit básico (reutilizamos el del plan)
+    if _user_id:
+        _used, _limit, _exceeded, _plan = _check_user_render_limit(_user_id)
+        if _exceeded:
+            raise HTTPException(status_code=429, detail="Límite de renders alcanzado. Actualiza tu plan.")
+    else:
+        _used, _limit, _exceeded = _check_rate_limit(_ip)
+        if _exceeded:
+            raise HTTPException(status_code=429, detail="Límite diario alcanzado. Crea una cuenta gratis.")
+
+    if not req.texts:
+        raise HTTPException(status_code=400, detail="Se requiere al menos un texto")
+
+    anim_idx = min(req.animated_text_index, len(req.texts) - 1)
+    anim_type = req.animation_type.lower()
+    frame_delay_ms = max(50, int(1000 / req.gif_fps))
+    hold_frames    = max(1, int(req.hold_seconds * req.gif_fps))
+
+    try:
+        # Convertimos _GifRequest → MultiTextRequest para _render_pil
+        base_dict = req.dict(exclude={"animation_type", "animated_text_index", "gif_fps", "hold_seconds", "gif_loop"})
+
+        frames: list = []
+        durations: list = []
+
+        # Convertir todos los frames a RGBA → luego a P (Paleta) para GIF
+        if anim_type == "typewriter":
+            full_text = req.texts[anim_idx].text
+            chars     = list(full_text)
+            if not chars:
+                raise HTTPException(status_code=400, detail="El texto animado está vacío")
+            # Agrupa caracteres para que el GIF no sea demasiado largo (máx 40 frames)
+            step = max(1, len(chars) // 40)
+            indices = list(range(1, len(chars) + 1, step))
+            if indices[-1] != len(chars):
+                indices.append(len(chars))
+            for i in indices:
+                import copy
+                req_copy = MultiTextRequest(**base_dict)
+                req_copy.texts[anim_idx].text = full_text[:i]
+                frame_img = _render_pil(req_copy).convert("RGB")
+                frames.append(frame_img)
+                durations.append(frame_delay_ms)
+            # Frames de hold al final
+            for _ in range(hold_frames):
+                frames.append(frames[-1])
+                durations.append(frame_delay_ms)
+
+        elif anim_type == "fade":
+            # Frame 1: sin el texto animado (texto vacío)
+            import copy
+            req_bg = MultiTextRequest(**base_dict)
+            req_bg.texts[anim_idx].text = ""
+            bg_img = _render_pil(req_bg).convert("RGBA")
+            # Frame final: con texto completo
+            req_full = MultiTextRequest(**base_dict)
+            fg_img = _render_pil(req_full).convert("RGBA")
+            n_fade = 12
+            for i in range(n_fade + 1):
+                alpha = i / n_fade
+                blended = Image.blend(bg_img, fg_img, alpha).convert("RGB")
+                frames.append(blended)
+                durations.append(frame_delay_ms)
+            for _ in range(hold_frames):
+                frames.append(frames[-1])
+                durations.append(frame_delay_ms)
+
+        elif anim_type == "bounce":
+            # Fade-in + fade-out en loop
+            req_bg   = MultiTextRequest(**base_dict)
+            req_bg.texts[anim_idx].text = ""
+            bg_img   = _render_pil(req_bg).convert("RGBA")
+            req_full = MultiTextRequest(**base_dict)
+            fg_img   = _render_pil(req_full).convert("RGBA")
+            n_steps  = 10
+            seq      = list(range(n_steps + 1)) + list(range(n_steps, -1, -1))
+            for i in seq:
+                alpha   = i / n_steps
+                blended = Image.blend(bg_img, fg_img, alpha).convert("RGB")
+                frames.append(blended)
+                durations.append(frame_delay_ms)
+        else:
+            raise HTTPException(status_code=400, detail="animation_type debe ser typewriter, fade o bounce")
+
+        # Convertir a paleta P para GIF compatible
+        gif_frames = [f.convert("P", palette=Image.ADAPTIVE, colors=256) for f in frames]
+
+        buf = BytesIO()
+        gif_frames[0].save(
+            buf,
+            format="GIF",
+            save_all=True,
+            append_images=gif_frames[1:],
+            loop=req.gif_loop,
+            duration=durations,
+            optimize=False,
+        )
+        buf.seek(0)
+
+        # Contadores
+        _increment_images_generated()
+        if _user_id:
+            _increment_user_renders(_user_id)
+            threading.Thread(
+                target=log_render_event,
+                args=(_user_id,),
+                kwargs={"project_name": getattr(req, "project_name", None), "endpoint": "gif"},
+                daemon=True,
+            ).start()
+        else:
+            _increment_ip_usage(_ip)
+
+        return Response(
+            content=buf.getvalue(),
+            media_type="image/gif",
+            headers={
+                "Content-Disposition": "attachment; filename=textonflow-animated.gif",
+                "Cache-Control": "no-store",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 /api/gif/generate error: {e}")
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Mapa Preview (editor) ───────────────────────────────────────────────────
+
+@render_router.post("/api/map-preview")
+async def map_preview_endpoint(req: Request):
+    """Devuelve vista previa del mapa como base64 PNG para el editor."""
+    body = await req.json()
+    location = (body.get("location") or "").strip()
+    if not location:
+        raise HTTPException(status_code=400, detail="location requerida")
+    zoom   = int(body.get("zoom",   13))
+    style  = body.get("style",  "streets-v12")
+    width  = int(body.get("width",  400))
+    height = int(body.get("height", 280))
+    marker = bool(body.get("marker", True))
+
+    from_location = (body.get("from_location") or "").strip() or None
+    try:
+        import asyncio, functools
+        loop = asyncio.get_event_loop()
+        tile = await loop.run_in_executor(
+            None,
+            functools.partial(_fetch_mapbox_tile, location, zoom, style, width, height, marker, {}, from_location)
+        )
+        buf  = BytesIO()
+        tile.convert("RGB").save(buf, "JPEG", quality=88)
+        b64  = base64.b64encode(buf.getvalue()).decode()
+        return {"image": f"data:image/jpeg;base64,{b64}", "ok": True}
+    except Exception as e:
+        logger.error(f"map-preview error: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
