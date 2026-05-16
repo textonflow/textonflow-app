@@ -36,14 +36,16 @@ def _auto_update_statics() -> None:
         return
 
     files = [
+        # ── JS / Frontend ─────────────────────────────────────────────────────
         (_UPDATE_BASE + "/app.js",                "static/app.js"),
-        (_UPDATE_BASE + "/styles.css",            "static/styles.css"),
+        (_UPDATE_BASE + "/feedback.js",           "static/feedback.js"),
+        (_UPDATE_BASE + "/auth.js",               "static/auth.js"),
+        (_UPDATE_BASE + "/projects.js",           "static/projects.js"),
+        (_UPDATE_BASE + "/ai-panel.js",           "static/ai-panel.js"),
+        (_UPDATE_BASE + "/cd-help.js",            "static/cd-help.js"),
+        (_UPDATE_BASE + "/shortcuts.js",          "static/shortcuts.js"),
+        # ── HTML ──────────────────────────────────────────────────────────────
         (_UPDATE_BASE + "/index.html",            "index.html"),
-        (_UPDATE_BASE + "/favicon.png",           "static/favicon.png"),
-        (_UPDATE_BASE + "/logo-blanco.webp",      "static/logo-blanco.webp"),
-        (_UPDATE_BASE + "/logo-negro.webp",       "static/logo-negro.webp"),
-        (_UPDATE_BASE + "/logo-negro-new.png",    "static/logo-negro-new.png"),
-        (_UPDATE_BASE + "/logo-blanco-new.png",   "static/logo-blanco-new.png"),
         (_UPDATE_BASE + "/manual.html",           "static/manual.html"),
         (_UPDATE_BASE + "/privacidad.html",       "static/privacidad.html"),
         (_UPDATE_BASE + "/terminos.html",         "static/terminos.html"),
@@ -51,9 +53,22 @@ def _auto_update_statics() -> None:
         (_UPDATE_BASE + "/docs.html",             "static/docs.html"),
         (_UPDATE_BASE + "/precios.html",          "static/precios.html"),
         (_UPDATE_BASE + "/casos.html",            "static/casos.html"),
+        # ── CSS ───────────────────────────────────────────────────────────────
+        (_UPDATE_BASE + "/base.css",              "static/base.css"),
+        (_UPDATE_BASE + "/layout.css",            "static/layout.css"),
+        (_UPDATE_BASE + "/components.css",        "static/components.css"),
+        (_UPDATE_BASE + "/editor.css",            "static/editor.css"),
+        # ── Assets ────────────────────────────────────────────────────────────
+        (_UPDATE_BASE + "/favicon.png",           "static/favicon.png"),
+        (_UPDATE_BASE + "/logo-blanco.webp",      "static/logo-blanco.webp"),
+        (_UPDATE_BASE + "/logo-negro.webp",       "static/logo-negro.webp"),
+        (_UPDATE_BASE + "/logo-negro-new.png",    "static/logo-negro-new.png"),
+        (_UPDATE_BASE + "/logo-blanco-new.png",   "static/logo-blanco-new.png"),
         (_UPDATE_BASE + "/previews/biblica.jpg",  "static/previews/biblica.jpg"),
         (_UPDATE_BASE + "/previews/plumilla.jpg", "static/previews/plumilla.jpg"),
+        # ── Python routers ────────────────────────────────────────────────────
         (_UPDATE_BASE + "/render.py",             "routers/render.py"),
+        (_UPDATE_BASE + "/render_helpers.py",     "routers/render_helpers.py"),
         (_UPDATE_BASE + "/mc.py",                 "routers/mc.py"),
         (_UPDATE_BASE + "/ai.py",                 "routers/ai.py"),
         (_UPDATE_BASE + "/batch.py",              "routers/batch.py"),
