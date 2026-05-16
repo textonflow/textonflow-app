@@ -1314,29 +1314,6 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
 
 /* ══════════════════════════════════════════════════════════════
    CANVAS-GEN-BAR sticky en móvil
-   ══════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-
-    /* Botón Visualizar: sticky al fondo de la pantalla en móvil */
-    #canvas-gen-bar {
-        position: sticky !important;
-        bottom: 0 !important;
-        z-index: 200 !important;
-        background: var(--bg-surface, #0d0d1a) !important;
-        border-top: 1px solid var(--border, #1e2035) !important;
-        margin: 0 -10px !important;
-        padding: 10px 14px 14px !important;
-        border-radius: 0 !important;
-    }
-
-    #canvas-gen-btn {
-        width: 100% !important;
-        justify-content: center !important;
-        font-size: 14px !important;
-        padding: 14px 20px !important;
-    }
-
-}
 
 /* ══ TEMAS DE FONDO (Oscuro / Gris / Blanco) — toda la pantalla ══ */
 body.tof-bg-white {
@@ -1448,14 +1425,6 @@ body.tof-bg-dark .canvas-area {
 
 /* ══════════════════════════════════════════════════════════════
    MÓVIL — Botones AI en grid 2×2 (canvas sizing: ver app.js)
-   ══════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-    /* Canvas sizing corregido en JS (applyImageToCanvas / _applyFormatLayout)
-       usando maxW = innerWidth - 24 en mobile. No sobreescribir con CSS. */
-    #preview-canvas {
-        max-height: none !important;
-    }
-}
 
 @media (max-width: 480px) {
 
@@ -1476,8 +1445,40 @@ body.tof-bg-dark .canvas-area {
 
 /* ══════════════════════════════════════════════════════════
    MÓVIL — Handles de rotación más grandes (mínimo 44px táctil)
-   ══════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL — Barra de formatos en 1 fila (scroll horizontal)
+
+/* ══════════════════════════════════════════════════════════
+   BLOQUES 5-6: Polish móvil
+
+/* ══ MEDIA (max-width: 768px) — Consolidated mobile overrides (B1-B6) ══ */
 @media (max-width: 768px) {
+
+    /* Botón Visualizar: sticky al fondo de la pantalla en móvil */
+    #canvas-gen-bar {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 200 !important;
+        background: var(--bg-surface, #0d0d1a) !important;
+        border-top: 1px solid var(--border, #1e2035) !important;
+        margin: 0 -10px !important;
+        padding: 10px 14px 14px !important;
+        border-radius: 0 !important;
+    }
+
+    #canvas-gen-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+        padding: 14px 20px !important;
+    }
+
+    /* Canvas sizing corregido en JS (applyImageToCanvas / _applyFormatLayout)
+       usando maxW = innerWidth - 24 en mobile. No sobreescribir con CSS. */
+    #preview-canvas {
+        max-height: none !important;
+    }
 
     /* Handle de rotación de TEXTO */
     .txt-rot-handle {
@@ -1507,12 +1508,6 @@ body.tof-bg-dark .canvas-area {
         font-size: 15px !important;
         min-height: 44px !important;
     }
-}
-
-/* ══════════════════════════════════════════════════════════
-   MÓVIL — Barra de formatos en 1 fila (scroll horizontal)
-   ══════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
 
     /* En móvil: barra vuelve a sticky dentro del canvas-area */
     #format-tabs-bar {
@@ -1543,12 +1538,6 @@ body.tof-bg-dark .canvas-area {
     #format-tabs-bar .fmt-tab-sep {
         flex-shrink: 0 !important;
     }
-}
-
-/* ══════════════════════════════════════════════════════════
-   BLOQUES 5-6: Polish móvil
-   ══════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
 
     /* B5 — Separación extra al final del panel de controles para
        que el último acordeón no quede tapado por el botón sticky */
@@ -1629,4 +1618,5 @@ body.tof-bg-dark .canvas-area {
     .controls-panel button:not(.fmt-tab):not(.tab-close):not(.ctx-menu-item):not(.ai-ratio-card) {
         min-height: 36px !important;
     }
+
 }
