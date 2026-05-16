@@ -1227,6 +1227,39 @@
                         </div>
                     </div>
 
+
+                    <!-- ══ BRAND KIT ══════════════════════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-brand-kit" data-panel="brand-kit">
+                        <div class="acc-header acc-brand-kit-hdr" onclick="toggleAccordion('brand-kit')" style="background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(245,158,11,0.03));">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5" fill="currentColor"/><circle cx="19" cy="12" r="2.5" fill="currentColor"/><circle cx="13.5" cy="17.5" r="2.5" fill="currentColor"/><circle cx="5" cy="12" r="3.5" fill="none"/><path d="M7.5 11.5l4-3M7.5 12.5l4 3"/></svg></span>
+                                <span class="acc-name">Brand Kit</span>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-brand-kit">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-brand-kit" style="padding:10px;">
+                            <!-- Colores de marca -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;">Colores</span>
+                                <button onclick="addBrandColor(texts[activeTextIndex>=0?activeTextIndex:0]?.font_color||'#ffffff')"
+                                    title="Guardar color actual del campo activo"
+                                    style="font-size:11px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:700;">+ Color</button>
+                            </div>
+                            <div id="brand-swatches" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;min-height:26px;"></div>
+                            <!-- Fuentes favoritas -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;">Fuentes favoritas</span>
+                                <button onclick="_bkAddFont()"
+                                    title="Guardar fuente actual del campo activo (máx. 4)"
+                                    style="font-size:11px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:700;">+ Fuente</button>
+                            </div>
+                            <div id="brand-fonts" style="display:flex;flex-direction:column;gap:5px;"></div>
+                        </div>
+                    </div>
+
                     <!-- ══ LOGOS DE CLIENTES ════════════════════════════════ -->
                     <div class="acc-section sortable-panel" id="acc-logos" data-panel="logos">
                         <div class="acc-header acc-logos-hdr" onclick="toggleAccordion('logos')" style="background:linear-gradient(135deg,rgba(124,110,255,0.06),rgba(233,30,140,0.04));">
