@@ -522,6 +522,7 @@
             border-color: rgba(245,158,11,0.6) !important;
             box-shadow: 0 0 5px rgba(245,158,11,0.2);
         }
+        .tab-lock { margin-left: -1px; }
         body.fp-active .text-tab:not(.active):hover {
             background: rgba(245,158,11,0.12) !important;
         }
