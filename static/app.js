@@ -1245,7 +1245,7 @@ function _renderCountdownSection(index,t){const isEvent=(t.countdown_mode||'even
                           ? `<div class="font-picker-divider font-picker-divider-brand">✦ Biblia — Brand Fonts</div>`
                           : `<div class="font-picker-divider">${g}</div>`;
                         return divider+
-                          items.map(f=>`<div class="font-picker-option${f.value===t.font_value?' selected':''}"style="${f.css}"onclick="selectFont(${index},'${f.value}',event)">${f.display}</div>`).join('');
+                          items.map(f=>`<div onmousedown="event.preventDefault()" class="font-picker-option${f.value===t.font_value?' selected':''}"style="${f.css}"onclick="selectFont(${index},'${f.value}',event)">${f.display}</div>`).join('');
                       }).join('');
                       return `<div class="font-picker"id="fp-${index}"style="width:100%;"><button class="font-picker-btn"onmousedown="event.preventDefault()"onclick="toggleFontPicker(${index},event)"type="button"style="width:100%;background:#0e0e1c;border:1.5px solid #2a2a50;color:#e2e8f0;"><span class="font-picker-label"style="${cur.css};max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;">${cur.display}</span><span class="fp-arrow"style="color:#818cf8;">▼</span></button><div class="font-picker-dropdown"id="fp-list-${index}">${opts}</div></div>`;
                     })()}
