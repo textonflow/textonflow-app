@@ -21,7 +21,7 @@ from typing import Dict, Optional
 import requests
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse, Response
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 try:
     import numpy as np
     _NUMPY_OK = True
@@ -427,6 +427,14 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
     if request.filter_name and request.filter_name != "none":
         logger.info(f"🎨 Aplicando filtro: {request.filter_name}")
         image = apply_filter(image, request.filter_name)
+
+    # Ajustes de imagen: brillo / contraste / saturación
+    if request.img_brightness != 100.0:
+        image = ImageEnhance.Brightness(image).enhance(request.img_brightness / 100.0)
+    if request.img_contrast != 100.0:
+        image = ImageEnhance.Contrast(image).enhance(request.img_contrast / 100.0)
+    if request.img_saturation != 100.0:
+        image = ImageEnhance.Color(image).enhance(request.img_saturation / 100.0)
 
     # Viñeta
     if request.vignette_enabled:
