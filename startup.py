@@ -19,6 +19,19 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
+def _is_html_error_page(content: bytes, dest: str) -> bool:
+    """Devuelve True si el contenido parece una página HTML de error (ej: Replit sleep page).
+    
+    Previene sobreescribir CSS/JS con HTML cuando Replit está caído o en modo sleep.
+    Solo aplica a archivos .css y .js — los .html son descargados sin restricción.
+    """
+    if dest.endswith('.html'):
+        return False
+    stripped = content.lstrip()[:20].lower()
+    return stripped.startswith(b'<html') or stripped.startswith(b'<!doc')
+
+
 # ─── URL base desde donde Railway descarga los estáticos de Replit ─────────────
 _UPDATE_BASE = os.getenv(
     "TEXTONFLOW_UPDATE_URL",
@@ -78,6 +91,10 @@ def _auto_update_statics() -> None:
         try:
             r = requests.get(url, timeout=10)
             if r.status_code == 200 and len(r.content) > 100:
+                # Validar que CSS/JS no sea una página HTML de error (ej: Replit sleep page)
+                if _is_html_error_page(r.content, dest):
+                    logger.warning(f"⚠️  Auto-update abortado — respuesta HTML en lugar de {dest}")
+                    continue
                 parent = os.path.dirname(dest)
                 if parent:
                     os.makedirs(parent, exist_ok=True)
