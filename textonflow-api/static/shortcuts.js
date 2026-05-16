@@ -7,3 +7,5 @@ function closeShortcuts(){
   var el=document.getElementById('tof-shortcuts-overlay');
   if(el)el.style.display='none';
 }
+window.toggleShortcuts = toggleShortcuts;
+window.closeShortcuts  = closeShortcuts;
