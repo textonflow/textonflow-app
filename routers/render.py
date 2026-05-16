@@ -642,6 +642,12 @@ def _fire_user_webhook(user_id: str, image_url: str, template: str) -> None:
 _RENDER_JOBS: dict = {}          # job_id → {status, result, error, created_at}
 _RENDER_EXECUTOR = _futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="tof-render")
 
+def _rj_update(job_id, pct: int, msg: str) -> None:
+    """Actualiza el progreso de un render job en _RENDER_JOBS (no falla si no existe)."""
+    if job_id and job_id in _RENDER_JOBS:
+        _RENDER_JOBS[job_id].update({"progress": pct, "progress_msg": msg})
+
+
 def _run_render_job(job_id: str, req_data: dict, auth_header: str) -> None:
     """Ejecuta el render en un hilo del pool y guarda el resultado en _RENDER_JOBS."""
     _RENDER_JOBS[job_id]["status"] = "processing"
@@ -714,7 +720,11 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         if not _min_ok:
             raise HTTPException(status_code=429, detail="Demasiados renders por minuto. Crea una cuenta gratis para más velocidad.")
     try:
-        # Cargar imagen (URL o local)
+        # ── Progreso en tiempo real: registrar job si viene con render_job_id ──
+        if getattr(request, 'render_job_id', None):
+            _RENDER_JOBS[request.render_job_id] = {"status": "processing", "progress": 5, "progress_msg": "Iniciando render…"}
+        _rjid = getattr(request, 'render_job_id', None)
+                # Cargar imagen (URL o local)
         # ── Prioridad 1: base64 enviada por el frontend (evita fetch externo) ──────
         if request.template_image_b64:
             try:
@@ -852,6 +862,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         if request.filter_name and request.filter_name != "none":
             logger.info(f"🎨 Aplicando filtro: {request.filter_name}")
             image = apply_filter(image, request.filter_name)
+        _rj_update(_rjid, 30, "Filtro aplicado")
 
         # Aplicar viñeta (encima del filtro, antes de los textos)
         if request.vignette_enabled:
@@ -883,6 +894,8 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             except Exception as e:
                 logger.warning(f"⚠️ Error renderizando forma: {e}")
 
+        _rj_update(_rjid, 42, "Preparando textos…")
+        _n_texts = max(1, len(request.texts))
         for idx, text_field in enumerate(request.texts):
             # ── Countdown: calcular texto antes de renderizar ──────────────────
             if text_field.countdown_mode:
@@ -942,6 +955,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 font = ImageFont.load_default()
 
             image = draw_text_with_effects(image, text_field, font, render_scale=request.render_scale)
+            _rj_update(_rjid, 42 + int(46*(idx+1)/_n_texts), f"Texto {idx+1}/{_n_texts}")
 
         # Aplicar overlays de imagen (logos, firmas, badges, mapas)
         for ov in (request.overlays or []):
@@ -1066,11 +1080,13 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         local_path = os.path.join("output", output_filename)
         os.makedirs("output", exist_ok=True)
         image.save(local_path, "JPEG", quality=95, subsampling=0)
+        _rj_update(_rjid, 90, "Guardando imagen…")
 
         # ── Subir output a Supabase (URL permanente — sobrevive redeploys Railway) ──
         sb_out_url = _upload_output_to_supabase(storage_path, output_filename)
         base_url = _get_base_url(http_req)
         image_url = sb_out_url if sb_out_url else f"{base_url}/storage/{output_filename}"
+        _rj_update(_rjid, 99, "Casi listo…")
         logger.info(f"✅ Imagen generada: {output_filename} → {image_url[:60]}")
 
         # ── Contadores ────────────────────────────────────────────────────────
