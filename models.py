@@ -151,6 +151,10 @@ class MultiTextRequest(BaseModel):
     vignette_size:    float       = 50.0       # 0-100 (qué tanto cubre)
     vignette_sides:   Optional[List[str]] = None  # ['top','right','bottom','left','tl','tr','bl','br']
     vignette_filter:  str         = "none"     # tono: none|sepia|warm|cold|violet|green|red|golden|cyan
+    # ── Ajustes de imagen ─────────────────────────────────────────────────────
+    img_brightness: float = 100.0   # 0-200, 100=sin cambio
+    img_contrast:   float = 100.0   # 0-200, 100=sin cambio
+    img_saturation: float = 100.0   # 0-200, 100=sin cambio
     # ── Multi-formato: artboard crop/zoom ─────────────────────────────────────
     format_width:  Optional[int]   = None  # Ancho del artboard del formato (px)
     format_height: Optional[int]   = None  # Alto del artboard del formato (px)
