@@ -11,6 +11,7 @@ class TextRun(BaseModel):
     bold_override:   Optional[bool] = None
     italic_override: Optional[bool] = None
     font_color:      Optional[str]  = None
+    letter_spacing_run: Optional[int] = None
 
 
 class TextField(BaseModel):
@@ -33,6 +34,7 @@ class TextField(BaseModel):
     # Estilo de línea del borde: "solid" | "dashed" | "dotted"
     background_stroke_dash: str = "solid"
     line_spacing: int = 10
+    letter_spacing: int = 0
     alignment: str = "left"
     text_align: str = "center"
     font_name: str = "Arial-Bold"
