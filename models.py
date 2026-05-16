@@ -77,6 +77,8 @@ class TextField(BaseModel):
     countdown_expired_text: Optional[str] = None
     countdown_urgency_color: Optional[str] = None   # color cuando faltan N horas
     countdown_urgency_threshold_h: Optional[float] = 3.0  # horas umbral (default 3)
+    # ── Visibilidad de capa ──────────────────────────────────────────────────
+    visible: Optional[bool] = True       # False = oculto en canvas y en render
     # ── Formato inline (runs por selección) ──────────────────────────────────
     font_backend: Optional[str] = None                   # familia base: "Arial", "GeomanistRegular", etc.
     text_runs: Optional[List["TextRun"]] = None          # lista de runs con formato por segmento
