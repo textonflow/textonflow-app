@@ -454,6 +454,8 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
 
     # Textos
     for idx, text_field in enumerate(request.texts):
+        if getattr(text_field, 'visible', True) is False:
+            continue
         if text_field.countdown_mode:
             now_utc = datetime.now(timezone.utc)
             cd_fmt = text_field.countdown_format or "HH:MM:SS"
