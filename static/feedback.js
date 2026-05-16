@@ -90,3 +90,6 @@ function launchConfetti() {
         btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enviar feedback';
       }
     }
+window.openFeedback  = openFeedback;
+window.closeFeedback = closeFeedback;
+window.sendFeedback  = sendFeedback;
