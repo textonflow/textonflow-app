@@ -773,6 +773,16 @@
                     </button>
                     <div id="canvas-gen-hint" data-i18n="visualize_btn_hint">Genera la imagen final lista para usar en ManyChat</div>
                     <div id="generate-status" style="display:none;margin-top:10px;padding:9px 14px;border-radius:8px;font-size:12px;text-align:center;"></div>
+                    <!-- ── Barra de progreso real (item #20) ── -->
+                    <div id="gen-prog-wrap" style="display:none;margin-top:8px;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                        <span id="gen-prog-msg" style="font-size:10px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Procesando…</span>
+                        <span id="gen-prog-pct" style="font-size:10px;color:#7c6eff;font-weight:700;">0%</span>
+                      </div>
+                      <div style="width:100%;height:5px;background:#1e1e30;border-radius:3px;overflow:hidden;">
+                        <div id="gen-prog-bar-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#7c6eff,#a78bfa);border-radius:3px;transition:width .3s ease;"></div>
+                      </div>
+                    </div>
                     <button id="btn-batch-var" onclick="openBatchModal()" style="margin-top:8px;width:100%;padding:7px 12px;background:rgba(124,110,255,.12);border:1px solid rgba(124,110,255,.35);color:#9c8fff;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(124,110,255,.22)'" onmouseout="this.style.background='rgba(124,110,255,.12)'">
                         ⚡ Exportar variaciones en lote
                     </button>
@@ -4172,6 +4182,50 @@ function closeShortcuts(){
         <div style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
           <div id="bv-results"></div>
           <button id="bv-dl-all" onclick="bvDownloadAll()" style="display:none;padding:9px 18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34d399;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;align-self:flex-start;">⬇ Descargar todas</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GIF ANIMADO MODAL ══════════════════════════════════════════════════ -->
+    <div id="gif-anim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100001;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:#0f0f1c;border:1px solid #2a2a4a;border-radius:14px;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.85);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1e1e30;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff;">🎞 GIF animado (efecto typewriter)</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">Simula el tipeo de ManyChat letra por letra</div>
+          </div>
+          <button onclick="closeGifModal()" style="background:none;border:none;color:#555;cursor:pointer;font-size:20px;padding:0 4px;line-height:1;">×</button>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:11px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:#888;min-width:110px;">Campo a animar</span>
+            <select id="gif-anim-text-idx" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;cursor:pointer;"></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:#888;min-width:110px;">Tipo de animación</span>
+            <select id="gif-anim-type" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;cursor:pointer;">
+              <option value="typewriter">✍️ Typewriter (letra a letra)</option>
+              <option value="fade">✨ Fade (aparición suave)</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:10px;color:#888;">FPS</label>
+              <input id="gif-fps-input" type="number" min="4" max="24" value="12" style="padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;width:100%;">
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:10px;color:#888;">Pausa final (seg)</label>
+              <input id="gif-hold-input" type="number" min="0.5" max="5" step="0.5" value="1.5" style="padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;width:100%;">
+            </div>
+          </div>
+          <button id="gif-gen-btn-modal" onclick="gifGenerate()" style="padding:9px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;transition:background .15s;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">🎞 Generar GIF</button>
+          <div id="gif-gen-status" style="font-size:10px;color:#888;text-align:center;min-height:14px;"></div>
+        </div>
+        <div id="gif-preview-wrap" style="display:none;padding:0 18px 14px;text-align:center;">
+          <img id="gif-preview-img" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #2a2a4a;object-fit:contain;">
+        </div>
+        <div id="gif-dl-wrap" style="display:none;padding:0 18px 16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <a id="gif-dl-link" href="#" style="padding:8px 18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34d399;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;">⬇ Descargar GIF</a>
         </div>
       </div>
     </div>
