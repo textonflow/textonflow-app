@@ -1156,8 +1156,8 @@
         /* ── Panel de variables ManyChat ───────────────────────────── */
         .vars-panel {
             margin-top: 8px;
-            background: #f4f4ff;
-            border: 1px solid #ddd8f8;
+            background: rgba(30,30,50,0.7);
+            border: 1px solid rgba(100,100,180,0.25);
             border-radius: 8px;
             padding: 8px 10px;
         }
@@ -1166,13 +1166,14 @@
             align-items: center;
             gap: 5px;
             font-size: 10px;
-            color: #6b7280;
+            color: #7c80a0;
             margin-bottom: 7px;
             font-style: italic;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
         }
         .vars-panel-header code {
-            background: #e8e4ff;
-            color: #4f46e5;
+            background: rgba(79,70,229,0.2);
+            color: #a5b4fc;
             padding: 1px 4px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
@@ -1182,10 +1183,11 @@
         .vars-panel-section-label {
             font-size: 10px;
             font-weight: 700;
-            color: #374151;
+            color: #8890b0;
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
         }
         .vars-panel-chips {
             display: flex;
@@ -1193,39 +1195,40 @@
             gap: 5px;
         }
 
-        /* Chip sistema (azul/morado) */
+        /* Chip sistema (azul/morado) — dark theme */
         .var-chip {
             display: inline-flex;
             align-items: center;
             gap: 3px;
-            padding: 4px 9px;
+            padding: 3px 8px;
             border-radius: 999px;
-            font-size: 11px;
-            font-family: 'Courier New', monospace;
-            font-weight: 700;
+            font-size: 11px !important;
+            font-family: 'Courier New', monospace !important;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
             white-space: nowrap;
-            border: 1.5px solid transparent;
+            border: 1px solid transparent;
+            line-height: 1.4;
         }
         .var-chip-sys {
-            background: #ede9fe;
-            color: #4f46e5;
-            border-color: #c4b5fd;
+            background: rgba(79,70,229,0.15);
+            color: #a5b4fc;
+            border-color: rgba(79,70,229,0.35);
         }
         .var-chip-sys:hover {
             background: #4f46e5;
             color: #fff;
             border-color: #4f46e5;
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(79,70,229,0.25);
+            box-shadow: 0 2px 6px rgba(79,70,229,0.4);
         }
 
-        /* Chip usuario (naranja) */
+        /* Chip usuario (naranja) — dark theme */
         .var-chip-user {
-            background: #fff7ed;
-            color: #c2410c;
-            border-color: #fdba74;
+            background: rgba(194,65,12,0.15);
+            color: #fb923c;
+            border-color: rgba(194,65,12,0.35);
             position: relative;
         }
         .var-chip-user:hover {
@@ -1253,19 +1256,19 @@
         }
         .var-chip-user:hover .del-field { display: block; }
 
-        /* Chip "+ Nuevo" */
+        /* Chip "+ Nuevo" — dark theme */
         .var-chip-add {
-            background: #fff;
+            background: transparent;
             color: #6b7280;
-            border: 1.5px dashed #d1d5db;
-            font-family: inherit;
+            border: 1.5px dashed rgba(100,100,150,0.4);
+            font-family: -apple-system, 'Segoe UI', sans-serif !important;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 11px !important;
         }
         .var-chip-add:hover {
-            background: #f0fdf4;
-            color: #16a34a;
-            border-color: #86efac;
+            background: rgba(22,163,74,0.12);
+            color: #4ade80;
+            border-color: rgba(22,163,74,0.4);
             transform: translateY(-1px);
         }
 
@@ -1449,6 +1452,15 @@
         .emoji-btn:hover { opacity: 1; background: rgba(0,0,0,0.07); }
 
         .textarea-wrap { position: relative; }
+
+        /* Reset fuente del textarea — evita que herede la fuente del canvas */
+        .textarea-wrap textarea,
+        .form-group textarea {
+            font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            line-height: 1.5 !important;
+        }
 
         .emoji-picker-popup {
             display: none;
