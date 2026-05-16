@@ -524,6 +524,51 @@
         }
         .tab-lock { margin-left: -1px; }
 
+
+        /* ── BATCH VARIATIONS ───────────────────────────────── */
+        .bv-swatch-label {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; cursor: pointer; position: relative;
+        }
+        .bv-color-check { width: 12px; height: 12px; cursor: pointer; accent-color: #7c6eff; }
+        .bv-color-pick {
+            width: 34px; height: 34px; border: none; border-radius: 6px;
+            cursor: pointer; padding: 0; background: none;
+        }
+        .bv-color-preview {
+            width: 34px; height: 10px; border-radius: 3px;
+            display: block; border: 1px solid #333;
+        }
+        .bv-results-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .bv-result-card {
+            display: flex; flex-direction: column; gap: 5px;
+            border: 1px solid #2a2a4a; border-radius: 8px; overflow: hidden;
+            background: #141422; width: 140px; flex-shrink: 0;
+        }
+        .bv-result-img {
+            width: 140px; height: 90px; object-fit: cover; display: block;
+        }
+        .bv-result-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 4px 6px;
+        }
+        .bv-result-color {
+            width: 16px; height: 16px; border-radius: 4px;
+            border: 1px solid #333; flex-shrink: 0; display: inline-block;
+        }
+        .bv-dl-btn {
+            font-size: 10px; color: #7c6eff; text-decoration: none;
+            font-weight: 600; white-space: nowrap;
+        }
+        .bv-dl-btn:hover { color: #9c8fff; }
+        .bv-result-err {
+            padding: 8px; font-size: 10px; color: #f87171;
+        }
+        .bv-loading {
+            padding: 20px; text-align: center; color: #666; font-size: 12px;
+        }
+        #bv-results { display: flex; flex-wrap: wrap; gap: 10px; }
+
         /* ── HISTORIAL VISUAL ───────────────────────────────── */
         #tof-hist-panel {
             position: fixed;
