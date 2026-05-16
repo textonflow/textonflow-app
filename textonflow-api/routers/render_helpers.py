@@ -376,10 +376,30 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
             else:
                 # Archivo no encontrado localmente (storage efímero en Railway) → fallback HTTP
                 logger.warning(f"⚠️ Archivo local no encontrado ({local_path}), descargando via HTTP: {request.template_name}")
-                session = build_retry_session()
-                response = session.get(request.template_name, timeout=15)
-                response.raise_for_status()
-                image = Image.open(BytesIO(response.content)).convert("RGBA")
+                try:
+                    session = build_retry_session()
+                    response = session.get(request.template_name, timeout=15,
+                                           headers={"User-Agent": "TextOnFlow/1.0", "Accept": "image/*,*/*;q=0.8"})
+                    if response.status_code == 404:
+                        _fname = os.path.basename(local_path)
+                        raise HTTPException(
+                            status_code=400,
+                            detail=(
+                                f"La imagen '{_fname}' ya no existe en el servidor "
+                                f"(fue eliminada tras un redeploy). "
+                                f"Abre el editor, vuelve a subir la imagen y actualiza el template en ManyChat."
+                            ),
+                        )
+                    response.raise_for_status()
+                    image = Image.open(BytesIO(response.content)).convert("RGBA")
+                except HTTPException:
+                    raise
+                except Exception as _fe:
+                    _fname = os.path.basename(local_path)
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Imagen '{_fname}' no encontrada localmente ni descargable: {_fe}. Re-sube la imagen en el editor.",
+                    )
         else:
             logger.info(f"🔵 Descargando imagen: {request.template_name}")
             session = build_retry_session()
