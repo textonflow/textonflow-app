@@ -827,21 +827,32 @@
             <div class="panel-resizer" id="panel-resizer"></div>
             
             <div class="controls-panel" id="ui-scalable-panel">
+
+                <!-- ══ BARRA PERSISTENTE: undo/redo + zoom siempre visibles ══ -->
+                <div id="tof-persist-bar" style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:#141420;border-bottom:1px solid #252535;flex-shrink:0;min-height:34px;">
+                    <div style="display:flex;align-items:center;border:1px solid #333345;border-radius:5px;overflow:hidden;" title="Deshacer / Rehacer (Ctrl+Z / Ctrl+Y)">
+                        <button id="btn-undo" onclick="undo()" disabled title="Deshacer (Ctrl+Z)"
+                            style="width:30px;height:26px;border:none;background:#1e1e2e;cursor:pointer;font-size:15px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
+                            onmouseover="if(!this.disabled){this.style.background='#2a2a4a';this.style.color='#ccc';}" onmouseout="this.style.background='#1e1e2e';this.style.color=this.disabled?'#333':'#aaa';">↩</button>
+                        <button id="btn-redo" onclick="redo()" disabled title="Rehacer (Ctrl+Y)"
+                            style="width:30px;height:26px;border:none;border-left:1px solid #333345;background:#1e1e2e;cursor:pointer;font-size:15px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
+                            onmouseover="if(!this.disabled){this.style.background='#2a2a4a';this.style.color='#ccc';}" onmouseout="this.style.background='#1e1e2e';this.style.color=this.disabled?'#333':'#aaa';">↪</button>
+                    </div>
+                    <span id="tof-history-lbl" style="font-size:10px;color:#383850;white-space:nowrap;user-select:none;flex-shrink:0;">sin cambios</span>
+                    <div style="flex:1;"></div>
+                    <div style="display:flex;align-items:center;gap:1px;border:1px solid #252535;border-radius:5px;overflow:hidden;background:#1e1e2e;">
+                        <button onclick="_cvZoomStep(-1)" title="Alejar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">−</button>
+                        <span id="tof-zoom-lbl" style="font-size:10px;color:#555;min-width:34px;text-align:center;cursor:pointer;user-select:none;padding:0 2px;" onclick="_cvZoomReset()" title="Clic = 100%">100%</span>
+                        <button onclick="_cvZoomStep(1)"  title="Acercar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">+</button>
+                    </div>
+                </div>
+
                 <!-- ══ Diseño ══ -->
                 <div id="tab-design">
                 <div class="upload-section">
                     <div class="tof-toolbar-row" style="display: flex; align-items: center; gap: 15px;">
                         <h4 id="upload-section-title" style="margin: 0;" data-i18n="upload_section_title">Cargar Imagen</h4>
                         <div class="tof-toolbar-btns" style="display:flex; align-items:center; gap:6px; margin-left: auto;">
-                            <!-- Undo / Redo -->
-                            <div style="display:flex;align-items:center;border:1px solid #3d3d3d;border-radius:5px;overflow:hidden;" title="Deshacer / Rehacer (Ctrl+Z / Ctrl+Y)">
-                                <button id="btn-undo" onclick="undo()" disabled title="Deshacer (Ctrl+Z)"
-                                    style="width:28px;height:24px;border:none;background:#2a2a2a;cursor:pointer;font-size:14px;color:#a0a0a0;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
-                                    onmouseover="if(!this.disabled)this.style.background='#3a3a4a'" onmouseout="this.style.background='#2a2a2a'">↩</button>
-                                <button id="btn-redo" onclick="redo()" disabled title="Rehacer (Ctrl+Y)"
-                                    style="width:28px;height:24px;border:none;border-left:1px solid #3d3d3d;background:#2a2a2a;cursor:pointer;font-size:14px;color:#a0a0a0;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
-                                    onmouseover="if(!this.disabled)this.style.background='#3a3a4a'" onmouseout="this.style.background='#2a2a2a'">↪</button>
-                            </div>
                             <!-- Menú desplegable: Proyectos / Planes / Masivo -->
                             <div style="position:relative;" id="tof-nav-menu-wrap">
                                 <button onclick="toggleNavMenu()" id="tof-nav-menu-btn"
