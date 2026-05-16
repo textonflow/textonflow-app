@@ -6,8 +6,11 @@
     <meta name="google-site-verification" content="yswz02_5nuqTXpNaUk-k5x_D5LO-3NauE0Srf-GAnwY" />
     <title>TextOnFlow - Configurador Visual</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <!-- ASSET_VERSION: v232 — Supabase Storage permanente (imágenes no se pierden en Railway) -->
-    <link rel="stylesheet" href="/static/styles.css?v=234">
+    <!-- ASSET_VERSION: v262 — fix: URL render incluye ?var={{var}} automáticamente al guardar template -->
+    <link rel="stylesheet" href="/static/base.css">
+    <link rel="stylesheet" href="/static/layout.css">
+    <link rel="stylesheet" href="/static/components.css">
+    <link rel="stylesheet" href="/static/editor.css">
     <!-- Google Fonts para preview en canvas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,6 +31,28 @@
         @font-face { font-family: 'Oishigo'; src: url('/fonts/Oishigo-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; }
         @font-face { font-family: 'Oraqle Script'; src: url('/fonts/OraqleScript-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; }
         @font-face { font-family: 'Oraqle Swash'; src: url('/fonts/OraqleSwash-Regular.otf') format('opentype'); font-weight: normal; font-style: normal; }
+        /* ── Colección Premium ── */
+        @font-face { font-family: 'Hunter River';      src: url('/fonts/HunterRiver-Regular.otf')  format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Boorsok';           src: url('/fonts/Boorsok-Regular.otf')      format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: '518';               src: url('/fonts/518-Regular.otf')           format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: '518';               src: url('/fonts/518-Light.otf')             format('opentype');  font-weight: 300;    font-style: normal; }
+        @font-face { font-family: 'Garden Flower';     src: url('/fonts/GardenFlower-Regular.otf') format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'The Dolbak Brush';  src: url('/fonts/TheDolbak-Brush.ttf')      format('truetype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Post';              src: url('/fonts/Post-Regular.otf')         format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'North';             src: url('/fonts/North-Regular.otf')        format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'The Beardy Script'; src: url('/fonts/BeardyScript-Regular.otf') format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Holidaze';          src: url('/fonts/Holidaze-Regular.otf')     format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Teenage Marley';    src: url('/fonts/TeenageMarley-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'West River';        src: url('/fonts/WestRiver-Regular.otf')    format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Black Mystique';    src: url('/fonts/BlackMystique-Regular.otf') format('opentype'); font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Artisan Maker';     src: url('/fonts/ArtisanMaker-Regular.otf') format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'Right Potions';     src: url('/fonts/RightPotions-Regular.otf') format('opentype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-Light.ttf')        format('truetype');  font-weight: 300;    font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-Regular.ttf')      format('truetype');  font-weight: normal; font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-Medium.ttf')       format('truetype');  font-weight: 500;    font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-SemiBold.ttf')     format('truetype');  font-weight: 600;    font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-Bold.ttf')         format('truetype');  font-weight: bold;   font-style: normal; }
+        @font-face { font-family: 'TRT Burn';          src: url('/fonts/TRTBurn-ExtraBold.ttf')    format('truetype');  font-weight: 800;    font-style: normal; }
     </style>
     <!-- Google Identity Services para Drive OAuth -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -315,11 +340,11 @@
 
             <!-- Mode toggle -->
             <div class="splash-mode-tabs">
-                <button class="splash-tab active" id="tab-url" onclick="splashSetMode('url')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Pega un link
-                </button>
-                <button class="splash-tab" id="tab-upload" onclick="splashSetMode('upload')">
+                <button class="splash-tab active" id="tab-upload" onclick="splashSetMode('upload')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>Subir Imagen
+                </button>
+                <button class="splash-tab" id="tab-url" onclick="splashSetMode('url')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Pega un link
                 </button>
                 <button class="splash-tab" id="tab-ai" onclick="splashSetMode('ai')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="tof-icon2"><path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>Crear con IA
@@ -327,11 +352,10 @@
             </div>
 
             <!-- URL mode -->
-            <div id="splash-url-mode">
+            <div id="splash-url-mode" style="display:none;">
                 <div class="splash-input-row">
                     <input type="text" id="splash-url-input"
-                           placeholder="https://... link de tu imagen"
-                           autofocus
+                           placeholder="Pega aquí el link de la imagen que deseas cargar"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();splashLoad();}">
                     <button onclick="splashLoad()">Cargar →</button>
                 </div>
@@ -342,7 +366,7 @@
             </div>
 
             <!-- Upload mode -->
-            <div id="splash-upload-mode" style="display:none;">
+            <div id="splash-upload-mode">
                 <!-- Rectángulo grande: receptor único de clic, drag y Ctrl+V -->
                 <div id="splash-drop-zone"
                      onclick="document.getElementById('splash-file-input').click()"
@@ -518,7 +542,8 @@
             <div id="splash-timer-mode" style="display:none;">
 
                 <!-- Sub-tabs: Evento vs Urgencia -->
-                <div class="timer-mode-tabs">
+                <div class="timer-mode-tabs" style="display:flex;align-items:center;gap:0;">
+                    <button onclick="cdHelpModal(_timerSubMode==='urgency'?'urgency':'event')" title="Guía de uso del contador" style="background:#1e1e3a;border:1px solid #2a2a50;border-radius:50%;width:22px;height:22px;color:#818cf8;font-size:12px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;margin-right:6px;padding:0;">?</button>
                     <button class="timer-mode-tab active" id="ttab-event" onclick="timerSetSubMode('event')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         <span data-i18n="timer_event_tab">Contador de Evento</span>
@@ -714,7 +739,9 @@
 
                     <div class="canvas-wrapper" id="canvas-wrapper">
                     <canvas id="preview-canvas"></canvas>
-                    <img id="canvas-watermark" src="/static/logo-negro-new.png" alt="TextOnFlow" style="position:absolute;bottom:14px;right:18px;height:22px;width:auto;opacity:0.55;pointer-events:none;z-index:200;display:none;">
+                    <div id="canvas-watermark" style="position:absolute;bottom:14px;right:18px;display:none;pointer-events:none;z-index:200;background:rgba(0,0,0,0.50);border-radius:999px;padding:6px 14px;align-items:center;gap:0;">
+                      <img id="canvas-watermark-img" src="/static/logo-blanco-new.png" alt="" style="height:55px;width:auto;display:block;opacity:1;">
+                    </div>
                     <div id="text-layers" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
                     <!-- Snap lines -->
                     <div id="snap-line-v" style="position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: #FFFF00; opacity: 0; pointer-events: none; transition: opacity 0.15s;"></div>
@@ -749,6 +776,19 @@
                     </button>
                     <div id="canvas-gen-hint" data-i18n="visualize_btn_hint">Genera la imagen final lista para usar en ManyChat</div>
                     <div id="generate-status" style="display:none;margin-top:10px;padding:9px 14px;border-radius:8px;font-size:12px;text-align:center;"></div>
+                    <!-- ── Barra de progreso real (item #20) ── -->
+                    <div id="gen-prog-wrap" style="display:none;margin-top:8px;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                        <span id="gen-prog-msg" style="font-size:10px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Procesando…</span>
+                        <span id="gen-prog-pct" style="font-size:10px;color:#7c6eff;font-weight:700;">0%</span>
+                      </div>
+                      <div style="width:100%;height:5px;background:#1e1e30;border-radius:3px;overflow:hidden;">
+                        <div id="gen-prog-bar-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#7c6eff,#a78bfa);border-radius:3px;transition:width .3s ease;"></div>
+                      </div>
+                    </div>
+                    <button id="btn-batch-var" onclick="openBatchModal()" style="margin-top:8px;width:100%;padding:7px 12px;background:rgba(124,110,255,.12);border:1px solid rgba(124,110,255,.35);color:#9c8fff;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(124,110,255,.22)'" onmouseout="this.style.background='rgba(124,110,255,.12)'">
+                        ⚡ Exportar variaciones en lote
+                    </button>
                 </div>
                 </div><!-- /canvas-center-wrap -->
 
@@ -799,23 +839,79 @@
                     </div>
                 </div>
             </div>
+
+            <div class="panel-resizer" id="panel-resizer"></div>
             
             <div class="controls-panel" id="ui-scalable-panel">
+
+                <!-- ══ BARRA PERSISTENTE: undo/redo + zoom siempre visibles ══ -->
+                <div id="tof-persist-bar" style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:#141420;border-bottom:1px solid #252535;flex-shrink:0;min-height:34px;">
+                    <div style="display:flex;align-items:center;border:1px solid #333345;border-radius:5px;overflow:hidden;" title="Deshacer / Rehacer (Ctrl+Z / Ctrl+Y)">
+                        <button id="btn-undo" onclick="undo()" disabled title="Deshacer (Ctrl+Z)"
+                            style="width:30px;height:26px;border:none;background:#1e1e2e;cursor:pointer;font-size:15px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
+                            onmouseover="if(!this.disabled){this.style.background='#2a2a4a';this.style.color='#ccc';}" onmouseout="this.style.background='#1e1e2e';this.style.color=this.disabled?'#333':'#aaa';">↩</button>
+                        <button id="btn-redo" onclick="redo()" disabled title="Rehacer (Ctrl+Y)"
+                            style="width:30px;height:26px;border:none;border-left:1px solid #333345;background:#1e1e2e;cursor:pointer;font-size:15px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;"
+                            onmouseover="if(!this.disabled){this.style.background='#2a2a4a';this.style.color='#ccc';}" onmouseout="this.style.background='#1e1e2e';this.style.color=this.disabled?'#333':'#aaa';">↪</button>
+                    </div>
+                    <button id="btn-hist-toggle" onclick="toggleHistPanel()" title="Historial visual (miniaturas)"
+                        style="width:30px;height:26px;border:none;background:#1e1e2e;cursor:pointer;font-size:14px;color:#555;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color .15s,background .15s;flex-shrink:0;"
+                        onmouseover="this.style.background='#2a2a4a';this.style.color='#9c8fff';" onmouseout="if(document.getElementById('tof-hist-panel')?.style.display!=='none'){this.style.background='#1a1a38';this.style.color='#7c6eff';}else{this.style.background='#1e1e2e';this.style.color='#555';}">🕐</button>
+                    <span id="tof-history-lbl" style="font-size:10px;color:#383850;white-space:nowrap;user-select:none;flex-shrink:0;">sin cambios</span>
+                    <div style="flex:1;"></div>
+                    <div style="display:flex;align-items:center;gap:1px;border:1px solid #252535;border-radius:5px;overflow:hidden;background:#1e1e2e;">
+                        <button onclick="_cvZoomStep(-1)" title="Alejar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">−</button>
+                        <span id="tof-zoom-lbl" style="font-size:10px;color:#555;min-width:34px;text-align:center;cursor:pointer;user-select:none;padding:0 2px;" onclick="_cvZoomReset()" title="Clic = 100%">100%</span>
+                        <button onclick="_cvZoomStep(1)"  title="Acercar" style="width:22px;height:26px;border:none;background:transparent;color:#555;cursor:pointer;font-size:14px;font-weight:700;padding:0;line-height:1;transition:color .12s;" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">+</button>
+                    </div>
+                    <!-- Pincel de formato -->
+                    <button onclick="_fpToggle()" id="btn-fp" title="Pincel de formato — copia estilo del campo activo"
+                        style="width:24px;height:24px;border:1px solid #2a2a3a;border-radius:5px;background:#1e1e2e;color:#555;cursor:pointer;font-size:13px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,border-color .15s,background .15s,box-shadow .15s;"
+                        onmouseover="if(!window._fpMode){this.style.color='#f59e0b';this.style.borderColor='#f59e0b';}"
+                        onmouseout="if(!window._fpMode){this.style.color='#555';this.style.borderColor='#2a2a3a';}">&#9874;</button>
+                    <!-- Atajos -->
+                    <button onclick="toggleShortcuts()" id="btn-shortcuts" title="Atajos de teclado (?)" style="width:22px;height:22px;border:1px solid #2a2a3a;border-radius:50%;background:#1e1e2e;color:#444;cursor:pointer;font-size:11px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .12s,border-color .12s;" onmouseover="this.style.color='#9ca3ff';this.style.borderColor='#6366f1';" onmouseout="this.style.color='#444';this.style.borderColor='#2a2a3a';">?</button>
+                </div>
+
                 <!-- ══ Diseño ══ -->
                 <div id="tab-design">
                 <div class="upload-section">
-                    <div class="tof-toolbar-row" style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                    <div class="tof-toolbar-row" style="display: flex; align-items: center; gap: 15px;">
                         <h4 id="upload-section-title" style="margin: 0;" data-i18n="upload_section_title">Cargar Imagen</h4>
                         <div class="tof-toolbar-btns" style="display:flex; align-items:center; gap:6px; margin-left: auto;">
-                            <!-- Botón Proyectos -->
-                            <button onclick="openProjectsModal()" id="btn-projects"
-                                class="tof-toolbar-btn green"
-                                title="Guardar / Abrir proyecto">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                                Proyectos
-                            </button>
-                            <!-- Link de precios -->
-                            <a href="/precios" target="_blank" class="tof-toolbar-btn" title="Ver planes y precios">Planes</a>
+                            <!-- Menú desplegable: Proyectos / Planes / Masivo -->
+                            <div style="position:relative;" id="tof-nav-menu-wrap">
+                                <button onclick="toggleNavMenu()" id="tof-nav-menu-btn"
+                                    class="tof-toolbar-btn"
+                                    title="Menú"
+                                    style="gap:4px;padding:0 9px;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                                    <svg id="tof-nav-menu-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s;opacity:.6;"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div id="tof-nav-menu-dropdown"
+                                    style="display:none;position:absolute;top:calc(100% + 5px);left:0;background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.55);min-width:155px;z-index:9999;overflow:hidden;">
+                                    <button onclick="openProjectsModal();closeNavMenu()"
+                                        style="width:100%;display:flex;align-items:center;gap:9px;padding:9px 14px;background:none;border:none;color:#c8c8e8;font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:background .15s;"
+                                        onmouseover="this.style.background='#2a2a4a'" onmouseout="this.style.background='none'">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                        Proyectos
+                                    </button>
+                                    <div style="height:1px;background:#2a2a50;margin:0 8px;"></div>
+                                    <a href="/precios" target="_blank" onclick="closeNavMenu()"
+                                        style="width:100%;display:flex;align-items:center;gap:9px;padding:9px 14px;background:none;border:none;color:#c8c8e8;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s;"
+                                        onmouseover="this.style.background='#2a2a4a'" onmouseout="this.style.background='none'">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        Planes
+                                    </a>
+                                    <div style="height:1px;background:#2a2a50;margin:0 8px;"></div>
+                                    <a href="/batch" target="_blank" onclick="closeNavMenu()"
+                                        style="width:100%;display:flex;align-items:center;gap:9px;padding:9px 14px;background:none;border:none;color:#f59e0b;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s;"
+                                        onmouseover="this.style.background='#2a2a4a'" onmouseout="this.style.background='none'">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                        Masivo
+                                    </a>
+                                </div>
+                            </div>
                             <!-- Botón cuenta de usuario -->
                             <button id="auth-btn" onclick="handleAuthBtn()"
                                 class="tof-toolbar-btn">
@@ -953,6 +1049,35 @@
                             <span id="filter-opacity-label" style="font-size:10px;color:#e8e8e8;min-width:30px;text-align:right;">100%</span>
                         </div>
                     </div>
+
+                    <!-- Ajustes de imagen: Brillo / Contraste / Saturación -->
+                    <div id="img-adj-panel" style="display:flex;flex-direction:column;gap:5px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:7px 10px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                            <span style="font-size:10px;font-weight:700;color:#a0a0a0;text-transform:uppercase;letter-spacing:.4px;">Ajustes imagen</span>
+                            <button onclick="_resetImgAdj()" title="Restablecer ajustes" style="background:none;border:none;color:#555;cursor:pointer;font-size:10px;padding:0 2px;">↺ Reset</button>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">☀ Brillo</span>
+                            <input type="range" id="adj-brightness-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('brightness',this.value)"
+                                style="flex:1;accent-color:#f59e0b;cursor:pointer;height:4px;">
+                            <span id="adj-brightness-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">◑ Contraste</span>
+                            <input type="range" id="adj-contrast-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('contrast',this.value)"
+                                style="flex:1;accent-color:#7c6eff;cursor:pointer;height:4px;">
+                            <span id="adj-contrast-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;color:#888;min-width:62px;">🎨 Satur.</span>
+                            <input type="range" id="adj-saturation-slider" min="0" max="200" value="100"
+                                oninput="_setImgAdj('saturation',this.value)"
+                                style="flex:1;accent-color:#34d399;cursor:pointer;height:4px;">
+                            <span id="adj-saturation-lbl" style="font-size:10px;color:#e8e8e8;min-width:34px;text-align:right;">100%</span>
+                        </div>
+                    </div>
                     <!-- Guías (solo on/off) -->
                     <div style="display:flex;align-items:center;gap:5px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:6px 10px;white-space:nowrap;flex-shrink:0;">
                         <span style="font-size:11px;font-weight:700;color:#a0a0a0;" data-i18n="guides_label">Guías</span>
@@ -1087,25 +1212,7 @@
                         </div>
                     </div>
 
-                    <!-- ══ ACORDEÓN 0: TEMPLATES ══════════════════════════ -->
-                    <div class="acc-section sortable-panel" id="acc-templates" data-panel="templates">
-                        <div class="acc-header" onclick="toggleAccordion('templates')" style="background:linear-gradient(90deg,#1e1e3a 0%,#2a1f4a 100%);">
-                            <span class="panel-dh" title="Mover panel">⠿</span>
-                            <div class="acc-title">
-                                <span class="acc-icon" class="tof-accent-3">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                                </span>
-                                <span class="acc-name" class="tof-accent-3" data-i18n="section_templates">Templates de bienvenida</span>
-                            </div>
-                            <span id="acc-chev-templates" class="acc-chevron">▾</span>
-                        </div>
-                        <div class="acc-body" id="acc-body-templates" style="padding:12px;">
-                            <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;line-height:1.5;">Carga textos pre-configurados listos para ManyChat. <strong>Requiere imagen cargada.</strong> Puedes editar cada texto después.</p>
-                            <div style="display:flex;flex-direction:column;gap:10px;" id="tof-template-cards"></div>
-                        </div>
-                    </div>
-
-                    <!-- ══ ACORDEÓN 1: TEXTOS ══════════════════════════════ -->
+                    <!-- ══ ACORDEÓN 0: TEXTOS ══════════════════════════════ -->
                     <div class="acc-section sortable-panel" id="acc-textos" data-panel="textos">
                         <div class="acc-header acc-textos-hdr" onclick="toggleAccordion('textos')">
                             <span class="panel-dh" title="Mover panel">⠿</span>
@@ -1123,8 +1230,27 @@
                         <div class="acc-body" id="acc-body-textos">
                             <div class="texts-tabs-outer">
                                 <div id="texts-tabs-bar"></div>
+                                <div id="tof-contrast-badge" style="display:none;"></div>
                                 <div id="texts-active-content"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ ACORDEÓN 1: TEMPLATES ══════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-templates" data-panel="templates">
+                        <div class="acc-header" onclick="toggleAccordion('templates')" style="background:linear-gradient(90deg,#1e1e3a 0%,#2a1f4a 100%);">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon" class="tof-accent-3">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </span>
+                                <span class="acc-name" class="tof-accent-3" data-i18n="section_templates">Templates de bienvenida</span>
+                            </div>
+                            <span id="acc-chev-templates" class="acc-chevron">▾</span>
+                        </div>
+                        <div class="acc-body" id="acc-body-templates" style="padding:12px;">
+                            <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;line-height:1.5;">Carga textos pre-configurados listos para ManyChat. <strong>Requiere imagen cargada.</strong> Puedes editar cada texto después.</p>
+                            <div style="display:flex;flex-direction:column;gap:10px;" id="tof-template-cards"></div>
                         </div>
                     </div>
 
@@ -1147,6 +1273,39 @@
                                 <div id="stickers-tabs-bar"></div>
                                 <div id="stickers-active-content"></div>
                             </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ══ BRAND KIT ══════════════════════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-brand-kit" data-panel="brand-kit">
+                        <div class="acc-header acc-brand-kit-hdr" onclick="toggleAccordion('brand-kit')" style="background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(245,158,11,0.03));">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5" fill="currentColor"/><circle cx="19" cy="12" r="2.5" fill="currentColor"/><circle cx="13.5" cy="17.5" r="2.5" fill="currentColor"/><circle cx="5" cy="12" r="3.5" fill="none"/><path d="M7.5 11.5l4-3M7.5 12.5l4 3"/></svg></span>
+                                <span class="acc-name">Brand Kit</span>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-brand-kit">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-brand-kit" style="padding:10px;">
+                            <!-- Colores de marca -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;">Colores</span>
+                                <button onclick="addBrandColor(texts[activeTextIndex>=0?activeTextIndex:0]?.font_color||'#ffffff')"
+                                    title="Guardar color actual del campo activo"
+                                    style="font-size:11px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:700;">+ Color</button>
+                            </div>
+                            <div id="brand-swatches" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;min-height:26px;"></div>
+                            <!-- Fuentes favoritas -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;">Fuentes favoritas</span>
+                                <button onclick="_bkAddFont()"
+                                    title="Guardar fuente actual del campo activo (máx. 4)"
+                                    style="font-size:11px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;border-radius:5px;padding:2px 8px;cursor:pointer;font-weight:700;">+ Fuente</button>
+                            </div>
+                            <div id="brand-fonts" style="display:flex;flex-direction:column;gap:5px;"></div>
                         </div>
                     </div>
 
@@ -1241,7 +1400,8 @@
                                     <label style="font-size:13px;font-weight:700;color:#e8e8e8;display:block;margin-bottom:4px;">URL o texto</label>
                                     <input id="qr-input-text" type="text" placeholder="https://ejemplo.com"
                                         style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:13px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;"
-                                        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#3d3d3d'">
+                                        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#3d3d3d'"
+                                        oninput="updateQRPreview()">
                                 </div>
 
                                 <!-- Modo WhatsApp -->
@@ -1249,11 +1409,13 @@
                                     <label style="font-size:12px;font-weight:700;color:#25d366;display:block;margin-bottom:3px;">Número WhatsApp <span style="color:#888;font-weight:400;">(opcional, con código de país)</span></label>
                                     <input id="qr-wa-phone" type="text" placeholder="521234567890  ← sin + ni espacios"
                                         style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:13px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;margin-bottom:8px;"
-                                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#3d3d3d'">
+                                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#3d3d3d'"
+                                        oninput="updateQRPreview()">
                                     <label style="font-size:12px;font-weight:700;color:#25d366;display:block;margin-bottom:3px;">Mensaje pre-escrito</label>
                                     <textarea id="qr-wa-msg" rows="3" data-i18n-ph="ph_qr_wa_msg" placeholder="Hola, me interesa tu promoción..."
                                         style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:13px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;resize:vertical;font-family:inherit;"
-                                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#3d3d3d'"></textarea>
+                                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#3d3d3d'"
+                                        oninput="updateQRPreview()"></textarea>
                                     <div style="font-size:10px;color:#666;margin-top:3px;">Al escanear abrirá WhatsApp con el mensaje listo para enviar.</div>
                                 </div>
 
@@ -1262,26 +1424,63 @@
                                     <div style="flex:1;">
                                         <label style="font-size:12px;font-weight:700;color:#e8e8e8;display:block;margin-bottom:3px;">Color QR</label>
                                         <input type="color" id="qr-color-dark" value="#000000" title="Color módulos QR"
-                                            class="tof-color-input">
+                                            class="tof-color-input" oninput="updateQRPreview()">
                                     </div>
                                     <div style="flex:1;">
                                         <label style="font-size:12px;font-weight:700;color:#e8e8e8;display:block;margin-bottom:3px;">Fondo QR</label>
                                         <input type="color" id="qr-color-light" value="#ffffff" title="Color píxeles claros del QR"
-                                            class="tof-color-input">
+                                            class="tof-color-input" oninput="updateQRPreview()">
                                     </div>
                                     <div style="flex:1;">
                                         <label style="font-size:12px;font-weight:700;color:#e8e8e8;display:block;margin-bottom:3px;">Marco</label>
                                         <input type="color" id="qr-color-bg" value="#ffffff" title="Color del marco exterior"
-                                            class="tof-color-input">
+                                            class="tof-color-input" oninput="updateQRPreview()">
                                     </div>
                                 </div>
+
+                                <!-- Fondo transparente toggle -->
+                                <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+                                    <label class="tof-toggle-wrap" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                                        <input type="checkbox" id="qr-transparent-bg" style="display:none;"
+                                            onchange="(function(){var t=document.getElementById('qr-transparent-bg').checked;['qr-color-light','qr-color-bg'].forEach(function(id){var el=document.getElementById(id);if(el){el.disabled=t;el.parentElement.style.opacity=t?'0.35':'1';}});updateQRPreview();})()">
+                                        <span id="qr-trans-knob" style="display:inline-flex;width:32px;height:18px;border-radius:9px;background:#2a2a50;border:1px solid #4a3a90;transition:background .2s;position:relative;flex-shrink:0;">
+                                            <span style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6b7280;transition:transform .2s,background .2s;" id="qr-trans-dot"></span>
+                                        </span>
+                                        <span style="font-size:12px;font-weight:700;color:#e8e8e8;">Fondo transparente</span>
+                                    </label>
+                                </div>
+                                <script>
+                                (function(){
+                                    var chk=document.getElementById('qr-transparent-bg');
+                                    if(!chk)return;
+                                    chk.addEventListener('change',function(){
+                                        var on=chk.checked;
+                                        var knob=document.getElementById('qr-trans-knob');
+                                        var dot=document.getElementById('qr-trans-dot');
+                                        if(knob)knob.style.background=on?'#16a34a':'#2a2a50';
+                                        if(dot){dot.style.transform=on?'translateX(14px)':'translateX(0)';dot.style.background=on?'#fff':'#6b7280';}
+                                    });
+                                })();
+                                </script>
 
                                 <!-- Padding -->
                                 <div style="margin-top:8px;">
                                     <label style="font-size:12px;font-weight:700;color:#e8e8e8;">Padding marco: <span id="qr-pad-val">20</span>px</label>
                                     <input type="range" id="qr-padding" min="0" max="80" value="20"
-                                        oninput="document.getElementById('qr-pad-val').textContent=this.value"
+                                        oninput="document.getElementById('qr-pad-val').textContent=this.value;updateQRPreview()"
                                         style="width:100%;margin-top:2px;accent-color:#16a34a;">
+                                </div>
+
+                                <!-- Preview del QR -->
+                                <div id="qr-preview-wrap" style="display:none;margin-top:10px;text-align:center;">
+                                    <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Vista previa</div>
+                                    <div style="display:inline-block;position:relative;background:#1a1a2e;border:1px solid #2a2a50;border-radius:10px;padding:6px;">
+                                        <img id="qr-preview-img" src="" alt="QR preview"
+                                            style="display:block;width:120px;height:120px;border-radius:6px;image-rendering:pixelated;">
+                                        <div id="qr-preview-spinner" style="display:none;position:absolute;inset:0;background:rgba(13,13,31,.7);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                                            <div style="width:22px;height:22px;border:3px solid #2a2a50;border-top-color:#7c6eff;border-radius:50%;animation:tof-spin .7s linear infinite;"></div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button onclick="addQRToCanvas()"
@@ -1289,6 +1488,195 @@
                                     ▣ Agregar QR al canvas
                                 </button>
                                 <p id="qr-status" style="display:none;font-size:11px;text-align:center;margin:5px 0 0;color:#16a34a;"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ ACORDEÓN: GENERADOR MASIVO ══════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-masivo" data-panel="masivo">
+                        <div class="acc-header acc-masivo-hdr" onclick="toggleAccordion('masivo')">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+                                <span class="acc-name">Masivo</span>
+                                <span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border-radius:4px;padding:1px 5px;letter-spacing:.5px;margin-left:4px;">SHEETS</span>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-masivo">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-masivo">
+                            <div style="padding:8px 4px 4px;">
+                                <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5;">
+                                    Genera imágenes en lote desde Google Sheets o CSV. El diseño actual se usa automáticamente.
+                                </div>
+
+                                <!-- Paso 1: URL fuente -->
+                                <label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Fuente de datos</label>
+                                <div style="display:flex;gap:6px;margin-bottom:8px;">
+                                    <input id="batch-source-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/…"
+                                        style="flex:1;padding:7px 9px;font-size:12px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;min-width:0;"
+                                        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#3d3d3d'">
+                                    <button onclick="batchPreviewColumns()" id="btn-batch-preview"
+                                        style="flex-shrink:0;padding:7px 11px;font-size:11px;font-weight:700;border:1px solid #2a2a50;border-radius:7px;background:#1a1a2e;color:#a5b4fc;cursor:pointer;white-space:nowrap;">
+                                        Ver columnas
+                                    </button>
+                                </div>
+                                <div style="font-size:10px;color:#4b5563;margin-bottom:10px;">
+                                    💡 Google Sheets → Compartir → "Cualquier persona con el enlace puede ver"
+                                </div>
+
+                                <!-- Preview columnas -->
+                                <div id="batch-cols-wrap" style="display:none;margin-bottom:10px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">
+                                        <span id="batch-col-count">0</span> columnas · <span id="batch-row-count">0</span> filas
+                                    </div>
+                                    <div style="overflow-x:auto;border-radius:8px;border:1px solid #1e1e3a;font-size:11px;">
+                                        <table id="batch-preview-table" style="width:100%;border-collapse:collapse;">
+                                            <thead id="batch-preview-thead" style="background:#12121e;"></thead>
+                                            <tbody id="batch-preview-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Paso 2: Mapeo de variables -->
+                                <div id="batch-map-wrap" style="display:none;">
+                                    <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Variables del diseño → Columnas</div>
+                                    <div id="batch-map-rows" style="margin-bottom:10px;"></div>
+                                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                                        <span style="font-size:11px;color:#6b7280;">Prefijo ZIP:</span>
+                                        <input id="batch-prefix" type="text" value="imagen"
+                                            style="flex:1;padding:5px 8px;font-size:12px;border:1px solid #2a2a50;border-radius:6px;color:#e8e8e8;background:#1a1a2e;outline:none;">
+                                    </div>
+                                </div>
+
+                                <!-- Paso 3: Generar -->
+                                <div id="batch-gen-wrap" style="display:none;">
+                                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                                        <div style="text-align:center;">
+                                            <div id="batch-gen-count" style="font-size:22px;font-weight:900;color:#fff;line-height:1;">—</div>
+                                            <div style="font-size:10px;color:#6b7280;">imágenes</div>
+                                        </div>
+                                        <div style="flex:1;font-size:11px;color:#6b7280;line-height:1.5;">
+                                            Se generará una imagen por cada fila del Sheets usando el diseño actual del editor.
+                                        </div>
+                                    </div>
+                                    <button onclick="batchGenerate()" id="btn-batch-gen"
+                                        style="width:100%;padding:9px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;">
+                                        ⚡ Generar y descargar ZIP
+                                    </button>
+                                    <div id="batch-progress-wrap" style="display:none;margin-top:10px;">
+                                        <div style="background:#1a1a2e;border-radius:100px;height:6px;overflow:hidden;border:1px solid #2a2a50;">
+                                            <div id="batch-progress-bar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#7c6eff);border-radius:100px;width:5%;transition:width .3s;"></div>
+                                        </div>
+                                        <div id="batch-status" style="font-size:11px;color:#6b7280;margin-top:6px;"></div>
+                                    </div>
+                                </div>
+
+                                <div id="batch-alert" style="display:none;padding:8px 10px;border-radius:8px;font-size:11px;margin-top:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ ACORDEÓN: MAPA DINÁMICO ══════════════════════════ -->
+                    <div class="acc-section sortable-panel" id="acc-mapa" data-panel="mapa">
+                        <div class="acc-header acc-mapa-hdr" onclick="toggleAccordion('mapa')">
+                            <span class="panel-dh" title="Mover panel">⠿</span>
+                            <div class="acc-title">
+                                <span class="acc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
+                                <span class="acc-name">Mapa Dinámico</span>
+                                <span class="acc-badge acc-badge-mapa" id="acc-badge-mapa">0</span>
+                                <span style="font-size:9px;font-weight:800;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-radius:4px;padding:1px 5px;letter-spacing:.5px;margin-left:4px;">NUEVO</span>
+                            </div>
+                            <div class="acc-actions">
+                                <span class="acc-chevron" id="acc-chev-mapa">▾</span>
+                            </div>
+                        </div>
+                        <div class="acc-body" id="acc-body-mapa">
+                            <div style="padding:8px 4px 4px;">
+
+                                <p style="font-size:11px;color:#888;margin:0 0 10px;line-height:1.5;">Coordenadas exactas del local. También acepta <code style="background:#1a1a2e;padding:1px 4px;border-radius:3px;color:#60a5fa;">{{ciudad}}</code> o dirección de texto.</p>
+
+                                <!-- Toggle MYKOZ vs custom -->
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:7px 10px;background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;">
+                                    <input type="checkbox" id="map-use-mykoz" checked style="accent-color:#0ea5e9;width:15px;height:15px;cursor:pointer;" onchange="toggleMapMykoz(this.checked)">
+                                    <label for="map-use-mykoz" style="font-size:11px;font-weight:700;color:#7dd3fc;cursor:pointer;line-height:1.3;">Usar coordenadas de <span style="color:#38bdf8;">MYKOZ Copan</span><br><span style="font-family:monospace;font-size:9px;color:#475569;font-weight:400;">22.893601669944495, -109.90806963327955</span></label>
+                                </div>
+
+                                <!-- Latitud / Longitud del local (siempre presentes, JS llena el valor) -->
+                                <div id="map-coords-custom" style="display:none;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;color:#94a3b8;display:block;margin-bottom:3px;">📍 Latitud</label>
+                                        <input id="map-lat" type="text" placeholder="ej. 25.6866"
+                                            style="width:100%;box-sizing:border-box;padding:6px 8px;font-size:11px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;font-family:monospace;"
+                                            onfocus="this.style.borderColor='#0ea5e9'" onblur="this.style.borderColor='#3d3d3d'">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;color:#94a3b8;display:block;margin-bottom:3px;">📍 Longitud</label>
+                                        <input id="map-lon" type="text" placeholder="ej. -100.3161"
+                                            style="width:100%;box-sizing:border-box;padding:6px 8px;font-size:11px;border:1px solid #3d3d3d;border-radius:7px;outline:none;color:#e8e8e8;background:#2a2a2a;font-family:monospace;"
+                                            onfocus="this.style.borderColor='#0ea5e9'" onblur="this.style.borderColor='#3d3d3d'">
+                                    </div>
+                                </div>
+
+                                <!-- Estilo -->
+                                <label style="font-size:12px;font-weight:700;color:#e8e8e8;display:block;margin-bottom:4px;">Estilo</label>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+                                    <button id="map-style-streets" onclick="setMapStyle('streets-v12')"
+                                        style="padding:6px 4px;font-size:11px;font-weight:700;border:2px solid #0ea5e9;border-radius:6px;background:#0ea5e920;color:#7dd3fc;cursor:pointer;">🗺️ Calles</button>
+                                    <button id="map-style-satellite" onclick="setMapStyle('satellite-streets-v12')"
+                                        style="padding:6px 4px;font-size:11px;font-weight:700;border:2px solid #3d3d3d;border-radius:6px;background:#2a2a2a;color:#aaa;cursor:pointer;">🛰️ Satélite</button>
+                                    <button id="map-style-dark" onclick="setMapStyle('dark-v11')"
+                                        style="padding:6px 4px;font-size:11px;font-weight:700;border:2px solid #3d3d3d;border-radius:6px;background:#2a2a2a;color:#aaa;cursor:pointer;">🌙 Oscuro</button>
+                                    <button id="map-style-light" onclick="setMapStyle('light-v11')"
+                                        style="padding:6px 4px;font-size:11px;font-weight:700;border:2px solid #3d3d3d;border-radius:6px;background:#2a2a2a;color:#aaa;cursor:pointer;">☀️ Claro</button>
+                                </div>
+
+                                <!-- Zoom -->
+                                <div style="margin-bottom:8px;">
+                                    <label style="font-size:12px;font-weight:700;color:#e8e8e8;">Zoom: <span id="map-zoom-val">13</span> <span style="color:#666;font-weight:400;font-size:10px;">(barrio=15 · ciudad=12 · región=9)</span></label>
+                                    <input type="range" id="map-zoom" min="5" max="18" value="13"
+                                        oninput="document.getElementById('map-zoom-val').textContent=this.value"
+                                        style="width:100%;margin-top:2px;accent-color:#0ea5e9;">
+                                </div>
+
+                                <!-- Pin -->
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                    <input type="checkbox" id="map-marker" checked style="accent-color:#0ea5e9;width:14px;height:14px;">
+                                    <label for="map-marker" style="font-size:12px;color:#e8e8e8;cursor:pointer;">Mostrar pin rojo en el centro</label>
+                                </div>
+
+                                <!-- Distancia dinámica -->
+                                <div style="border:1px solid #2d3748;border-radius:8px;padding:10px 10px 8px;margin-bottom:10px;background:#1e2533;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                                        <input type="checkbox" id="map-show-distance" style="accent-color:#f59e0b;width:14px;height:14px;" onchange="document.getElementById('map-distance-fields').style.display=this.checked?'block':'none'">
+                                        <label for="map-show-distance" style="font-size:12px;font-weight:700;color:#fbbf24;cursor:pointer;">📏 Mostrar distancia del cliente dentro del mapa</label>
+                                    </div>
+                                    <div id="map-distance-fields" style="display:none;">
+                                        <p style="font-size:10px;color:#64748b;margin:0 0 7px;line-height:1.5;">ManyChat debe guardar la ubicación del contacto en campos personalizados antes de llamar a TextOnFlow. En el flujo usa "Save Location" para obtener lat y lon.</p>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+                                            <div>
+                                                <label style="font-size:10px;font-weight:700;color:#94a3b8;display:block;margin-bottom:2px;">Variable Latitud contacto</label>
+                                                <input id="map-from-lat" type="text" placeholder="{{lat_contacto}}"
+                                                    style="width:100%;box-sizing:border-box;padding:5px 7px;font-size:11px;border:1px solid #374151;border-radius:6px;outline:none;color:#e8e8e8;background:#111827;font-family:monospace;"
+                                                    onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#374151'">
+                                            </div>
+                                            <div>
+                                                <label style="font-size:10px;font-weight:700;color:#94a3b8;display:block;margin-bottom:2px;">Variable Longitud contacto</label>
+                                                <input id="map-from-lon" type="text" placeholder="{{lon_contacto}}"
+                                                    style="width:100%;box-sizing:border-box;padding:5px 7px;font-size:11px;border:1px solid #374151;border-radius:6px;outline:none;color:#e8e8e8;background:#111827;font-family:monospace;"
+                                                    onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#374151'">
+                                            </div>
+                                        </div>
+                                        <p style="font-size:10px;color:#475569;margin:5px 0 0;">Vista previa del editor usa ubicación de prueba. La distancia real se calcula al renderizar con ManyChat.</p>
+                                    </div>
+                                </div>
+
+                                <button onclick="addMapToCanvas()"
+                                    style="width:100%;padding:9px;margin-top:2px;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">
+                                    🗺️ Agregar mapa al canvas
+                                </button>
+                                <p id="map-status" style="display:none;font-size:11px;text-align:center;margin:5px 0 0;color:#0ea5e9;"></p>
                             </div>
                         </div>
                     </div>
@@ -1403,7 +1791,7 @@
                                         Sugerir variaciones
                                     </button>
                                     <div id="iac-copy-status" style="display:none;margin-top:8px;font-size:12px;padding:8px 10px;border-radius:6px;"></div>
-                                    <div id="iac-copy-suggestions" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+                                    <div id="iac-copy-suggestions" style="display:none;margin-top:10px;flex-direction:column;gap:6px;"></div>
                                     <!-- A/B Variants trigger -->
                                     <div style="margin-top:14px;padding-top:12px;border-top:1px solid #1e1e38;">
                                         <div style="font-size:11px;color:#9090c0;margin-bottom:8px;line-height:1.5;">Genera 3 variantes del diseño completo con diferentes paletas de color para A/B testing.</div>
@@ -1426,21 +1814,33 @@
                             <span style="color:#888;font-size:11px;line-height:1.3;"><span data-i18n="watermark_include">Incluir sello</span> <strong style="color:#aaa;font-weight:600;">textonflow.com</strong></span>
                         </label>
                         <div id="tof-sello-opts" style="display:none;padding:8px 10px 10px;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 7px 7px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                    <input type="checkbox" id="wm-pill-toggle" checked style="accent-color:#7c6eff;width:13px;height:13px;" onchange="wmSetPill(this.checked)">
+                                    <span style="font-size:11px;color:#888;">Fondo redondeado</span>
+                                </label>
+                            </div>
                             <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px;">Posición</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:10px;">
                                 <button class="wm-corner-btn" data-corner="tl" onclick="wmSetCorner('tl',this)">↖ Arriba izq.</button>
                                 <button class="wm-corner-btn" data-corner="tr" onclick="wmSetCorner('tr',this)">↗ Arriba der.</button>
                                 <button class="wm-corner-btn" data-corner="bl" onclick="wmSetCorner('bl',this)">↙ Abajo izq.</button>
                                 <button class="wm-corner-btn selected" data-corner="br" onclick="wmSetCorner('br',this)">↘ Abajo der.</button>
                             </div>
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">22</span>px</div>
-                            <input type="range" id="wm-size-range" min="12" max="80" value="22"
-                                oninput="wmSetSize(this.value)"
-                                style="width:100%;accent-color:#7c6eff;cursor:pointer;margin-bottom:8px;">
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
-                            <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
-                                oninput="wmSetOpacity(this.value)"
-                                style="width:100%;accent-color:#7c6eff;cursor:pointer;margin-bottom:10px;">
+                            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">55</span>px</div>
+                                    <input type="range" id="wm-size-range" min="20" max="150" value="55"
+                                        oninput="wmSetSize(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
+                                    <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
+                                        oninput="wmSetOpacity(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                            </div>
                             <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">Color</div>
                             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
                                 <button onclick="wmSetColor('#ffffff',this)" class="wm-color-swatch" title="Blanco" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
@@ -1457,10 +1857,10 @@
                                         oninput="if(this.value.length===6&&/^[0-9a-fA-F]{6}$/.test(this.value)){wmSetColor('#'+this.value,null);}"
                                         onkeydown="if(event.key==='Enter'){this.blur();}"
                                         placeholder="ffffff">
-                                    <label title="Abrir selector de color" style="width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
-                                        <input type="color" id="wm-color-picker" value="#ffffff" oninput="wmSetColor(this.value,null)"
-                                            style="width:34px;height:34px;border:none;padding:0;background:none;cursor:pointer;opacity:0;position:absolute;">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
+                                    <label title="Abrir selector de color" style="position:relative;width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
+                                        <input type="color" id="wm-color-picker" value="#ffffff" data-hex-done="1" oninput="wmSetColor(this.value,null)"
+                                            style="position:absolute;inset:0;width:100%;height:100%;border:none;padding:0;background:none;cursor:pointer;opacity:0;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" style="pointer-events:none;position:relative;z-index:1;"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
                                     </label>
                                 </div>
                             </div>
@@ -1537,8 +1937,13 @@
 
                 <div class="json-section" style="display:none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <h3 style="margin: 0;" data-i18n="json_panel_title">JSON para ManyChat</h3>
-                        <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn">Copiar</button>
+                        <h3 style="margin: 0;" data-i18n="json_panel_title">Listo para ManyChat</h3>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                          <button class="copy-btn" onclick="copyJSON()" data-i18n="json_copy_btn" title="Copiar JSON al portapapeles">JSON</button>
+                          <button onclick="sendToManyChat()" title="Generar URL lista para ManyChat — sin copiar JSON" style="padding:8px 16px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">
+                            URL
+                          </button>
+                        </div>
                     </div>
                     <div class="json-output">
                         <pre id="json-output">{
@@ -1554,6 +1959,13 @@
                             <b>Cada vez que cambies algo</b> (tamaño, separación, posición…) debes <b>Copiar</b> el JSON actualizado y reemplazarlo en tu bot de ManyChat. Si no lo actualizas, ManyChat seguirá usando la versión anterior.
                         </div>
                     </details>
+
+                    <!-- ENLACE INTEGRACIONES -->
+                    <a href="/integraciones" target="_blank" style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:8px 12px;background:#1a1a3f;border:1px solid #3a3a6f;border-radius:7px;color:#a5b4fc;font-size:11px;font-weight:700;text-decoration:none;" onmouseover="this.style.background='#22224a'" onmouseout="this.style.background='#1a1a3f'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Manual de Integraciones — Zapier · Make · BoostSpace
+                        <svg style="margin-left:auto;opacity:.5;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
 
                     <!-- ATAJOS DE TECLADO -->
                     <details style="margin-top:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;overflow:hidden;">
@@ -1693,6 +2105,155 @@
                     </div>
                 </div>
 
+                <!-- ══ INTEGRACIONES: ZAPIER / MAKE / BOOSTSPACE ══════════════════ -->
+                <div class="dapi-section" id="integr-panel" style="margin-top:12px;">
+                    <div class="dapi-header" onclick="toggleIntegrPanel()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;user-select:none;">
+                        <span style="font-size:14px;">⚡</span>
+                        <span class="dapi-title">Integraciones — Zapier · Make · BoostSpace</span>
+                        <span class="dapi-chevron" id="integr-chevron" style="margin-left:auto;color:#666;font-size:11px;transition:transform .2s;">▼</span>
+                    </div>
+                    <div id="integr-body" style="display:none;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 8px 8px;padding:12px;">
+
+                        <!-- Endpoint card -->
+                        <div style="background:#0d0d1f;border:1px solid #1e3a1e;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+                            <div style="font-size:10px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Endpoint universal</div>
+                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                <span style="font-size:10px;font-weight:700;background:#1e3a1e;color:#4ade80;border-radius:4px;padding:2px 7px;">POST</span>
+                                <code id="integr-endpoint-url" style="font-size:11px;color:#a5f3a5;font-family:monospace;flex:1;word-break:break-all;">https://www.textonflow.com/webhook/render</code>
+                                <button onclick="navigator.clipboard.writeText('https://www.textonflow.com/webhook/render').then(()=>showNotif('URL copiada','success'))" style="background:#1e3a1e;border:1px solid #2a5a2a;color:#4ade80;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap;">Copiar</button>
+                            </div>
+                        </div>
+
+                        <!-- Body format card -->
+                        <div style="background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+                            <div style="font-size:10px;font-weight:700;color:#9ca3ff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Cuerpo del request (JSON)</div>
+                            <pre style="font-size:10.5px;color:#c0b8ff;font-family:monospace;margin:0;line-height:1.6;white-space:pre-wrap;">{
+  "template_id": "<span style="color:#fbbf24;">TU_TEMPLATE_ID</span>",
+  "variables": {
+    "nombre": "{{first name}}",
+    "descuento": "30",
+    "producto": "{{custom field}}"
+  }
+}</pre>
+                            <div style="margin-top:8px;font-size:10px;color:#4b5563;">
+                                Obtén el <code style="color:#9ca3ff;">template_id</code> desde la sección <strong style="color:#888;">API de Render Dinámico</strong> → guarda tu template → aparece en la URL.
+                            </div>
+                        </div>
+
+                        <!-- Platform tabs -->
+                        <div style="display:flex;gap:4px;margin-bottom:12px;" id="integr-tabs">
+                            <button onclick="switchIntegrTab('zapier',this)" id="itab-zapier"
+                                style="flex:1;padding:6px 4px;background:#ff4a00;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:1;">
+                                ⚡ Zapier
+                            </button>
+                            <button onclick="switchIntegrTab('make',this)" id="itab-make"
+                                style="flex:1;padding:6px 4px;background:#2a2a50;color:#9ca3ff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:.7;">
+                                🔀 Make
+                            </button>
+                            <button onclick="switchIntegrTab('boostspace',this)" id="itab-boostspace"
+                                style="flex:1;padding:6px 4px;background:#2a2a50;color:#9ca3ff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;opacity:.7;">
+                                🚀 BoostSpace
+                            </button>
+                        </div>
+
+                        <!-- ZAPIER -->
+                        <div id="integr-tab-zapier">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 1 — Trigger</div>
+                                    <div style="font-size:11px;color:#d1b08a;">Elige cualquier trigger: <strong>HubSpot</strong>, <strong>ActiveCampaign</strong>, <strong>Shopify</strong>, formulario, etc.</div>
+                                </div>
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 2 — Acción: "Webhooks by Zapier"</div>
+                                    <div style="font-size:11px;color:#d1b08a;">Busca <strong>Webhooks by Zapier</strong> → acción <strong>"POST"</strong></div>
+                                    <div style="margin-top:6px;background:#0d0800;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#ffd580;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Payload Type: <span style="color:#a3e635;">json</span><br>
+                                        Data: template_id | <span style="color:#fbbf24;">TU_TEMPLATE_ID</span><br>
+                                        Data: variables.nombre | <span style="color:#93c5fd;">(campo del trigger)</span>
+                                    </div>
+                                </div>
+                                <div style="background:#1a0f00;border:1px solid #3a1f00;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#ff7733;margin-bottom:2px;">Paso 3 — Usa la imagen generada</div>
+                                    <div style="font-size:11px;color:#d1b08a;">La respuesta incluye <code style="color:#fbbf24;">image_url</code>. Úsala en el siguiente paso (enviar por WhatsApp, email, Slack, etc.)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MAKE -->
+                        <div id="integr-tab-make" style="display:none;">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 1 — Trigger de tu sistema</div>
+                                    <div style="font-size:11px;color:#9090c0;">Conecta cualquier app: <strong>Google Sheets</strong>, <strong>Typeform</strong>, <strong>Pipedrive</strong>, etc.</div>
+                                </div>
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 2 — HTTP › Make a request</div>
+                                    <div style="font-size:11px;color:#9090c0;">Agrega el módulo <strong>HTTP → Make a request</strong> y configura:</div>
+                                    <div style="margin-top:6px;background:#060610;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#a5b4fc;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Method: <span style="color:#a3e635;">POST</span><br>
+                                        Body type: <span style="color:#a3e635;">Raw</span><br>
+                                        Content type: <span style="color:#a3e635;">application/json</span><br>
+                                        Body: {"{"}template_id":"<span style="color:#fbbf24;">ID</span>","variables":{"{"}...{"}"}{"}"}
+                                    </div>
+                                </div>
+                                <div style="background:#0a0a1a;border:1px solid #1e1e50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#6e6eff;margin-bottom:2px;">Módulo 3 — Procesa image_url</div>
+                                    <div style="font-size:11px;color:#9090c0;">Parsea el JSON de respuesta y mapea <code style="color:#a5b4fc;">image_url</code> al siguiente módulo (WhatsApp Business, Klaviyo, etc.)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOOSTSPACE -->
+                        <div id="integr-tab-boostspace" style="display:none;">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 1 — Crea un flujo en BoostSpace</div>
+                                    <div style="font-size:11px;color:#90b0c0;">En <strong>BoostSpace Automation</strong> crea un nuevo flujo. Usa como trigger cualquier evento: lead nuevo, tarea creada, etc.</div>
+                                </div>
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 2 — Acción: HTTP Request / Webhook</div>
+                                    <div style="font-size:11px;color:#90b0c0;">Agrega la acción <strong>"HTTP Request"</strong> o <strong>"Send Webhook"</strong>:</div>
+                                    <div style="margin-top:6px;background:#060a10;border-radius:5px;padding:7px 9px;font-size:10.5px;font-family:monospace;color:#7dd3fc;line-height:1.7;">
+                                        URL: https://www.textonflow.com/webhook/render<br>
+                                        Method: <span style="color:#a3e635;">POST</span><br>
+                                        Headers: Content-Type: application/json<br>
+                                        Body:<br>
+                                        {"{"}"template_id":"<span style="color:#fbbf24;">TU_ID</span>",<br>
+                                        &nbsp;"variables":{"{"}{"}"}{"}"}
+                                    </div>
+                                </div>
+                                <div style="background:#0a0f1a;border:1px solid #1e2f50;border-radius:7px;padding:9px 11px;">
+                                    <div style="font-size:10px;font-weight:700;color:#38bdf8;margin-bottom:2px;">Paso 3 — Usa la respuesta</div>
+                                    <div style="font-size:11px;color:#90b0c0;">BoostSpace recibe el <code style="color:#7dd3fc;">image_url</code> en la respuesta JSON. Mapealo a un campo de tu CRM o úsalo en un mensaje de WhatsApp.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual completo -->
+                        <div style="margin-top:14px;text-align:center;">
+                            <a href="/integraciones" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#1e1e3f,#2a1a50);border:1px solid #4a3aff;border-radius:8px;padding:8px 16px;color:#a5b4fc;font-size:11px;font-weight:700;text-decoration:none;">
+                                📖 Ver manual completo con diagramas y blueprints
+                                <span style="font-size:9px;opacity:.6;">↗</span>
+                            </a>
+                        </div>
+
+                        <!-- Webhook de salida -->
+                        <div style="margin-top:14px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;">
+                            <div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Webhook de salida (render.done)</div>
+                            <div style="font-size:11px;color:#aaa;margin-bottom:8px;">TextOnFlow puede notificar a tu sistema al terminar cada render. Configura tu URL de destino:</div>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <input id="integr-webhook-url" type="url" placeholder="https://hook.zapier.com/... o tu endpoint"
+                                    style="flex:1;min-width:0;background:#080812;border:1px solid #2a2a50;border-radius:6px;padding:6px 9px;color:#e0e0f0;font-size:11px;outline:none;">
+                                <button onclick="saveIncomingWebhook()" style="background:#f59e0b;color:#000;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">Guardar</button>
+                            </div>
+                            <div style="font-size:10px;color:#555;margin-top:6px;">Payload recibido: <code style="color:#666;">{"{"}"event":"render.done","image_url":"...","template":"...","ts":"..."{"}"}</code></div>
+                        </div>
+
+                    </div>
+                </div><!-- /integr-panel -->
+
                 </div><!-- /tab-design -->
 
                 <div id="resultModal" onclick="closeResultModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;">
@@ -1708,6 +2269,42 @@
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 <span data-i18n="result_download">Descargar</span>
                             </button>
+                            <!-- Exportar GIF animado -->
+                            <div style="position:relative;display:inline-flex;flex-direction:column;align-items:center;flex-shrink:0;" id="gif-btn-wrap">
+                              <button id="result-gif-btn" onclick="exportAnimatedGIF()" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#7c3aed;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;" onmouseenter="document.getElementById('gif-tip').style.opacity='1';document.getElementById('gif-tip').style.pointerEvents='auto';" onmouseleave="document.getElementById('gif-tip').style.opacity='0';document.getElementById('gif-tip').style.pointerEvents='none';">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                GIF
+                              </button>
+                              <!-- Tooltip redes sociales -->
+                              <div id="gif-tip" style="opacity:0;pointer-events:none;transition:opacity .18s;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid #3a3a5c;border-radius:10px;padding:9px 13px;width:200px;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+                                <div style="font-size:10px;color:#9ca3ff;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;">Ideal para estas redes</div>
+                                <div style="display:flex;flex-direction:column;gap:6px;">
+                                  <!-- Instagram -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" stroke="white" stroke-width="1.6" fill="none"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/><defs><linearGradient id="ig-grad" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#f09433"/><stop offset="25%" stop-color="#e6683c"/><stop offset="50%" stop-color="#dc2743"/><stop offset="75%" stop-color="#cc2366"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Instagram DM / Stories</span>
+                                  </div>
+                                  <!-- Messenger -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0084FF"/><path d="M12 5C8.134 5 5 7.9 5 11.5c0 2.02 1.017 3.823 2.61 5.007V18.5l2.42-1.33A7.43 7.43 0 0 0 12 17.5c3.866 0 7-2.9 7-6.5S15.866 5 12 5zm.7 8.75-1.79-1.9-3.49 1.9 3.84-4.07 1.83 1.9 3.45-1.9-3.84 4.07z" fill="white"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Facebook Messenger</span>
+                                  </div>
+                                  <!-- Email -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="#EA4335"/><path d="M2 7l10 7 10-7" stroke="white" stroke-width="1.6" fill="none"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Email marketing</span>
+                                  </div>
+                                  <!-- Telegram -->
+                                  <div style="display:flex;align-items:center;gap:7px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2CA5E0"/><path d="M17.5 7.5l-2.5 11-3.7-3.3-1.8 1.7V14l6.5-6-7.5 4.2-2.7-.9 11.7-3.8z" fill="white"/></svg>
+                                    <span style="font-size:11px;color:#e2e8f0;font-weight:600;">Telegram</span>
+                                  </div>
+                                </div>
+                                <div style="margin-top:7px;padding-top:7px;border-top:1px solid #2a2a4a;font-size:10px;color:#6b7280;line-height:1.4;">WhatsApp convierte GIFs a video, usa imagen PNG para WA.</div>
+                                <!-- flecha -->
+                                <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:10px;height:6px;overflow:hidden;"><div style="width:10px;height:10px;background:#1a1a2e;border:1px solid #3a3a5c;transform:rotate(45deg);margin-top:-5px;margin-left:0;"></div></div>
+                              </div>
+                            </div>
                             <button id="result-drive-btn" onclick="resultDriveBtnClick()" class="tof-drive-save-btn" style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#4a5568;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;flex-shrink:0;">
                                 <svg width="14" height="14" viewBox="0 0 87.3 78" fill="currentColor" class="tof-shrink-0"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.9 1.2C28.55 2 27.4 3.1 26.6 4.5L1.2 49.5C.4 50.9 0 52.45 0 54h27.5z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.85l5.65 10.85z" fill="#ea4335"/><path d="M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="M59.85 54H27.5L13.75 77.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="M73.4 27.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.85 54h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
                                 <span id="result-drive-btn-lbl" data-i18n="result_drive_btn">Drive</span>
@@ -1737,11 +2334,17 @@
                         <div id="result-url-display" style="margin-top:10px;font-size:10px;color:#888;word-break:break-all;"></div>
                         <!-- JSON del payload -->
                         <div id="result-json-section" style="margin-top:16px;border-top:1px solid #2a2a45;padding-top:14px;text-align:left;display:none;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
                                 <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;" data-i18n="json_template_lbl">JSON del template</span>
-                                <button id="result-copy-json-btn" onclick="resultCopyJson()" style="font-size:11px;font-weight:600;padding:4px 12px;background:#1a3a2a;border:1.5px solid #27ae60;color:#4ade80;border-radius:6px;cursor:pointer;transition:all .15s;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                  <button id="result-copy-json-btn" onclick="resultCopyJson()" style="font-size:11px;font-weight:600;padding:4px 12px;background:#1a3a2a;border:1.5px solid #27ae60;color:#4ade80;border-radius:6px;cursor:pointer;transition:all .15s;">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:4px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span data-i18n="json_copy_btn">Copiar JSON</span>
-                                </button>
+                                  </button>
+                                  <button onclick="sendToManyChat()" style="font-size:11px;font-weight:700;padding:4px 12px;background:linear-gradient(135deg,#0084FF,#00C6FF);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+                                    Enviar a ManyChat
+                                  </button>
+                                </div>
                             </div>
                             <pre id="result-json-display" style="background:#0d0d1a;border:1px solid #2a2a45;border-radius:8px;padding:10px 12px;font-size:10px;color:#7c6eff;overflow-x:auto;max-height:140px;overflow-y:auto;text-align:left;margin:0;line-height:1.5;"></pre>
                         </div>
@@ -1849,6 +2452,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           API Docs
         </a>
+        <a href="/integraciones" target="_blank" class="rec-item" style="color:#a5b4fc;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Integraciones
+        </a>
         <div class="rec-divider"></div>
         <div class="rec-group-label">TextOnFlow</div>
         <a href="/precios" target="_blank" class="rec-item rec-item-gold">
@@ -1868,8 +2475,8 @@
       Extensión Chrome
     </a>
 
-    <script src="/static/i18n.js?v=234"></script>
-    <script src="/static/app.js?v=234"></script>
+    <script src="/static/i18n.js?v=250"></script>
+    <script src="/static/app.js?v=284"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
     <button id="fb-tab" onclick="openFeedback()"
@@ -1914,100 +2521,7 @@
       </div>
     </div>
 
-    <script>
-    function launchConfetti() {
-      var canvas = document.createElement('canvas');
-      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999999;pointer-events:none;';
-      document.body.appendChild(canvas);
-      var ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      var colors = ['#667eea','#764ba2','#f59e0b','#10b981','#f87171','#60a5fa','#a78bfa','#fbbf24','#34d399','#fb7185'];
-      var pieces = [];
-      for (var i = 0; i < 140; i++) {
-        pieces.push({
-          x: Math.random() * canvas.width,
-          y: -10 - Math.random() * 200,
-          r: Math.random() * 7 + 3,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          vx: Math.random() * 5 - 2.5,
-          vy: Math.random() * 3 + 1.5,
-          alpha: 1,
-          rot: Math.random() * 360,
-          rotSpeed: Math.random() * 8 - 4,
-          shape: Math.random() > 0.5 ? 'rect' : 'circle'
-        });
-      }
-      var start = Date.now();
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        var elapsed = (Date.now() - start) / 1000;
-        pieces.forEach(function(p) {
-          p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.rot += p.rotSpeed;
-          if (elapsed > 2) p.alpha = Math.max(0, p.alpha - 0.018);
-          ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
-          ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
-          if (p.shape === 'rect') { ctx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r); }
-          else { ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill(); }
-          ctx.restore();
-        });
-        if (elapsed < 4) { requestAnimationFrame(animate); }
-        else { document.body.removeChild(canvas); }
-      }
-      animate();
-    }
-    window.launchConfetti = launchConfetti;
-
-    function openFeedback() {
-      document.getElementById('fb-overlay').style.display = 'flex';
-      document.getElementById('fb-form-view').style.display = 'block';
-      document.getElementById('fb-thanks-view').style.display = 'none';
-      document.getElementById('fb-error').style.display = 'none';
-      var btn = document.getElementById('fb-send-btn');
-      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enviar feedback';
-    }
-    function closeFeedback() {
-      document.getElementById('fb-overlay').style.display = 'none';
-    }
-    async function sendFeedback() {
-      var name = document.getElementById('fb-name').value.trim();
-      var email = document.getElementById('fb-email').value.trim();
-      var msg = document.getElementById('fb-msg').value.trim();
-      var errEl = document.getElementById('fb-error');
-      var btn = document.getElementById('fb-send-btn');
-      errEl.style.display = 'none';
-      if (!name) { errEl.textContent = 'Por favor escribe tu nombre.'; errEl.style.display='block'; document.getElementById('fb-name').focus(); return; }
-      if (!email || !email.includes('@')) { errEl.textContent = 'Escribe un correo electrónico válido.'; errEl.style.display='block'; document.getElementById('fb-email').focus(); return; }
-      if (!msg) { errEl.textContent = 'El mensaje no puede estar vacío.'; errEl.style.display='block'; document.getElementById('fb-msg').focus(); return; }
-      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Enviando...';
-      try {
-        var res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ name: name, email: email, message: msg })
-        });
-        if (!res.ok) throw new Error('server');
-        var data = await res.json();
-        document.getElementById('fb-name').value = '';
-        document.getElementById('fb-email').value = '';
-        document.getElementById('fb-msg').value = '';
-        document.getElementById('fb-form-view').style.display = 'none';
-        var thanksEl = document.getElementById('fb-thanks-view');
-        thanksEl.style.display = 'block';
-        if (!data.vars_set) {
-          thanksEl.querySelector('p').innerHTML = 'Feedback guardado.<br><small style="color:#f59e0b">Email no configurado en Railway.</small>';
-        } else if (data.error) {
-          thanksEl.querySelector('p').innerHTML = 'Feedback guardado.<br><small style="color:#f59e0b">Error: ' + data.error + '</small>';
-        }
-        if (!data.error && data.vars_set) launchConfetti();
-        setTimeout(closeFeedback, data.error || !data.vars_set ? 8000 : 3000);
-      } catch(e) {
-        errEl.textContent = 'Hubo un error al enviar. Intenta de nuevo.';
-        errEl.style.display = 'block';
-        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Enviar feedback';
-      }
-    }
-    </script>
+    <script src="/static/feedback.js"></script>
 
 <!-- ══ BOTÓN SOPORTE WHATSAPP ══════════════════════════════════════════ -->
 <!-- ══ CUSTOM STYLE FORM OVERLAY ══ -->
@@ -2119,20 +2633,18 @@
     </div>
     <div id="auth-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:10px 13px;font-size:12px;margin-bottom:16px;"></div>
     <div id="auth-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#4ade80;border-radius:8px;padding:10px 13px;font-size:12px;margin-bottom:16px;"></div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <input id="auth-email" type="email" placeholder="tu@email.com"
+    <form onsubmit="authSubmit();return false;" style="display:flex;flex-direction:column;gap:12px;">
+      <input id="auth-email" type="email" placeholder="tu@email.com" autocomplete="email"
         style="background:#0a0a12;border:1px solid #1e1e38;border-radius:8px;padding:11px 13px;color:#d0d0e8;font-size:13px;outline:none;width:100%;"
-        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'"
-        onkeydown="if(event.key==='Enter')authSubmit()">
-      <input id="auth-password" type="password" placeholder="Contraseña (mín. 8 caracteres)"
+        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'">
+      <input id="auth-password" type="password" placeholder="Contraseña (mín. 8 caracteres)" autocomplete="current-password"
         style="background:#0a0a12;border:1px solid #1e1e38;border-radius:8px;padding:11px 13px;color:#d0d0e8;font-size:13px;outline:none;width:100%;"
-        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'"
-        onkeydown="if(event.key==='Enter')authSubmit()">
-      <button id="auth-submit-btn" onclick="authSubmit()"
+        onfocus="this.style.borderColor='#7c6eff'" onblur="this.style.borderColor='#1e1e38'">
+      <button id="auth-submit-btn" type="submit"
         style="background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;">
         Iniciar sesión
       </button>
-    </div>
+    </form>
     <div id="auth-login-footer" style="margin-top:14px;text-align:center;font-size:11px;color:#555577;">
       ¿No tienes cuenta? <a href="#" onclick="authSwitchTab('register')" style="color:#a5b4fc;text-decoration:none;">Crear cuenta gratis →</a><br>
       <a href="#" onclick="authSwitchTab('forgot')" style="color:#888;text-decoration:none;margin-top:6px;display:inline-block;">¿Olvidaste tu contraseña?</a>
@@ -2161,217 +2673,7 @@
   </div>
 </div>
 
-<script>
-// ── Auth modal ────────────────────────────────────────────────────────────────
-var _authTab = 'login';
-var _TOF_TOKEN_KEY = 'tof_token';
-
-function openAuthModal(tab, ctxMsg) {
-  _authTab = tab || 'login';
-  document.getElementById('auth-modal').style.display = 'flex';
-  authSwitchTab(_authTab);
-  var ctx = document.getElementById('auth-ctx-msg');
-  if (ctx) { if (ctxMsg) { ctx.textContent = ctxMsg; ctx.style.display = 'block'; } else { ctx.style.display = 'none'; } }
-  setTimeout(function(){ document.getElementById('auth-email').focus(); }, 100);
-}
-function closeAuthModal() {
-  document.getElementById('auth-modal').style.display = 'none';
-  document.getElementById('auth-error').style.display = 'none';
-  document.getElementById('auth-success').style.display = 'none';
-  document.getElementById('auth-email').value = '';
-  document.getElementById('auth-password').value = '';
-  var ctx = document.getElementById('auth-ctx-msg');
-  if (ctx) ctx.style.display = 'none';
-}
-function authSwitchTab(tab) {
-  _authTab = tab;
-  var tl = document.getElementById('auth-tab-login');
-  var tr = document.getElementById('auth-tab-register');
-  var sb = document.getElementById('auth-submit-btn');
-  var lf = document.getElementById('auth-login-footer');
-  var rf = document.getElementById('auth-register-footer');
-  var fp = document.getElementById('auth-forgot-panel');
-  var mainFields = document.querySelector('#auth-modal .modal-main-fields');
-  // Mostrar/ocultar panel de recuperación
-  var isForgot = (tab === 'forgot');
-  if (fp) fp.style.display = isForgot ? 'block' : 'none';
-  // Ocultar campos principales en modo forgot
-  var emailInput = document.getElementById('auth-email');
-  var pwInput = document.getElementById('auth-password');
-  var submitBtn = document.getElementById('auth-submit-btn');
-  if (emailInput) emailInput.style.display = isForgot ? 'none' : '';
-  if (pwInput) pwInput.style.display = isForgot ? 'none' : '';
-  if (submitBtn) submitBtn.style.display = isForgot ? 'none' : '';
-  if (isForgot) {
-    tl.style.background = '#1a1a2e'; tl.style.color = '#8888aa';
-    tr.style.background = '#1a1a2e'; tr.style.color = '#8888aa';
-    lf.style.display = 'none'; rf.style.display = 'none';
-    setTimeout(function(){ var fe=document.getElementById('auth-forgot-email'); if(fe) fe.focus(); }, 100);
-  } else if (tab === 'login') {
-    tl.style.background = '#252545'; tl.style.color = '#d0d0e8';
-    tr.style.background = '#1a1a2e'; tr.style.color = '#8888aa';
-    if(sb) sb.textContent = 'Iniciar sesión'; lf.style.display='block'; rf.style.display='none';
-  } else {
-    tr.style.background = '#252545'; tr.style.color = '#d0d0e8';
-    tl.style.background = '#1a1a2e'; tl.style.color = '#8888aa';
-    if(sb) sb.textContent = 'Crear cuenta gratuita'; lf.style.display='none'; rf.style.display='block';
-  }
-  document.getElementById('auth-error').style.display = 'none';
-  document.getElementById('auth-success').style.display = 'none';
-}
-async function authForgotSubmit() {
-  var email = document.getElementById('auth-forgot-email').value.trim();
-  var btn = document.getElementById('auth-forgot-btn');
-  if (!email) { _authShowErr('Ingresa tu email.'); return; }
-  btn.disabled = true; btn.textContent = 'Enviando...';
-  try {
-    await fetch('/user/forgot-password', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({email: email})
-    });
-    _authShowOk('Si ese email existe, te enviamos un enlace de recuperación.');
-    document.getElementById('auth-forgot-email').value = '';
-  } catch(e) {
-    _authShowErr('Error de conexión.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Enviar enlace';
-  }
-}
-function _authShowErr(msg) {
-  var el = document.getElementById('auth-error');
-  el.textContent = msg; el.style.display = 'block';
-  document.getElementById('auth-success').style.display = 'none';
-}
-function _authShowOk(msg) {
-  var el = document.getElementById('auth-success');
-  el.textContent = msg; el.style.display = 'block';
-  document.getElementById('auth-error').style.display = 'none';
-}
-async function authSubmit() {
-  var email = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value;
-  var btn = document.getElementById('auth-submit-btn');
-  if (!email || !password) { _authShowErr('Completa todos los campos.'); return; }
-  btn.disabled = true; btn.textContent = 'Procesando...';
-  var endpoint = _authTab === 'login' ? '/user/login' : '/user/register';
-  try {
-    var res = await fetch(endpoint, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, password: password })
-    });
-    var data = await res.json();
-    if (!res.ok) { _authShowErr(data.detail || 'Error al procesar.'); return; }
-    // Guardar token
-    localStorage.setItem(_TOF_TOKEN_KEY, data.token);
-    var plan = (data.user && data.user.plan) || 'trial';
-    var planLabel = { trial: 'Prueba', starter: 'Starter', agency: 'Agency', admin: 'Admin' };
-    if (_authTab === 'register') {
-      _authShowOk('¡Cuenta creada! Trial activo — 7 días de renders ilimitados.');
-    } else {
-      _authShowOk('¡Sesión iniciada!');
-    }
-    var _wasRegister = (_authTab === 'register');
-    _authUpdateBtn(email, plan);
-    setTimeout(function(){
-      closeAuthModal();
-      // Onboarding: siempre al registrar; al iniciar sesión si no lo ocultó
-      if (typeof showOnboarding === 'function' && !localStorage.getItem('tof_ob_hidden')) {
-        setTimeout(showOnboarding, 400);
-      }
-      // Ejecutar acción pendiente (ej: copiar JSON)
-      if (window._tof_pending) {
-        var pending = window._tof_pending;
-        window._tof_pending = null;
-        setTimeout(function(){
-          if (pending === 'copy_json' && typeof copyJSON === 'function') copyJSON();
-          else if (pending === 'copy_result_json' && typeof resultCopyJson === 'function') resultCopyJson();
-          else if (pending === 'generate' && typeof generateImage === 'function') generateImage();
-        }, 300);
-      }
-    }, 1500);
-  } catch(e) {
-    _authShowErr('Error de conexión. Intenta de nuevo.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = _authTab === 'login' ? 'Iniciar sesión' : 'Crear cuenta gratuita';
-  }
-}
-function _authUpdateBtn(email, plan) {
-  var btn = document.getElementById('auth-btn');
-  var lbl = document.getElementById('auth-btn-label');
-  if (email) {
-    var short = email.split('@')[0].substring(0, 12);
-    lbl.textContent = short;
-    btn.style.borderColor = 'rgba(34,197,94,.4)';
-    btn.style.color = '#4ade80';
-    btn.title = 'Mi cuenta';
-  } else {
-    lbl.textContent = 'Iniciar sesión';
-    btn.style.borderColor = 'rgba(124,110,255,.4)';
-    btn.style.color = '#c4b5fd';
-    btn.title = '';
-  }
-}
-function handleAuthBtn() {
-  var tok = localStorage.getItem(_TOF_TOKEN_KEY) || sessionStorage.getItem(_TOF_TOKEN_KEY);
-  if (tok) { window.location.href = '/dashboard'; }
-  else { openAuthModal('login'); }
-}
-// Cerrar modal con Escape
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') closeAuthModal();
-});
-// Cerrar al hacer clic en el fondo
-document.getElementById('auth-modal').addEventListener('click', function(e){
-  if (e.target === this) closeAuthModal();
-});
-// ── Sesión: si el usuario sale de TextOnFlow 30 min → cierra sesión ───────────
-// Sale = empieza el reloj. Regresa = cancela y reinicia.
-(function _awayTimer(){
-  var TIMEOUT = 30 * 60 * 1000; // 30 min
-  var _timer  = null;
-
-  function _logout(){
-    localStorage.removeItem('tof_token');
-    sessionStorage.removeItem('tof_token');
-    var lbl = document.getElementById('auth-btn-label');
-    if (lbl) lbl.textContent = 'Iniciar sesión';
-    var note = document.createElement('div');
-    note.textContent = 'Sesión cerrada — estuviste 30 min fuera de TextOnFlow.';
-    note.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#13132a;border:1px solid #7c6eff;color:#a5b4fc;padding:11px 20px;border-radius:10px;font-size:13px;z-index:999999;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;';
-    document.body.appendChild(note);
-    setTimeout(function(){ note.remove(); openAuthModal('login'); }, 2200);
-  }
-
-  document.addEventListener('visibilitychange', function(){
-    var tok = localStorage.getItem('tof_token') || sessionStorage.getItem('tof_token');
-    if (document.hidden) {
-      // Usuario sale → arranca el reloj
-      if (tok) _timer = setTimeout(_logout, TIMEOUT);
-    } else {
-      // Usuario regresa → cancela el reloj
-      clearTimeout(_timer);
-      _timer = null;
-    }
-  });
-})();
-// Cargar estado en inicio
-(async function _authInit(){
-  var tok = localStorage.getItem(_TOF_TOKEN_KEY) || sessionStorage.getItem(_TOF_TOKEN_KEY);
-  if (!tok) return;
-  try {
-    var res = await fetch('/user/me', { headers: { Authorization: 'Bearer ' + tok } });
-    if (res.ok) {
-      var data = await res.json();
-      _authUpdateBtn(data.email, data.plan);
-    } else {
-      localStorage.removeItem(_TOF_TOKEN_KEY);
-    }
-  } catch(e) { /* silently skip */ }
-})();
-// Exponer para 429 handler
-window.openAuthModal = openAuthModal;
-</script>
+<script src="/static/auth.js"></script>
 
 <!-- ═══════════════════════════════════════════════════════ MODAL PROYECTOS -->
 <div id="projects-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
@@ -2401,148 +2703,7 @@ window.openAuthModal = openAuthModal;
   </div>
 </div>
 
-<script>
-// ─── Proyectos ────────────────────────────────────────────────────────────────
-function _tofToken(){ return localStorage.getItem('tof_token') || ''; }
-
-function openProjectsModal(){
-  if(!_tofToken()){
-    showToast && showToast('⚠️ Inicia sesión para guardar proyectos','warning');
-    if(window.openAuthModal) openAuthModal();
-    return;
-  }
-  document.getElementById('projects-modal').style.display='flex';
-  loadProjectsList();
-}
-function closeProjectsModal(){
-  document.getElementById('projects-modal').style.display='none';
-}
-
-function _buildCanvasSnapshot(){
-  // Recoge el estado actual del editor desde las variables globales de app.js
-  try{
-    const snap = {};
-    // Intentar capturar textos desde el DOM del panel
-    const layers = window.textLayers || [];
-    snap.textLayers = layers;
-    if(window.currentImageUrl) snap.currentImageUrl = window.currentImageUrl;
-    if(window.imageZoom)       snap.imageZoom = window.imageZoom;
-    if(window.panX !== undefined){ snap.panX = window.panX; snap.panY = window.panY; }
-    // Capturar el JSON exportado si existe
-    if(typeof getExportJSON === 'function') snap.exportJSON = getExportJSON();
-    return snap;
-  }catch(e){ return {}; }
-}
-
-async function saveCurrentProject(){
-  const nameEl = document.getElementById('project-name-input');
-  const name = (nameEl.value || 'Sin título').trim();
-  const btn = document.getElementById('btn-save-project');
-  btn.disabled = true; btn.textContent = '…';
-  try{
-    const canvas_json = _buildCanvasSnapshot();
-    // Captura la última imagen generada si existe
-    const lastImg = document.getElementById('result-image') ? document.getElementById('result-image').src : null;
-    const body = { name, canvas_json, image_url: (lastImg && lastImg.startsWith('http')) ? lastImg : null };
-    const r = await fetch('/projects', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tofToken()},
-      body: JSON.stringify(body)
-    });
-    if(r.ok){
-      nameEl.value = '';
-      showToast && showToast('✅ Proyecto "'+name+'" guardado','success');
-      loadProjectsList();
-    } else {
-      const e = await r.json().catch(()=>({detail:'Error'}));
-      showToast && showToast('❌ '+e.detail,'error');
-    }
-  }catch(ex){ showToast && showToast('❌ Error de red','error'); }
-  btn.disabled=false; btn.textContent='💾 Guardar';
-}
-
-async function loadProjectsList(){
-  const list = document.getElementById('projects-list');
-  const loading = document.getElementById('projects-loading');
-  if(loading) loading.style.display='block';
-  try{
-    const r = await fetch('/projects?limit=50',{headers:{'Authorization':'Bearer '+_tofToken()}});
-    if(!r.ok) throw new Error('No autorizado');
-    const data = await r.json();
-    renderProjectsList(data.projects || []);
-  }catch(e){
-    if(list) list.innerHTML='<div style="color:#f87171;font-size:13px;padding:20px 0;text-align:center;">Error cargando proyectos</div>';
-  }
-}
-
-function renderProjectsList(projects){
-  const list = document.getElementById('projects-list');
-  if(!list) return;
-  if(!projects.length){
-    list.innerHTML='<div style="text-align:center;color:#475569;padding:28px 0;font-size:13px;">No tienes proyectos guardados aún.<br><span style="font-size:12px;color:#334155;">Guarda tu diseño actual con el botón de arriba.</span></div>';
-    return;
-  }
-  list.innerHTML = projects.map(p=>{
-    const date = new Date(p.updated_at).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const thumb = p.image_url
-      ? `<img src="${p.image_url}" style="width:52px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);">`
-      : `<div style="width:52px;height:40px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-      ${thumb}
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</div>
-        <div style="font-size:11px;color:#475569;margin-top:2px;">${date}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="openProject('${p.id}')" title="Abrir proyecto"
-          style="padding:5px 10px;border-radius:7px;border:1px solid rgba(99,102,241,.4);background:rgba(99,102,241,.12);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer;">Abrir</button>
-        <button onclick="deleteProject('${p.id}','${escHtml(p.name)}')" title="Eliminar proyecto"
-          style="padding:5px 8px;border-radius:7px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);color:#f87171;font-size:11px;cursor:pointer;">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-async function openProject(id){
-  try{
-    const r = await fetch('/projects/'+id,{headers:{'Authorization':'Bearer '+_tofToken()}});
-    if(!r.ok) throw new Error('No encontrado');
-    const proj = await r.json();
-    closeProjectsModal();
-    // Restaurar imagen si existe
-    if(proj.canvas_json && proj.canvas_json.currentImageUrl && window.loadImageFromUrl){
-      loadImageFromUrl(proj.canvas_json.currentImageUrl);
-    }
-    if(proj.canvas_json && proj.canvas_json.exportJSON){
-      try{
-        const j = typeof proj.canvas_json.exportJSON === 'string'
-          ? JSON.parse(proj.canvas_json.exportJSON)
-          : proj.canvas_json.exportJSON;
-        if(typeof loadFromJSON === 'function') loadFromJSON(j);
-      }catch(_){}
-    }
-    showToast && showToast('📂 Proyecto "'+proj.name+'" cargado','success');
-  }catch(e){ showToast && showToast('❌ Error abriendo proyecto','error'); }
-}
-
-async function deleteProject(id, name){
-  if(!confirm('¿Eliminar el proyecto "'+name+'"? Esta acción no se puede deshacer.')) return;
-  try{
-    const r = await fetch('/projects/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+_tofToken()}});
-    if(r.ok){
-      showToast && showToast('🗑 Proyecto eliminado','success');
-      loadProjectsList();
-    } else { showToast && showToast('❌ Error eliminando','error'); }
-  }catch(e){ showToast && showToast('❌ Error de red','error'); }
-}
-
-// Cerrar modal al hacer click fuera
-document.getElementById('projects-modal').addEventListener('click',function(e){
-  if(e.target===this) closeProjectsModal();
-});
-</script>
+<script src="/static/projects.js"></script>
 
 <!-- ══ BRAND KIT MODAL ══ -->
 <div id="iac-brand-modal" onclick="if(event.target===this)closeIacBrandKit()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;align-items:center;justify-content:center;">
@@ -2581,395 +2742,7 @@ document.getElementById('projects-modal').addEventListener('click',function(e){
   </div>
 </div>
 
-<script>
-/* ══ IA CORE — JavaScript ══ */
-
-let _iacLastDesignLayout = null;
-let _iacLastVariants = null;
-let _iacLastBrandKit = null;
-
-function iacSetTab(tab) {
-  document.getElementById('iac-tab-design').style.display = tab === 'design' ? '' : 'none';
-  document.getElementById('iac-tab-copy').style.display   = tab === 'copy'   ? '' : 'none';
-  const btnD = document.getElementById('iac-tab-btn-design');
-  const btnC = document.getElementById('iac-tab-btn-copy');
-  btnD.style.background = tab === 'design' ? '#7c6eff' : '#1a1a30';
-  btnD.style.color      = tab === 'design' ? '#fff'    : '#888';
-  btnC.style.background = tab === 'copy'   ? '#7c6eff' : '#1a1a30';
-  btnC.style.color      = tab === 'copy'   ? '#fff'    : '#888';
-  if (tab === 'copy') _iacRefreshCopyText();
-}
-
-function _iacStatus(elId, msg, type) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.style.display = msg ? '' : 'none';
-  el.textContent = msg || '';
-  const colors = {info:'rgba(124,110,255,.15)',error:'rgba(239,68,68,.15)',success:'rgba(34,197,94,.15)'};
-  const texts  = {info:'#a5b4fc',error:'#fca5a5',success:'#86efac'};
-  el.style.background = colors[type] || colors.info;
-  el.style.color = texts[type] || texts.info;
-}
-
-/* ─── FEATURE 1: Diseñar desde descripción ─── */
-async function iacGenerateDesign() {
-  const desc = (document.getElementById('iac-design-input').value || '').trim();
-  if (!desc) { _iacStatus('iac-design-status','Escribe una descripción primero','error'); return; }
-  const btn = document.getElementById('iac-design-btn');
-  btn.disabled = true;
-  document.getElementById('iac-design-result').style.display = 'none';
-  _iacStatus('iac-design-status','⏳ Generando layout…','info');
-  try {
-    const r = await fetch('/api/ai/design-layout', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+_tofToken()},
-      body: JSON.stringify({description: desc, canvas_width: (typeof imageData!=='undefined'&&imageData.width)||1080, canvas_height: (typeof imageData!=='undefined'&&imageData.height)||1080})
-    });
-    const d = await r.json();
-    if (!r.ok) { _iacStatus('iac-design-status', d.detail || 'Error IA','error'); return; }
-    _iacLastDesignLayout = d;
-    document.getElementById('iac-design-result').style.display = '';
-    const bgEl = document.getElementById('iac-bg-suggestion');
-    if (d.background_suggestion) bgEl.textContent = '💡 Fondo sugerido: ' + d.background_suggestion;
-    else bgEl.textContent = '';
-    _iacStatus('iac-design-status', `✓ ${(d.texts||[]).length} capas generadas`, 'success');
-  } catch(e) { _iacStatus('iac-design-status','Error de red: '+e.message,'error');
-  } finally { btn.disabled = false; }
-}
-
-function iacApplyDesign(mode) {
-  if (!_iacLastDesignLayout) return;
-  const newTexts = _iacLastDesignLayout.texts || [];
-  if (!newTexts.length) return;
-  try {
-    if (mode === 'replace') {
-      texts = JSON.parse(JSON.stringify(newTexts));
-    } else {
-      texts = [...texts, ...JSON.parse(JSON.stringify(newTexts))];
-    }
-    activeTextIndex = 0; selectedTexts = [];
-    saveHistory(); updateControls(); updatePreview(); updateJSON();
-    if (typeof renderFormasPanel === 'function') renderFormasPanel();
-    showToast && showToast('✓ Layout IA aplicado — ' + newTexts.length + ' capas', 1800);
-    document.getElementById('iac-design-result').style.display = 'none';
-    _iacStatus('iac-design-status','','info');
-    if (typeof _openAccordion === 'function') _openAccordion('textos');
-  } catch(e) { _iacStatus('iac-design-status','Error al aplicar: '+e.message,'error'); }
-}
-
-/* ─── FEATURE 2: Copy Suggestions ─── */
-function _iacRefreshCopyText() {
-  const el = document.getElementById('iac-copy-current');
-  if (!el) return;
-  if (typeof texts !== 'undefined' && texts.length > 0 && activeTextIndex >= 0) {
-    el.textContent = texts[activeTextIndex]?.text || '(capa vacía)';
-  } else {
-    el.textContent = '(selecciona una capa de texto primero)';
-  }
-}
-
-async function iacGetCopySuggestions() {
-  _iacRefreshCopyText();
-  const currentText = (typeof texts !== 'undefined' && texts[activeTextIndex]?.text) || '';
-  if (!currentText.trim()) { _iacStatus('iac-copy-status','Selecciona una capa de texto activa','error'); return; }
-  const context = (document.getElementById('iac-copy-context').value || '').trim();
-  const btn = document.getElementById('iac-copy-btn');
-  btn.disabled = true;
-  document.getElementById('iac-copy-suggestions').style.display = 'none';
-  _iacStatus('iac-copy-status','⏳ Generando sugerencias…','info');
-  try {
-    const r = await fetch('/api/ai/copy-suggestions', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({current_text: currentText, context: context || null})
-    });
-    const d = await r.json();
-    if (!r.ok) { _iacStatus('iac-copy-status', d.detail || 'Error IA','error'); return; }
-    const container = document.getElementById('iac-copy-suggestions');
-    container.innerHTML = '';
-    (d.suggestions || []).forEach((s, i) => {
-      const pill = document.createElement('div');
-      pill.style.cssText = 'background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px;padding:9px 11px;cursor:pointer;font-size:12px;color:#d0d0e8;transition:border-color .2s;position:relative;';
-      pill.innerHTML = `<div style="font-size:10px;font-weight:700;color:#7c6eff;margin-bottom:3px;">Variante ${String.fromCharCode(65+i)}</div>${s}<div style="font-size:10px;color:#555;margin-top:6px;">Clic para aplicar →</div>`;
-      pill.onmouseover = () => pill.style.borderColor = '#7c6eff';
-      pill.onmouseout  = () => pill.style.borderColor = '#2a2a50';
-      pill.onclick = () => iacApplyCopy(s);
-      container.appendChild(pill);
-    });
-    container.style.display = 'flex';
-    _iacStatus('iac-copy-status','','info');
-  } catch(e) { _iacStatus('iac-copy-status','Error: '+e.message,'error');
-  } finally { btn.disabled = false; }
-}
-
-function iacApplyCopy(text) {
-  if (typeof texts==='undefined' || activeTextIndex < 0 || activeTextIndex >= texts.length) return;
-  texts[activeTextIndex].text = text;
-  saveHistory(); updateControls(); updatePreview(); updateJSON();
-  showToast && showToast('✓ Copy aplicado', 1200);
-}
-
-/* ─── FEATURE 3: Brand Kit ─── */
-function openIacBrandKit() {
-  const m = document.getElementById('iac-brand-modal');
-  m.style.display = 'flex';
-  document.getElementById('iac-brand-result').style.display = 'none';
-  _iacStatus('iac-brand-status','','info');
-}
-function closeIacBrandKit() {
-  document.getElementById('iac-brand-modal').style.display = 'none';
-}
-
-async function iacExtractBrandKit() {
-  const url = (document.getElementById('iac-brand-url').value || '').trim();
-  if (!url) { _iacStatus('iac-brand-status','Pega la URL del logo primero','error'); return; }
-  const btn = document.getElementById('iac-brand-btn');
-  btn.disabled = true;
-  document.getElementById('iac-brand-result').style.display = 'none';
-  _iacStatus('iac-brand-status','⏳ Analizando logo con IA…','info');
-  try {
-    const r = await fetch('/api/ai/brand-kit', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({image_url: url})
-    });
-    const d = await r.json();
-    if (!r.ok) { _iacStatus('iac-brand-status', d.detail || 'Error IA','error'); return; }
-    _iacLastBrandKit = d;
-    // Render swatches
-    const sw = document.getElementById('iac-brand-swatches');
-    sw.innerHTML = '';
-    (d.colors || []).forEach(hex => {
-      const s = document.createElement('div');
-      s.title = hex;
-      s.style.cssText = `width:36px;height:36px;border-radius:8px;background:${hex};border:2px solid #2a2a50;cursor:pointer;flex-shrink:0;`;
-      s.onclick = () => navigator.clipboard && navigator.clipboard.writeText(hex);
-      sw.appendChild(s);
-    });
-    const info = document.getElementById('iac-brand-info');
-    info.innerHTML = `<strong style="color:#d0d0e8">Estilo:</strong> ${d.style || '—'}<br><strong style="color:#d0d0e8">Fuente sugerida:</strong> ${d.font_suggestion || '—'}<br><em>${d.description || ''}</em>`;
-    document.getElementById('iac-brand-result').style.display = '';
-    _iacStatus('iac-brand-status','✓ Paleta extraída — Copia los colores o aplica al editor','success');
-  } catch(e) { _iacStatus('iac-brand-status','Error: '+e.message,'error');
-  } finally { btn.disabled = false; }
-}
-
-function iacApplyBrandKit() {
-  if (!_iacLastBrandKit || !_iacLastBrandKit.colors) return;
-  if (typeof brandColors !== 'undefined') {
-    brandColors = [..._iacLastBrandKit.colors];
-    try { localStorage.setItem('textonflow_brand_colors', JSON.stringify(brandColors)); } catch(_){}
-  }
-  closeIacBrandKit();
-  showToast && showToast('🎨 Brand Kit aplicado — ' + (_iacLastBrandKit.colors.length) + ' colores cargados', 2200);
-}
-
-/* ─── FEATURE 4: A/B Variant Generator ─── */
-function closeIacAB() {
-  document.getElementById('iac-ab-modal').style.display = 'none';
-}
-
-async function iacGenerateVariants() {
-  if (typeof texts === 'undefined' || !texts.length) {
-    showToast && showToast('❌ Agrega al menos una capa de texto primero', 1800); return;
-  }
-  const modal = document.getElementById('iac-ab-modal');
-  modal.style.display = 'flex';
-  document.getElementById('iac-ab-loading').style.display = '';
-  document.getElementById('iac-ab-variants').style.display = 'none';
-  try {
-    const r = await fetch('/api/ai/ab-variants', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({texts: JSON.parse(JSON.stringify(texts)), context: null})
-    });
-    const d = await r.json();
-    if (!r.ok) { showToast && showToast('❌ '+(d.detail||'Error IA'),'error'); modal.style.display='none'; return; }
-    _iacLastVariants = d.variants || [];
-    const container = document.getElementById('iac-ab-variants');
-    container.innerHTML = '';
-    _iacLastVariants.forEach((v, i) => {
-      const card = document.createElement('div');
-      card.style.cssText = 'background:#0d0d1f;border:1px solid #2a2a50;border-radius:10px;padding:14px;';
-      const swatchesHtml = (v.color_overrides ? Object.values(v.color_overrides) : []).filter(c=>c&&c.startsWith('#')).map(c=>`<div style="display:inline-block;width:18px;height:18px;border-radius:4px;background:${c};margin-right:4px;vertical-align:middle;"></div>`).join('');
-      card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="color:#c4b5fd;font-size:13px;font-weight:800;">${v.label||'Variante '+(i+1)}</span>
-          <div>${swatchesHtml}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-          ${(v.texts||[]).slice(0,3).map(t=>`<div style="font-size:11px;color:#888;background:#131325;border-radius:5px;padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.text||''}</div>`).join('')}
-        </div>
-        <button onclick="iacApplyVariant(${i})" style="width:100%;background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;">✓ Usar esta variante</button>
-      `;
-      container.appendChild(card);
-    });
-    document.getElementById('iac-ab-loading').style.display = 'none';
-    container.style.display = 'flex';
-  } catch(e) {
-    showToast && showToast('❌ Error: '+e.message, 1800);
-    modal.style.display = 'none';
-  }
-}
-
-function iacApplyVariant(idx) {
-  if (!_iacLastVariants || !_iacLastVariants[idx]) return;
-  const variant = _iacLastVariants[idx];
-  if (variant.texts && variant.texts.length) {
-    texts = JSON.parse(JSON.stringify(variant.texts));
-    activeTextIndex = 0; selectedTexts = [];
-    saveHistory(); updateControls(); updatePreview(); updateJSON();
-    if (typeof renderFormasPanel === 'function') renderFormasPanel();
-  }
-  closeIacAB();
-  showToast && showToast('✓ Variante "'+variant.label+'" aplicada', 2000);
-}
-
-// ── ONBOARDING GUIADO 3 PASOS ─────────────────────────────────────────────────
-var _OB_KEY = 'tof_onboarding_done';
-var _obStep = 0;
-
-var _obIcons = {
-  palette: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
-  smartphone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>',
-  zap: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-  star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-  layers: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-  image: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
-  type: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
-  eye: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-  plug: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
-  clipboard: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
-  link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-  target: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
-};
-
-var _obSteps = [
-  {
-    icon: 'palette',
-    badge: 'Paso 1 de 3',
-    title: 'Bienvenido a TextOnFlow',
-    subtitle: 'Imágenes personalizadas para cada usuario de ManyChat — en segundos.',
-    content: [
-      { icon: 'smartphone', label: 'Para agencias ManyChat', text: 'Convierte variables como <code>{{nombre}}</code> o <code>{{ciudad}}</code> en imágenes únicas para cada contacto. Sin programar.' },
-      { icon: 'zap', label: 'API + Editor visual', text: 'Diseña en el editor visual, genera el JSON, conéctalo a tu flujo de ManyChat. Tu imagen se crea automáticamente al activar el mensaje.' },
-      { icon: 'star', label: '7 días de trial ilimitado', text: 'Renders ilimitados durante 7 días. Sin tarjeta de crédito. Puedes pasarte a Starter ($29/mes) o Agency ($79/mes) cuando estés listo.' }
-    ],
-    cta: 'Empezar el tour →'
-  },
-  {
-    icon: 'layers',
-    badge: 'Paso 2 de 3',
-    title: 'Diseña tu primera imagen',
-    subtitle: 'El editor tiene todo lo que necesitas en el panel derecho.',
-    content: [
-      { icon: 'image', label: 'Imagen de fondo', text: 'Pega la URL de una imagen o sube una. Puede ser el logo de tu cliente, un banner o una plantilla.' },
-      { icon: 'type', label: 'Añade capas de texto', text: 'Haz clic en <strong>+ Añadir texto</strong>. Escribe el texto con variables: <code>Hola, {{nombre}}!</code> — cada usuario verá su nombre.' },
-      { icon: 'eye', label: 'Visualizar', text: 'Haz clic en <strong>Visualizar</strong>. Verás la imagen generada y el JSON listo para ManyChat. Puedes probar con valores reales.' }
-    ],
-    cta: 'Siguiente →'
-  },
-  {
-    icon: 'plug',
-    badge: 'Paso 3 de 3',
-    title: 'Conecta con ManyChat',
-    subtitle: 'Copia el JSON y activa tu flujo. 5 minutos de integración.',
-    content: [
-      { icon: 'clipboard', label: 'Copia el JSON', text: 'Después de visualizar, haz clic en <strong>Copiar JSON</strong>. Ese JSON contiene toda la configuración de tu imagen.' },
-      { icon: 'link', label: 'En ManyChat: HTTP Request', text: 'Crea un bloque <strong>HTTP Request → POST</strong> con URL: <code>https://www.textonflow.com/generate-multi</code>. Header: <code>Authorization: Bearer [tu token]</code>.' },
-      { icon: 'target', label: 'Pega y activa variables', text: 'Pega el JSON en el body. Reemplaza los valores fijos por las variables de ManyChat de tu flujo. ¡Listo! Cada usuario recibirá su imagen personalizada.' }
-    ],
-    cta: '¡Empezar a diseñar!'
-  }
-];
-
-function showOnboarding() {
-  if (localStorage.getItem('tof_ob_hidden')) return;
-  _obStep = 0;
-  _renderObStep();
-  document.getElementById('ob-modal').style.display = 'flex';
-}
-
-function openOnboarding() {
-  _obStep = 0;
-  _renderObStep();
-  var el = document.getElementById('ob-modal');
-  if (el) { el.style.opacity = '1'; el.style.display = 'flex'; }
-}
-
-function _renderObStep() {
-  var s = _obSteps[_obStep];
-  var el = document.getElementById('ob-modal');
-  if (!el) return;
-
-  // Dots
-  var dots = '';
-  for (var i = 0; i < _obSteps.length; i++) {
-    dots += '<div style="width:' + (i===_obStep?24:8) + 'px;height:8px;border-radius:4px;background:' + (i===_obStep?'#7c6eff':'#2a2a3e') + ';transition:all .3s;"></div>';
-  }
-
-  // Content items
-  var items = s.content.map(function(c) {
-    var itemSvg = (_obIcons[c.icon] || '').replace('stroke="currentColor"', 'stroke="#a5b4fc"');
-    return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#0d0d1e;border:1px solid #1e1e38;border-radius:10px;">' +
-      '<div style="flex-shrink:0;width:30px;height:30px;border-radius:8px;background:rgba(124,110,255,.12);border:1px solid rgba(124,110,255,.2);display:flex;align-items:center;justify-content:center;margin-top:1px;">' + itemSvg + '</div>' +
-      '<div style="min-width:0;overflow-wrap:break-word;word-break:break-word;flex:1;">' +
-        '<div style="font-size:.82rem;font-weight:700;color:#a5b4fc;margin-bottom:3px;">' + c.label + '</div>' +
-        '<div style="font-size:.86rem;color:#9090b8;line-height:1.55;">' + c.text + '</div>' +
-      '</div></div>';
-  }).join('');
-
-  var mainSvg = (_obIcons[s.icon] || '').replace('stroke="currentColor"', 'stroke="#a5b4fc"');
-  document.getElementById('ob-content').innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
-      '<div style="width:48px;height:48px;border-radius:12px;background:rgba(124,110,255,.15);border:1px solid rgba(124,110,255,.25);display:flex;align-items:center;justify-content:center;">' + mainSvg + '</div>' +
-      '<div style="display:flex;gap:6px;align-items:center;">' + dots + '</div>' +
-    '</div>' +
-    '<div style="font-size:.75rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7c6eff;margin-bottom:6px;">' + s.badge + '</div>' +
-    '<h2 style="font-size:1.35rem;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-.3px;">' + s.title + '</h2>' +
-    '<p style="font-size:.88rem;color:#8080a0;margin-bottom:18px;line-height:1.6;">' + s.subtitle + '</p>' +
-    '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">' + items + '</div>' +
-    '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">' +
-      (_obStep > 0 ? '<button onclick="_obPrev()" style="flex:0 0 auto;padding:10px 16px;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:8px;color:#8080a0;font-size:13px;cursor:pointer;">← Atrás</button>' : '') +
-      '<button onclick="_obNext()" style="flex:1;padding:12px 20px;background:linear-gradient(135deg,#6d28d9,#4f46e5);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity=\'.88\'" onmouseout="this.style.opacity=\'1\'">' + s.cta + '</button>' +
-      '<button onclick="_obSkip()" style="flex:0 0 auto;padding:10px 12px;background:none;border:none;color:#fff;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7;">Cerrar</button>' +
-    '</div>' +
-    '<label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:7px 10px;background:#080812;border:1px solid #1a1a30;border-radius:8px;">' +
-      '<input type="checkbox" id="ob-hide-chk" ' + (localStorage.getItem('tof_ob_hidden') ? 'checked' : '') + ' onchange="if(this.checked){localStorage.setItem(\'tof_ob_hidden\',\'1\');}else{localStorage.removeItem(\'tof_ob_hidden\');}" style="accent-color:#7c6eff;width:13px;height:13px;cursor:pointer;">' +
-      '<span style="font-size:11px;color:#505070;">No mostrar al iniciar (puedo abrirlo cuando quiera)</span>' +
-    '</label>';
-}
-
-function _obNext() {
-  if (_obStep < _obSteps.length - 1) {
-    _obStep++;
-    _renderObStep();
-  } else {
-    _obFinish();
-  }
-}
-
-function _obPrev() {
-  if (_obStep > 0) {
-    _obStep--;
-    _renderObStep();
-  }
-}
-
-function _obSkip() { _obFinish(); }
-
-function _obFinish() {
-  var el = document.getElementById('ob-modal');
-  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function(){ el.style.display = 'none'; el.style.opacity = '1'; }, 300); }
-  if (typeof showToast === 'function') showToast('✦ Tutorial disponible en el botón inferior del panel →', 3500);
-}
-
-// Mostrar onboarding solo si ya aceptó términos (no interrumpir ese flujo)
-(function _checkOnboarding(){
-  var hidden = localStorage.getItem('tof_ob_hidden');
-  var termsAccepted = localStorage.getItem('tof_terms_v2');
-  if (!hidden && termsAccepted) {
-    setTimeout(showOnboarding, 1200);
-  }
-})();
-</script>
+<script src="/static/ai-panel.js"></script>
 
 <!-- ── Onboarding modal ─────────────────────────────────────────────────── -->
 <div id="ob-modal" style="display:none;position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)_obFinish();">
@@ -2978,5 +2751,406 @@ function _obFinish() {
   </div>
 </div>
 
+<!-- ── Modal: Enviar a ManyChat ─────────────────────────────────────────── -->
+<div id="mc-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#13132b;border:1.5px solid #0084FF;border-radius:16px;padding:22px 24px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,132,255,.25);position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0084FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 12 13a16 16 0 0 0 1.06.83l.94.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+        <span style="font-size:15px;font-weight:800;color:#e2e8f0;">URL lista para ManyChat</span>
+      </div>
+      <button onclick="document.getElementById('mc-modal').style.display='none'" style="background:none;border:none;color:#666;cursor:pointer;font-size:18px;line-height:1;">✕</button>
+    </div>
+    <div id="mc-modal-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL AYUDA CONTADOR REGRESIVO
+═══════════════════════════════════════════════════════ -->
+<div id="cd-help-modal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;padding:14px;">
+  <div style="background:#13132b;border:1.5px solid #2a2a55;border-radius:18px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.7);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid #1e1e40;position:sticky;top:0;background:#13132b;z-index:2;border-radius:18px 18px 0 0;">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <span style="font-size:20px;">⏱</span>
+        <span style="font-size:15px;font-weight:800;color:#e2e8f0;">Guía del Contador Regresivo</span>
+      </div>
+      <button onclick="document.getElementById('cd-help-modal').style.display='none'" style="background:#1e1e3a;border:1px solid #2a2a50;border-radius:50%;width:28px;height:28px;color:#94a3b8;font-size:16px;cursor:pointer;line-height:1;flex-shrink:0;">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid #1e1e40;background:#0d0d1f;">
+      <button id="cd-help-tab-event" onclick="cdHelpTab('event')" style="flex:1;padding:11px 8px;font-size:12px;font-weight:700;background:transparent;color:#a5b4fc;border:none;border-bottom:2.5px solid #6366f1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Evento
+      </button>
+      <button id="cd-help-tab-urgency" onclick="cdHelpTab('urgency')" style="flex:1;padding:11px 8px;font-size:12px;font-weight:700;background:transparent;color:#64748b;border:none;border-bottom:2.5px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Urgencia
+      </button>
+    </div>
+
+    <!-- ── PANE EVENTO ─────────────────────────────────── -->
+    <div id="cd-help-pane-event" style="padding:20px 22px 24px;">
+
+      <div style="background:#1a1a36;border:1px solid #2a2a55;border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:#94a3b8;line-height:1.6;">
+        <strong style="color:#e2e8f0;">¿Cuándo usarlo?</strong> Cuando <em>todos los usuarios</em> deben ver el mismo tiempo restante. Ideal para lanzamientos, ventas flash o webinars con fecha fija.
+      </div>
+
+      <!-- Paso 1 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#6366f1;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">Configura la fecha y hora de vencimiento</div>
+        </div>
+        <!-- Mockup visual -->
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;font-size:11px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <div style="color:#64748b;font-size:10px;margin-bottom:3px;">Fecha</div>
+              <div style="background:#1e1e3a;border:1.5px solid #6366f1;border-radius:6px;padding:5px 10px;color:#a5b4fc;font-family:monospace;font-size:12px;">2026-05-30</div>
+            </div>
+            <div>
+              <div style="color:#64748b;font-size:10px;margin-bottom:3px;">Hora : Min</div>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <div style="background:#1e1e3a;border:1.5px solid #6366f1;border-radius:6px;padding:5px 8px;color:#a5b4fc;font-family:monospace;font-size:12px;">23</div>
+                <span style="color:#818cf8;font-weight:bold;">:</span>
+                <div style="background:#1e1e3a;border:1.5px solid #6366f1;border-radius:6px;padding:5px 8px;color:#a5b4fc;font-family:monospace;font-size:12px;">59</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="color:#64748b;font-size:10px;margin-bottom:3px;">Zona horaria</div>
+            <div style="background:#1e1e3a;border:1px solid #2a2a50;border-radius:6px;padding:5px 10px;color:#94a3b8;font-size:11px;">Mazatlán / Cabo San Lucas (UTC-7)</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#64748b;margin-top:6px;padding-left:28px;">Elige la zona horaria de tu audiencia para que el reloj sea exacto.</div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#6366f1;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">Haz clic en "Listo para ManyChat" → URL</div>
+        </div>
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10px;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">URL generada</div>
+          <div style="background:#0a0a1a;border:1.5px solid #22c55e55;border-radius:7px;padding:8px 10px;font-size:10px;color:#60a5fa;font-family:monospace;word-break:break-all;line-height:1.5;">https://www.textonflow.com/api/mc/<span style="color:#34d399;">TU_ID</span>/render<span style="color:#f59e0b;">?id={{id}}</span></div>
+          <div style="font-size:10px;color:#64748b;margin-top:6px;">El <code style="color:#f59e0b;background:#1a1000;padding:1px 4px;border-radius:3px;">{{id}}</code> de ManyChat cambia por usuario y evita que WhatsApp cachee la imagen.</div>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#6366f1;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">Pega la URL en ManyChat — paso HTTP Request</div>
+        </div>
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;">
+          <!-- Mockup de ManyChat step -->
+          <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+              <div style="background:#0084FF22;border:1px solid #0084FF55;border-radius:5px;padding:3px 8px;font-size:10px;color:#60a5fa;font-weight:700;">HTTP Request</div>
+              <div style="font-size:10px;color:#94a3b8;">Método: <strong style="color:#e2e8f0;">GET</strong></div>
+            </div>
+            <div style="font-size:10px;color:#64748b;margin-bottom:3px;">URL del Request:</div>
+            <div style="background:#0a0a1a;border:1px solid #1e1e40;border-radius:5px;padding:6px 8px;font-size:9.5px;color:#60a5fa;font-family:monospace;word-break:break-all;">https://www.textonflow.com/api/mc/<span style="color:#34d399;">TU_ID</span>/render?id=<span style="color:#f59e0b;">{{id}}</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              <div style="background:#0d1f0d;border:1px solid #22c55e44;border-radius:5px;padding:4px 8px;font-size:10px;color:#86efac;">✓ Mapeo de respuesta: <code style="color:#4ade80;">image_url</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nota clave -->
+      <div style="background:#1a0f00;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:10px 13px;font-size:11px;color:#d4a017;line-height:1.55;">
+        <strong>Nota:</strong> Todos tus usuarios verán <em>exactamente el mismo tiempo restante</em>. Si Pedro abre la imagen a las 3pm y Lupita a las 6pm, ambos ven cuánto falta para el mismo deadline.
+      </div>
+    </div>
+
+    <!-- ── PANE URGENCIA ───────────────────────────────── -->
+    <div id="cd-help-pane-urgency" style="display:none;padding:20px 22px 24px;">
+
+      <div style="background:#1a1a36;border:1px solid #2a2a55;border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:#94a3b8;line-height:1.6;">
+        <strong style="color:#e2e8f0;">¿Cuándo usarlo?</strong> Cuando quieres que <em>cada persona tenga su propio reloj</em>. Lupita puede vencer el viernes y Pedro el sábado — tú decides la fecha de expiración de cada uno.
+      </div>
+
+      <!-- Paso 1 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#8b5cf6;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">Usa la Calculadora para obtener el número</div>
+        </div>
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;">
+          <div style="background:linear-gradient(135deg,#12103a,#1a1250);border:1.5px solid #4f46e5;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:6px;">Calculadora — ¿Cuándo vence la oferta?</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+              <div style="background:#0a0a1a;border:1px solid #2a2a45;border-radius:5px;padding:4px 8px;font-size:10px;font-family:monospace;color:#94a3b8;">Fecha: 2026-05-30</div>
+              <div style="background:#0a0a1a;border:1px solid #2a2a45;border-radius:5px;padding:4px 8px;font-size:10px;font-family:monospace;color:#94a3b8;">Hora: 23  Min: 59</div>
+            </div>
+            <div style="background:#0a0816;border:1.5px solid #6d28d955;border-radius:7px;padding:8px 10px;display:flex;align-items:center;gap:8px;">
+              <div style="font-family:monospace;font-size:19px;font-weight:700;color:#34d399;letter-spacing:1px;flex:1;">1748649540</div>
+              <div style="background:#1e1040;border:1px solid #6d28d9;border-radius:5px;color:#a78bfa;padding:4px 10px;font-size:10px;cursor:pointer;">Copiar</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#64748b;">Copia este número — es el timestamp Unix de cuando expira la oferta.</div>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#8b5cf6;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">En ManyChat: guarda el número en un campo</div>
+        </div>
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;">
+          <!-- Mockup ManyChat Set Field -->
+          <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+              <div style="background:#8b5cf622;border:1px solid #8b5cf655;border-radius:5px;padding:3px 8px;font-size:10px;color:#c4b5fd;font-weight:700;">Set Field</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:10px;color:#64748b;margin-bottom:3px;">Campo</div>
+                <div style="background:#0a0a1a;border:1.5px solid #8b5cf655;border-radius:5px;padding:5px 10px;font-size:11px;font-family:monospace;color:#c4b5fd;">timer_final</div>
+              </div>
+              <div style="color:#64748b;font-size:14px;font-weight:bold;margin-top:12px;">=</div>
+              <div>
+                <div style="font-size:10px;color:#64748b;margin-bottom:3px;">Valor</div>
+                <div style="background:#0a0a1a;border:1.5px solid #8b5cf655;border-radius:5px;padding:5px 10px;font-size:11px;font-family:monospace;color:#34d399;">1748649540</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#64748b;line-height:1.5;">Crea el campo <code style="color:#c4b5fd;background:#1a0a30;padding:1px 4px;border-radius:3px;">timer_final</code> si no existe (Custom Fields → Number). Asigna el número <strong style="color:#e2e8f0;">antes</strong> del mensaje con la imagen.</div>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="background:#8b5cf6;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div style="font-size:12px;font-weight:700;color:#e2e8f0;">Pega la URL en ManyChat — HTTP Request</div>
+        </div>
+        <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;">
+          <div style="background:#1a1a2e;border:1px solid #2a2a50;border-radius:8px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+              <div style="background:#0084FF22;border:1px solid #0084FF55;border-radius:5px;padding:3px 8px;font-size:10px;color:#60a5fa;font-weight:700;">HTTP Request</div>
+              <div style="font-size:10px;color:#94a3b8;">Método: <strong style="color:#e2e8f0;">GET</strong></div>
+            </div>
+            <div style="font-size:10px;color:#64748b;margin-bottom:3px;">URL del Request:</div>
+            <div style="background:#0a0a1a;border:1px solid #1e1e40;border-radius:5px;padding:7px 9px;font-size:9.5px;color:#60a5fa;font-family:monospace;word-break:break-all;line-height:1.6;">https://www.textonflow.com/api/mc/<span style="color:#34d399;">TU_ID</span>/render<span style="color:#c4b5fd;">?timer_final={{timer_final}}</span><span style="color:#f59e0b;">&id={{id}}</span></div>
+            <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;">
+              <div style="background:#0d1f0d;border:1px solid #22c55e44;border-radius:5px;padding:3px 7px;font-size:9.5px;color:#86efac;">✓ Mapeo de respuesta: <code style="color:#4ade80;">image_url</code></div>
+            </div>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:#64748b;line-height:1.5;">
+            <code style="color:#c4b5fd;background:#1a0a30;padding:1px 4px;border-radius:3px;">{{timer_final}}</code> = el campo de ManyChat con el número &nbsp;|&nbsp; <code style="color:#f59e0b;background:#1a1000;padding:1px 4px;border-radius:3px;">{{id}}</code> = evita caché en WhatsApp
+          </div>
+        </div>
+      </div>
+
+      <!-- Orden correcto en el flow -->
+      <div style="background:#0d0d1f;border:1px solid #2a2a45;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#a78bfa;margin-bottom:8px;">📋 Orden en tu flow de ManyChat:</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#94a3b8;">
+            <div style="background:#8b5cf622;border:1px solid #8b5cf644;border-radius:4px;padding:2px 7px;font-size:10px;color:#c4b5fd;font-weight:700;white-space:nowrap;">Set Field</div>
+            <span><code style="color:#c4b5fd;">timer_final</code> = <code style="color:#34d399;">1748649540</code></span>
+          </div>
+          <div style="border-left:1.5px dashed #2a2a50;margin-left:20px;height:10px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#94a3b8;">
+            <div style="background:#0084FF22;border:1px solid #0084FF44;border-radius:4px;padding:2px 7px;font-size:10px;color:#60a5fa;font-weight:700;white-space:nowrap;">HTTP Request</div>
+            <span>Llama la URL con <code style="color:#c4b5fd;">{{timer_final}}</code></span>
+          </div>
+          <div style="border-left:1.5px dashed #2a2a50;margin-left:20px;height:10px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#94a3b8;">
+            <div style="background:#22c55e22;border:1px solid #22c55e44;border-radius:4px;padding:2px 7px;font-size:10px;color:#86efac;font-weight:700;white-space:nowrap;">Mensaje</div>
+            <span>Envía la imagen con la URL de respuesta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nota clave -->
+      <div style="background:#1a0f00;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:10px 13px;font-size:11px;color:#d4a017;line-height:1.55;">
+        <strong>Nota:</strong> Si quieres que <em>la misma oferta expire para todos al mismo tiempo</em>, usa modo <strong>Evento</strong> en su lugar. Urgencia es para cuando cada persona tiene su propio reloj independiente.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/static/cd-help.js"></script>
+
+<!-- ══ MODAL PROPIO DE TEXTONFLOW ══════════════════════════════════════ -->
+<div id="tof-modal-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.65);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+  <div id="tof-modal-box" style="background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:24px 28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:tofModalIn .18s ease;">
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;">
+      <span id="tof-modal-icon" style="font-size:22px;line-height:1;flex-shrink:0;margin-top:1px;"></span>
+      <div>
+        <div id="tof-modal-title" style="font-size:13px;font-weight:800;color:#e8e8e8;margin-bottom:5px;letter-spacing:0.2px;"></div>
+        <div id="tof-modal-msg" style="font-size:12px;color:#9ca3af;line-height:1.55;"></div>
+      </div>
+    </div>
+    <div id="tof-modal-btns" style="display:flex;gap:8px;justify-content:flex-end;"></div>
+  </div>
+</div>
+<style>
+@keyframes tofModalIn{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#tof-modal-overlay.active{display:flex!important;}
+</style>
+
+<!-- ══ MODAL ATAJOS DE TECLADO ══════════════════════════════════════════ -->
+<div id="tof-shortcuts-overlay" style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeShortcuts()">
+  <div style="background:#12121e;border:1px solid #2a2a4a;border-radius:16px;padding:0;width:min(700px,94vw);max-height:82vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.8);animation:tofModalIn .18s ease;display:flex;flex-direction:column;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 14px;border-bottom:1px solid #1e1e30;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:#1e1e3a;border:1px solid #3a3a60;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:800;color:#9ca3ff;letter-spacing:.8px;">ATAJOS</span>
+        <span style="font-size:13px;font-weight:700;color:#c8c8e8;">Chuleta de teclado</span>
+      </div>
+      <button onclick="closeShortcuts()" style="width:28px;height:28px;border:1px solid #2a2a40;border-radius:7px;background:#1e1e2e;color:#666;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color .12s;" onmouseover="this.style.color='#f00'" onmouseout="this.style.color='#666'">✕</button>
+    </div>
+    <!-- Body: 3 columnas -->
+    <div style="overflow-y:auto;padding:18px 22px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px 20px;">
+
+      <!-- Columna 1: Edición -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Edición</div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Z</kbd><span class="tof-sk-desc">Deshacer</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Y</kbd><span class="tof-sk-desc">Rehacer</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>D</kbd><span class="tof-sk-desc">Duplicar campo</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>B</kbd><span class="tof-sk-desc">Negrita</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>I</kbd><span class="tof-sk-desc">Cursiva</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>U</kbd><span class="tof-sk-desc">Subrayado</span></div>
+        <div class="tof-sk-row"><kbd>Del</kbd><span>/</span><kbd>⌫</kbd><span class="tof-sk-desc">Eliminar campo activo</span></div>
+      </div>
+
+      <!-- Columna 2: Canvas & Texto -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Canvas & Texto</div>
+        <div class="tof-sk-row"><kbd>Flechas</kbd><span class="tof-sk-desc">Mover texto (1px)</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>↑↓←→</kbd><span class="tof-sk-desc">Mover texto (10px)</span></div>
+        <div class="tof-sk-row"><kbd>Space</kbd><span>+</span><kbd>Drag</kbd><span class="tof-sk-desc">Pan del canvas</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Scroll</kbd><span class="tof-sk-desc">Zoom del canvas</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>Drag img</kbd><span class="tof-sk-desc">Mover imagen de fondo</span></div>
+        <div class="tof-sk-row"><kbd>Clic derecho</kbd><span class="tof-sk-desc">Menú contextual</span></div>
+        <div class="tof-sk-row"><kbd>Shift</kbd><span>+</span><kbd>Clic</kbd><span class="tof-sk-desc">Multi-selección</span></div>
+        <div class="tof-sk-row"><kbd>Drag vacío</kbd><span class="tof-sk-desc">Selección en área</span></div>
+      </div>
+
+      <!-- Columna 3: Interfaz -->
+      <div>
+        <div style="font-size:10px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Interfaz</div>
+        <div class="tof-sk-row"><kbd>?</kbd><span class="tof-sk-desc">Esta chuleta</span></div>
+        <div class="tof-sk-row"><kbd>Escape</kbd><span class="tof-sk-desc">Cerrar modales</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Scroll panel</kbd><span class="tof-sk-desc">Zoom de interfaz</span></div>
+        <div class="tof-sk-row"><kbd>↩</kbd><span class="tof-sk-desc">Deshacer (barra)</span></div>
+        <div class="tof-sk-row"><kbd>↪</kbd><span class="tof-sk-desc">Rehacer (barra)</span></div>
+        <div class="tof-sk-row"><kbd>−</kbd><span>/</span><kbd>+</kbd><span class="tof-sk-desc">Zoom canvas (barra)</span></div>
+        <div class="tof-sk-row"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Z</kbd><span class="tof-sk-desc">Rehacer (alt)</span></div>
+      </div>
+
+    </div>
+    <!-- Footer -->
+    <div style="padding:10px 22px;border-top:1px solid #1e1e30;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:10px;color:#383850;">Presiona <kbd style="background:#1e1e30;border:1px solid #2a2a50;border-radius:4px;padding:1px 5px;font-size:10px;color:#888;">?</kbd> para abrir/cerrar en cualquier momento</span>
+      <button onclick="closeShortcuts()" style="padding:5px 14px;background:#6366f1;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#5254cc'" onmouseout="this.style.background='#6366f1'">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.tof-sk-row{display:flex;align-items:center;gap:3px;margin-bottom:7px;flex-wrap:wrap;}
+.tof-sk-row kbd{background:#1a1a2e;border:1px solid #2e2e4e;border-bottom:2px solid #1a1a3a;border-radius:5px;padding:2px 6px;font-size:10px;color:#9ca3ff;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.tof-sk-row .tof-sk-desc{font-size:11px;color:#606080;margin-left:5px;flex:1;}
+.tof-sk-row span:not(.tof-sk-desc){font-size:10px;color:#383850;flex-shrink:0;}
+</style>
+
+<script src="/static/shortcuts.js"></script>
+
+
+    <!-- ══ HISTORIAL VISUAL DE VERSIONES ══════════════════════════════════════ -->
+    <div id="tof-hist-panel" style="display:none;"></div>
+
+    <!-- ══ BATCH VARIATIONS MODAL ════════════════════════════════════════════ -->
+    <div id="bv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:#0f0f1c;border:1px solid #2a2a4a;border-radius:14px;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8);">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1e1e30;flex-shrink:0;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff;">⚡ Variaciones en lote</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">Genera múltiples versiones con diferentes colores en paralelo</div>
+          </div>
+          <button onclick="closeBatchModal()" style="background:none;border:none;color:#555;cursor:pointer;font-size:20px;padding:0 4px;line-height:1;">×</button>
+        </div>
+        <!-- Config -->
+        <div style="padding:14px 18px;border-bottom:1px solid #1e1e30;flex-shrink:0;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;font-weight:700;color:#888;white-space:nowrap;min-width:90px;">Campo a variar</span>
+            <select id="bv-field-sel" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;cursor:pointer;"></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;font-weight:700;color:#888;white-space:nowrap;min-width:90px;">Tipo</span>
+            <span style="font-size:11px;color:#7c6eff;background:rgba(124,110,255,.12);padding:3px 10px;border-radius:20px;">Color del texto</span>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:7px;">Colores a generar <span style="color:#555;font-weight:400;">(activa/desactiva con el check)</span></div>
+            <div id="bv-colors-grid" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+          <button id="bv-gen-btn" onclick="bvGenerate()" style="padding:9px 18px;background:#7c6eff;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;align-self:flex-start;transition:background .15s;" onmouseover="this.style.background='#6655ee'" onmouseout="this.style.background='#7c6eff'">Generar variaciones</button>
+        </div>
+        <!-- Results -->
+        <div style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div id="bv-results"></div>
+          <button id="bv-dl-all" onclick="bvDownloadAll()" style="display:none;padding:9px 18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34d399;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;align-self:flex-start;">⬇ Descargar todas</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GIF ANIMADO MODAL ══════════════════════════════════════════════════ -->
+    <div id="gif-anim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100001;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:#0f0f1c;border:1px solid #2a2a4a;border-radius:14px;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.85);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1e1e30;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff;">🎞 GIF animado (efecto typewriter)</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">Simula el tipeo de ManyChat letra por letra</div>
+          </div>
+          <button onclick="closeGifModal()" style="background:none;border:none;color:#555;cursor:pointer;font-size:20px;padding:0 4px;line-height:1;">×</button>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:11px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:#888;min-width:110px;">Campo a animar</span>
+            <select id="gif-anim-text-idx" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;cursor:pointer;"></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:#888;min-width:110px;">Tipo de animación</span>
+            <select id="gif-anim-type" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;cursor:pointer;">
+              <option value="typewriter">✍️ Typewriter (letra a letra)</option>
+              <option value="fade">✨ Fade (aparición suave)</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:10px;color:#888;">FPS</label>
+              <input id="gif-fps-input" type="number" min="4" max="24" value="12" style="padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;width:100%;">
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <label style="font-size:10px;color:#888;">Pausa final (seg)</label>
+              <input id="gif-hold-input" type="number" min="0.5" max="5" step="0.5" value="1.5" style="padding:5px 8px;font-size:11px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#e8e8e8;width:100%;">
+            </div>
+          </div>
+          <button id="gif-gen-btn-modal" onclick="gifGenerate()" style="padding:9px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;transition:background .15s;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">🎞 Generar GIF</button>
+          <div id="gif-gen-status" style="font-size:10px;color:#888;text-align:center;min-height:14px;"></div>
+        </div>
+        <div id="gif-preview-wrap" style="display:none;padding:0 18px 14px;text-align:center;">
+          <img id="gif-preview-img" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #2a2a4a;object-fit:contain;">
+        </div>
+        <div id="gif-dl-wrap" style="display:none;padding:0 18px 16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <a id="gif-dl-link" href="#" style="padding:8px 18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34d399;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;">⬇ Descargar GIF</a>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
