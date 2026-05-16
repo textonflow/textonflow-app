@@ -1,0 +1,323 @@
+import logging
+import os
+import requests
+from datetime import datetime, timezone, timedelta
+
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, Response
+
+from auth import _is_superadmin, _get_client_ip, _check_rate_limit
+from database import SUPABASE_DATABASE_URL, get_db, _PSYCOPG2_OK
+from fonts import get_noto_emoji_font
+from stats import _read_stats
+
+try:
+    import numpy as _np
+    _NUMPY_OK = True
+except ImportError:
+    _NUMPY_OK = False
+
+logger = logging.getLogger(__name__)
+
+pages_router = APIRouter()
+
+
+def _reset_time_str() -> str:
+    """Tiempo hasta medianoche UTC en formato 'Xh Ym'."""
+    now      = datetime.utcnow()
+    midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    secs     = int((midnight - now).total_seconds())
+    return f"{secs // 3600}h {(secs % 3600) // 60}m"
+
+
+# ─── Página raíz y dashboard ─────────────────────────────────────────────────
+
+@pages_router.get("/")
+async def root():
+    return FileResponse("index.html", media_type="text/html")
+
+@pages_router.get("/dashboard")
+async def dashboard():
+    return FileResponse("static/dashboard.html", media_type="text/html")
+
+
+# ─── Status y health ─────────────────────────────────────────────────────────
+
+@pages_router.get("/status")
+async def status():
+    noto_path = get_noto_emoji_font()
+    return {
+        "message": "TextOnFlow Image Personalizer",
+        "status": "running",
+        "version": "6.0.0",
+        "noto_emoji_available": noto_path is not None,
+        "noto_emoji_path": noto_path,
+        "docs": "/docs",
+    }
+
+
+@pages_router.get("/health")
+async def health():
+    """Health check rápido — solo verifica que la app esté viva."""
+    db_ok  = False
+    db_err = ""
+    try:
+        conn = get_db()
+        if conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            db_ok = True
+    except Exception as e:
+        db_err = str(e)[:100]
+    return {
+        "status": "ok",
+        "version": "8.1.0",
+        "numpy": _NUMPY_OK,
+        "db": db_ok,
+        "psycopg2": _PSYCOPG2_OK,
+        "db_url_prefix": SUPABASE_DATABASE_URL[:40] if SUPABASE_DATABASE_URL else "NOT SET",
+        "db_err": db_err,
+    }
+
+
+# ─── API pública: stats y usage ───────────────────────────────────────────────
+
+@pages_router.get("/api/stats")
+async def get_stats():
+    """Devuelve estadísticas públicas de uso de TextOnFlow."""
+    data = _read_stats()
+    return {
+        "images_generated": data.get("images_generated", 0),
+    }
+
+@pages_router.get("/api/usage")
+async def get_usage(request: Request):
+    """Uso diario de la IP actual (rate limiting)."""
+    if _is_superadmin(request):
+        return {"used": 0, "limit": 0, "plan": "superadmin", "exceeded": False,
+                "reset_in": "—", "pct": 0, "superadmin": True}
+    ip   = _get_client_ip(request)
+    used, limit, exceeded = _check_rate_limit(ip)
+    pct  = min(100, round(used / limit * 100)) if limit else 0
+    return {
+        "used":       used,
+        "limit":      limit,
+        "plan":       "free",
+        "exceeded":   exceeded,
+        "reset_in":   _reset_time_str(),
+        "pct":        pct,
+        "superadmin": False,
+    }
+
+
+# ─── Páginas legales y de ayuda ───────────────────────────────────────────────
+
+@pages_router.get("/manual")
+async def manual_page():
+    return FileResponse("static/manual.html", media_type="text/html")
+
+@pages_router.get("/privacidad")
+async def privacidad_page():
+    return FileResponse("static/privacidad.html", media_type="text/html")
+
+@pages_router.get("/terminos")
+async def terminos_page():
+    return FileResponse("static/terminos.html", media_type="text/html")
+
+@pages_router.get("/docs")
+async def docs_page():
+    return FileResponse("static/docs.html", media_type="text/html")
+
+@pages_router.get("/faq")
+async def faq_page():
+    return FileResponse("static/faq.html", media_type="text/html")
+
+@pages_router.get("/precios")
+async def precios_page():
+    return FileResponse("static/precios.html", media_type="text/html")
+
+@pages_router.get("/casos")
+async def casos_page():
+    return FileResponse("static/casos.html", media_type="text/html")
+
+
+@pages_router.get("/integraciones")
+async def integraciones_page():
+    return FileResponse("static/integraciones.html", media_type="text/html")
+
+
+# ─── Archivos de sistema ──────────────────────────────────────────────────────
+
+@pages_router.get("/.well-known/sg-hosted-ping")
+async def sg_ping():
+    return Response(content="OK", media_type="text/plain")
+
+@pages_router.get("/robots.txt")
+async def robots():
+    content = """User-agent: *
+Allow: /
+Sitemap: https://www.textonflow.com/sitemap.xml
+"""
+    return Response(content=content, media_type="text/plain")
+
+@pages_router.get("/sitemap.xml")
+async def sitemap():
+    base  = "https://www.textonflow.com"
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{base}/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>{base}/manual</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>{base}/faq</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>{base}/privacidad</loc><lastmod>{today}</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>{base}/terminos</loc><lastmod>{today}</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>{base}/docs</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>{base}/precios</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>{base}/casos</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+</urlset>"""
+    return Response(content=xml, media_type="application/xml")
+
+@pages_router.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    favicon_path = os.path.join("static", "favicon.png")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path, media_type="image/png")
+    return Response(status_code=204)
+
+
+# ─── Proxy de imágenes (evita restricciones CORS del navegador) ───────────────
+
+@pages_router.get("/proxy-image")
+def proxy_image(url: str):
+    import re as _re
+
+    # ── Cortocircuito: si la URL apunta a nuestro propio /storage/ o /static/temp/
+    # leer directamente del disco en lugar de hacer HTTP circular a nosotros mismos
+    _STORAGE_DIR = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
+    _self_pat = _re.compile(r"https?://(?:www\.)?textonflow\.com(?::\d+)?/storage/(.+?)(?:\?.*)?$")
+    _temp_pat = _re.compile(r"https?://(?:www\.)?textonflow\.com(?::\d+)?/static/temp/(.+?)(?:\?.*)?$")
+    m = _self_pat.match(url) or _temp_pat.match(url)
+    if m:
+        fname = m.group(1).lstrip("/")
+        # Primero busca en STORAGE_DIR, luego en static/temp
+        candidates = [
+            os.path.join(_STORAGE_DIR, fname),
+            os.path.join("static", "temp", fname),
+        ]
+        for fpath in candidates:
+            if os.path.exists(fpath):
+                ext = fname.rsplit(".", 1)[-1].lower()
+                mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+                        "webp": "image/webp", "gif": "image/gif"}.get(ext, "image/png")
+                with open(fpath, "rb") as fh:
+                    return Response(content=fh.read(), media_type=mime,
+                                    headers={"Cache-Control": "public, max-age=3600"})
+        # Archivo ya no existe localmente (redeploy borró el storage efímero)
+        raise HTTPException(
+            status_code=400,
+            detail="La imagen ya no está disponible (el servidor se reinició y borró el storage temporal). "
+                   "Por favor re-sube la imagen base en el editor."
+        )
+
+    # ── URL externa: descarga normal ─────────────────────────────────────────
+    try:
+        resp = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; TextOnFlow/1.0)"},
+            timeout=15,
+            allow_redirects=True,
+        )
+        resp.raise_for_status()
+        content_type = resp.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+        return Response(
+            content=resp.content,
+            media_type=content_type,
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo cargar la imagen: {e}")
+
+
+# ─── Endpoint de descarga de estáticos (usado por Railway en startup) ─────────
+
+_DOWNLOAD_FILES = {
+    # ── JS / Frontend ─────────────────────────────────────────────────────────
+    "app.js":         "static/app.js",
+    "feedback.js":    "static/feedback.js",
+    "auth.js":        "static/auth.js",
+    "projects.js":    "static/projects.js",
+    "ai-panel.js":    "static/ai-panel.js",
+    "cd-help.js":     "static/cd-help.js",
+    "shortcuts.js":   "static/shortcuts.js",
+    # ── HTML ──────────────────────────────────────────────────────────────────
+    "index.html":       "index.html",
+    "manual.html":      "static/manual.html",
+    "privacidad.html":  "static/privacidad.html",
+    "terminos.html":    "static/terminos.html",
+    "faq.html":         "static/faq.html",
+    "docs.html":        "static/docs.html",
+    "precios.html":     "static/precios.html",
+    "casos.html":       "static/casos.html",
+    # ── CSS ───────────────────────────────────────────────────────────────────
+    "base.css":         "static/base.css",
+    "layout.css":       "static/layout.css",
+    "components.css":   "static/components.css",
+    "editor.css":       "static/editor.css",
+    # ── Assets ────────────────────────────────────────────────────────────────
+    "favicon.png":           "static/favicon.png",
+    "logo-blanco.webp":      "static/logo-blanco.webp",
+    "logo-negro.webp":       "static/logo-negro.webp",
+    "logo-negro-new.png":    "static/logo-negro-new.png",
+    "logo-blanco-new.png":   "static/logo-blanco-new.png",
+    "previews/biblica.jpg":  "static/previews/biblica.jpg",
+    "previews/plumilla.jpg": "static/previews/plumilla.jpg",
+    # ── Python routers ────────────────────────────────────────────────────────
+    "render.py":         "routers/render.py",
+    "render_helpers.py": "routers/render_helpers.py",
+    "mc.py":             "routers/mc.py",
+    "ai.py":             "routers/ai.py",
+    "batch.py":          "routers/batch.py",
+}
+
+@pages_router.get("/api/download")
+async def download_index():
+    return {"files": list(_DOWNLOAD_FILES.keys()), "status": "ok"}
+
+@pages_router.get("/api/download/{filepath:path}")
+async def download_static(filepath: str):
+    """Sirve archivos estáticos para que Railway los descargue en startup."""
+    local = _DOWNLOAD_FILES.get(filepath)
+    if not local or not os.path.exists(local):
+        raise HTTPException(status_code=404, detail=f"Archivo no encontrado: {filepath}")
+    return FileResponse(local)
+
+
+# ─── Páginas de administración ────────────────────────────────────────────────
+
+@pages_router.get("/batch", include_in_schema=False)
+async def batch_page():
+    """Generador masivo desde Google Sheets / CSV."""
+    path = os.path.join("static", "batch.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Página no encontrada")
+
+@pages_router.get("/admin-panel", include_in_schema=False)
+async def admin_panel_page():
+    """Panel de administración con gestión visual de usuarios."""
+    panel_path = os.path.join("static", "admin-panel.html")
+    if os.path.exists(panel_path):
+        return FileResponse(panel_path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Panel no encontrado.")
+
+@pages_router.get("/superadministrador", include_in_schema=False)
+async def superadmin_page():
+    """Ruta secreta que sirve la app con flag para abrir el login admin."""
+    html_path = "index.html"
+    if not os.path.exists(html_path):
+        raise HTTPException(status_code=404)
+    with open(html_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    inject = "<script>window._OPEN_SA_ON_LOAD=true;</script>"
+    content = content.replace("</body>", inject + "</body>", 1)
+    return HTMLResponse(content=content)
