@@ -523,6 +523,24 @@
             box-shadow: 0 0 5px rgba(245,158,11,0.2);
         }
         .tab-lock { margin-left: -1px; }
+        /* ── CONTRAST CHECKER ──────────────────────────── */
+        #tof-contrast-badge {
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px 6px;
+            font-size: 10px;
+            background: rgba(0,0,0,0.25);
+            border-top: 1px solid #1e1e30;
+            border-bottom: 1px solid #1e1e30;
+            flex-wrap: wrap;
+        }
+        .cc-label { color: #555; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; flex-shrink: 0; }
+        .cc-ratio { color: #9ca3ff; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+        .cc-badge { font-weight: 700; padding: 1px 6px; border-radius: 4px; font-size: 10px; flex-shrink: 0; }
+        .cc-pass  { background: rgba(74,222,128,.15); color: #4ade80; border: 1px solid rgba(74,222,128,.25); }
+        .cc-fail  { background: rgba(248,113,113,.15); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
+        .cc-dim   { background: rgba(156,163,175,.1); color: #6b7280; border: 1px solid rgba(156,163,175,.15); }
+        .cc-tip   { font-size: 9px; color: #f59e0b; font-style: italic; flex-basis: 100%; padding-top: 1px; }
         /* ── BRAND KIT ─────────────────────────────── */
         .acc-brand-kit-hdr { border-left: 3px solid rgba(251,191,36,0.5) !important; }
         #brand-swatches .brand-swatch { width:22px; height:22px; border-radius:5px; }
