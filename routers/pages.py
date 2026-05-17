@@ -272,6 +272,7 @@ _DOWNLOAD_FILES = {
     "previews/biblica.jpg":  "static/previews/biblica.jpg",
     "previews/plumilla.jpg": "static/previews/plumilla.jpg",
     # ── Python routers ────────────────────────────────────────────────────────
+    "users.py":          "routers/users.py",
     "render.py":         "routers/render.py",
     "render_helpers.py": "routers/render_helpers.py",
     "mc.py":             "routers/mc.py",
