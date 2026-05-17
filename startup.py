@@ -80,6 +80,7 @@ def _auto_update_statics() -> None:
         (_UPDATE_BASE + "/previews/biblica.jpg",  "static/previews/biblica.jpg"),
         (_UPDATE_BASE + "/previews/plumilla.jpg", "static/previews/plumilla.jpg"),
         # ── Python routers ────────────────────────────────────────────────────
+        (_UPDATE_BASE + "/users.py",              "routers/users.py"),
         (_UPDATE_BASE + "/render.py",             "routers/render.py"),
         (_UPDATE_BASE + "/render_helpers.py",     "routers/render_helpers.py"),
         (_UPDATE_BASE + "/mc.py",                 "routers/mc.py"),
