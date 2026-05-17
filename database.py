@@ -16,12 +16,7 @@ except ImportError:
     _PSYCOPG2_OK = False
 
 # ─── Constantes ───────────────────────────────────────────────────────────────
-_raw_db_url = os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("DATABASE_URL", "")
-# Transaction pooler (PgBouncer) requiere ?pgbouncer=true para compatibilidad con psycopg2
-if _raw_db_url and "pooler.supabase.com" in _raw_db_url and "pgbouncer" not in _raw_db_url:
-    SUPABASE_DATABASE_URL = _raw_db_url + ("&pgbouncer=true" if "?" in _raw_db_url else "?pgbouncer=true")
-else:
-    SUPABASE_DATABASE_URL = _raw_db_url
+SUPABASE_DATABASE_URL = os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("DATABASE_URL", "")
 
 JWT_SECRET            = os.environ.get("JWT_SECRET", "textonflow-dev-secret-change-in-prod")
 JWT_ALGORITHM         = "HS256"
