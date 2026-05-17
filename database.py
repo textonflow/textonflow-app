@@ -16,7 +16,7 @@ except ImportError:
     _PSYCOPG2_OK = False
 
 # ─── Constantes ───────────────────────────────────────────────────────────────
-SUPABASE_DATABASE_URL = os.environ.get("SUPABASE_DATABASE_URL", "")
+SUPABASE_DATABASE_URL = os.environ.get("SUPABASE_DATABASE_URL") or os.environ.get("DATABASE_URL", "")
 JWT_SECRET            = os.environ.get("JWT_SECRET", "textonflow-dev-secret-change-in-prod")
 JWT_ALGORITHM         = "HS256"
 JWT_EXPIRE_HOURS      = 24 * 7  # 7 días
