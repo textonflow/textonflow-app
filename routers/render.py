@@ -83,6 +83,9 @@ from .render_helpers import (
     _upload_output_to_supabase
 )
 
+STORAGE_DIR = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
+os.makedirs(STORAGE_DIR, exist_ok=True)
+
 @render_router.post("/generate-multi")
 async def generate_multi_text(request: MultiTextRequest, http_req: Request):
     # ── Rate limit: usuario autenticado (JWT) o IP (fallback) ────────────────
