@@ -469,8 +469,8 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 logger.warning(f"⚠️ Error aplicando overlay: {e}")
 
         # ── Sello TextOnFlow (watermark) ─────────────────────────────────────
-        # Se aplica si: (a) el request lo pide, (b) plan trial sin exención admin
-        _apply_wm = request.watermark or _should_apply_watermark(_user_id)
+        # Se aplica SOLO si el usuario lo activó explícitamente con el checkbox
+        _apply_wm = request.watermark
         if _apply_wm:
             image = _apply_wm_logo(
                 image,
