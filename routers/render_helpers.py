@@ -469,13 +469,16 @@ def _render_pil(request: "MultiTextRequest") -> "Image.Image":
         image = apply_vignette(image, color=request.vignette_color, opacity=request.vignette_opacity,
                                size=request.vignette_size, sides=sides, tone=request.vignette_filter)
 
-    # Sustituir variables {varname} y {{varname}} (formato ManyChat)
-    if request.vars:
-        sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
-        for text_field in request.texts:
-            for key in sorted_keys:
-                text_field.text = text_field.text.replace(f"{{{{{key}}}}}", request.vars[key])
-                text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
+    # Sustituir variables {varname} y {{varname}} (formato ManyChat).
+    # Variables de fecha reservadas ({{fecha_actual}}, etc.) se resuelven solas
+    # en cada render; las del usuario tienen prioridad.
+    from fecha_utils import build_date_vars
+    merged_vars = {**build_date_vars(), **(request.vars or {})}
+    sorted_keys = sorted(merged_vars.keys(), key=len, reverse=True)
+    for text_field in request.texts:
+        for key in sorted_keys:
+            text_field.text = text_field.text.replace(f"{{{{{key}}}}}", merged_vars[key])
+            text_field.text = text_field.text.replace(f"{{{key}}}", merged_vars[key])
 
     # Formas (z_index ordenado)
     sorted_shapes = sorted(request.shapes or [], key=lambda s: s.z_index)
