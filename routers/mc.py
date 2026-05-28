@@ -7,6 +7,7 @@ import logging
 import uuid
 import os
 import re
+from datetime import datetime, timezone, timedelta
 
 import httpx
 import psycopg2.extras
@@ -264,4 +265,69 @@ async def render_mc_template(template_id: str, request: Request):
         "image_url": image_url,
         "url": image_url,
         "template_id": template_id,
+    })
+
+
+# ─── Fecha dinámica para ManyChat (External Request) ──────────────────────────
+# Devuelve la fecha del momento de la consulta. ManyChat llama este endpoint en
+# cada conversación, así {{fecha_actual}} siempre es el día en que se escanea el
+# QR, sin tener que regenerar nada.
+
+_MESES_ES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+]
+_DIAS_ES = [
+    "lunes", "martes", "miércoles", "jueves",
+    "viernes", "sábado", "domingo",
+]
+
+
+def _ahora(tz: str):
+    """Devuelve datetime actual en la zona pedida.
+    Usa zoneinfo si está disponible; si no, cae a offset fijo (México = UTC-6,
+    sin horario de verano desde 2022)."""
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo(tz))
+    except Exception:
+        offset_h = -6  # America/Mexico_City por defecto
+        m = re.match(r"^UTC([+-]\d{1,2})$", tz.upper().replace(" ", ""))
+        if m:
+            offset_h = int(m.group(1))
+        return datetime.now(timezone(timedelta(hours=offset_h)))
+
+
+@mc_router.get("/fecha", tags=["manychat"])
+async def fecha_actual(tz: str = "America/Mexico_City"):
+    """Fecha de hoy lista para ManyChat.
+
+    Ejemplo de uso en ManyChat (External Request → GET):
+      https://www.textonflow.com/api/mc/fecha
+    Luego mapea el campo `fecha_actual` a un User Field y úsalo en el mensaje:
+      "Hola {{first_name}}, pasa por tu MYKOZ hoy {{fecha_actual}}..."
+
+    Parámetro opcional `tz` (ej. ?tz=America/Bogota) para cambiar la zona horaria.
+    """
+    ahora = _ahora(tz)
+    dia = ahora.day
+    mes_nombre = _MESES_ES[ahora.month - 1]
+    dia_semana = _DIAS_ES[ahora.weekday()]
+    anio = ahora.year
+
+    return JSONResponse({
+        "success": True,
+        # Lo principal: "28 de mayo de 2026"
+        "fecha_actual": f"{dia} de {mes_nombre} de {anio}",
+        # Variantes por si las necesitas en ManyChat
+        "fecha_corta": ahora.strftime("%d/%m/%Y"),
+        "fecha_larga": f"{dia_semana} {dia} de {mes_nombre} de {anio}",
+        "dia": f"{dia:02d}",
+        "mes": mes_nombre,
+        "mes_numero": f"{ahora.month:02d}",
+        "anio": str(anio),
+        "dia_semana": dia_semana,
+        "hora": ahora.strftime("%H:%M"),
+        "iso": ahora.isoformat(),
+        "tz": tz,
     })
