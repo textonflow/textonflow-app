@@ -80,7 +80,8 @@ from .render_helpers import (
     _rj_update,
     _run_render_job,
     _sb_key,
-    _upload_output_to_supabase
+    _upload_output_to_supabase,
+    TEMPLATES_API_DIR,
 )
 
 STORAGE_DIR = os.getenv("STORAGE_PATH", os.path.join("static", "temp"))
@@ -293,13 +294,16 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
                 tone    = request.vignette_filter,
             )
 
-        # Sustituir variables {varname} y {{varname}} (formato ManyChat)
-        if request.vars:
-            sorted_keys = sorted(request.vars.keys(), key=len, reverse=True)
-            for text_field in request.texts:
-                for key in sorted_keys:
-                    text_field.text = text_field.text.replace(f"{{{{{key}}}}}", request.vars[key])
-                    text_field.text = text_field.text.replace(f"{{{key}}}", request.vars[key])
+        # Sustituir variables {varname} y {{varname}} (formato ManyChat).
+        # Se inyectan variables de fecha reservadas ({{fecha_actual}}, etc.) que
+        # se resuelven solas en cada render; las del usuario tienen prioridad.
+        from fecha_utils import build_date_vars
+        merged_vars = {**build_date_vars(), **(request.vars or {})}
+        sorted_keys = sorted(merged_vars.keys(), key=len, reverse=True)
+        for text_field in request.texts:
+            for key in sorted_keys:
+                text_field.text = text_field.text.replace(f"{{{{{key}}}}}", merged_vars[key])
+                text_field.text = text_field.text.replace(f"{{{key}}}", merged_vars[key])
 
         # Renderizar Formas de canvas (ordenadas por z_index) — ANTES que los textos
         sorted_shapes = sorted(request.shapes or [], key=lambda s: s.z_index)
@@ -659,7 +663,9 @@ async def save_api_template(template: ApiTemplateRequest):
     data = template.model_dump()
     data["id"] = tid
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos.
+    # Se excluyen las reservadas de fecha: se resuelven solas, no se piden.
+    from fecha_utils import RESERVED_DATE_KEYS
     vars_found = set()
     for t in data.get("texts", []):
         txt = t.get("text", "")
@@ -667,7 +673,7 @@ async def save_api_template(template: ApiTemplateRequest):
             vars_found.add(m)
         for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
-    data["variables"] = sorted(vars_found)
+    data["variables"] = sorted(vars_found - RESERVED_DATE_KEYS)
     data["api_key"] = secrets.token_urlsafe(20)
     data["require_api_key"] = False
     data["rate_limit_per_hour"] = 500
@@ -702,7 +708,9 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
     data["require_api_key"]     = existing.get("require_api_key", False)
     data["rate_limit_per_hour"] = existing.get("rate_limit_per_hour", 500)
     data["updated_at"]          = datetime.now(timezone.utc).isoformat()
-    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos
+    # Detectar variables {varname} y {{varname}} (ManyChat) en los textos.
+    # Se excluyen las reservadas de fecha: se resuelven solas, no se piden.
+    from fecha_utils import RESERVED_DATE_KEYS
     vars_found = set()
     for t in data.get("texts", []):
         txt = t.get("text", "")
@@ -710,7 +718,7 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
             vars_found.add(m)
         for m in re.findall(r'(?<!\{)\{(\w+)\}(?!\})', txt):
             vars_found.add(m)
-    data["variables"] = sorted(vars_found)
+    data["variables"] = sorted(vars_found - RESERVED_DATE_KEYS)
     with open(path, "w") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     logger.info(f"📋 Template API actualizado: {template_id} | template_name={data.get('template_name','')[:60]}")
