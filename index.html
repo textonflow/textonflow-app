@@ -1713,65 +1713,6 @@
                     </div>
 
 
-                    <!-- ── SELLO TEXTONFLOW ─────────────────────────── -->
-                    <div class="tof-mt-3">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px 7px 0 0;" id="tof-sello-hdr" title="Agrega el sello textonflow.com sobre la imagen">
-                            <input type="checkbox" id="tof-watermark-toggle" style="accent-color:#7c6eff;width:14px;height:14px;flex-shrink:0;" onchange="wmToggleVis(this.checked)">
-                            <span style="color:#888;font-size:11px;line-height:1.3;"><span data-i18n="watermark_include">Incluir sello</span> <strong style="color:#aaa;font-weight:600;">textonflow.com</strong></span>
-                        </label>
-                        <div id="tof-sello-opts" style="display:none;padding:8px 10px 10px;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 7px 7px;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                    <input type="checkbox" id="wm-pill-toggle" checked style="accent-color:#7c6eff;width:13px;height:13px;" onchange="wmSetPill(this.checked)">
-                                    <span style="font-size:11px;color:#888;">Fondo redondeado</span>
-                                </label>
-                            </div>
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px;">Posición</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:10px;">
-                                <button class="wm-corner-btn" data-corner="tl" onclick="wmSetCorner('tl',this)">↖ Arriba izq.</button>
-                                <button class="wm-corner-btn" data-corner="tr" onclick="wmSetCorner('tr',this)">↗ Arriba der.</button>
-                                <button class="wm-corner-btn" data-corner="bl" onclick="wmSetCorner('bl',this)">↙ Abajo izq.</button>
-                                <button class="wm-corner-btn selected" data-corner="br" onclick="wmSetCorner('br',this)">↘ Abajo der.</button>
-                            </div>
-                            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
-                                <div style="flex:1;min-width:0;">
-                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">55</span>px</div>
-                                    <input type="range" id="wm-size-range" min="20" max="150" value="55"
-                                        oninput="wmSetSize(this.value)"
-                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
-                                </div>
-                                <div style="flex:1;min-width:0;">
-                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
-                                    <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
-                                        oninput="wmSetOpacity(this.value)"
-                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
-                                </div>
-                            </div>
-                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">Color</div>
-                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-                                <button onclick="wmSetColor('#ffffff',this)" class="wm-color-swatch" title="Blanco" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#cccccc',this)" class="wm-color-swatch" title="Gris" style="width:20px;height:20px;border-radius:50%;background:#cccccc;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#000000',this)" class="wm-color-swatch" title="Negro" style="width:20px;height:20px;border-radius:50%;background:#000000;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#7c6eff',this)" class="wm-color-swatch" title="Morado" style="width:20px;height:20px;border-radius:50%;background:#7c6eff;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#e91e8c',this)" class="wm-color-swatch" title="Rosa" style="width:20px;height:20px;border-radius:50%;background:#e91e8c;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#ffd700',this)" class="wm-color-swatch" title="Dorado" style="width:20px;height:20px;border-radius:50%;background:#ffd700;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <button onclick="wmSetColor('#00e5ff',this)" class="wm-color-swatch" title="Cyan" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
-                                <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;margin-left:2px;">
-                                    <span style="font-size:11px;color:#555;font-family:monospace;">#</span>
-                                    <input type="text" id="wm-hex-input" maxlength="6" value="ffffff"
-                                        style="width:62px;padding:3px 5px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;color:#c0b8ff;font-size:11px;font-family:monospace;letter-spacing:.5px;outline:none;"
-                                        oninput="if(this.value.length===6&&/^[0-9a-fA-F]{6}$/.test(this.value)){wmSetColor('#'+this.value,null);}"
-                                        onkeydown="if(event.key==='Enter'){this.blur();}"
-                                        placeholder="ffffff">
-                                    <label title="Abrir selector de color" style="position:relative;width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
-                                        <input type="color" id="wm-color-picker" value="#ffffff" data-hex-done="1" oninput="wmSetColor(this.value,null)"
-                                            style="position:absolute;inset:0;width:100%;height:100%;border:none;padding:0;background:none;cursor:pointer;opacity:0;">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" style="pointer-events:none;position:relative;z-index:1;"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <!-- ── VARIABLES DE PRUEBA ─────────────────────────── -->
                     <div id="vars-preview-panel" style="display:none;margin-top:10px;border:1px solid #2a2a50;border-radius:8px;overflow:hidden;">
                       <div id="vars-preview-header" onclick="toggleVarsPanel()" style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#0d0d1f;cursor:pointer;user-select:none;">
@@ -1840,6 +1781,67 @@
                     📁 Carpeta: TextOnFlow
                   </div>
                 </div>
+
+
+                    <!-- ── SELLO TEXTONFLOW ─────────────────────────── -->
+                    <div class="tof-mt-3">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:7px 7px 0 0;" id="tof-sello-hdr" title="Agrega el sello textonflow.com sobre la imagen">
+                            <input type="checkbox" id="tof-watermark-toggle" style="accent-color:#7c6eff;width:14px;height:14px;flex-shrink:0;" onchange="wmToggleVis(this.checked)">
+                            <span style="color:#888;font-size:11px;line-height:1.3;"><span data-i18n="watermark_include">Incluir sello</span> <strong style="color:#aaa;font-weight:600;">textonflow.com</strong></span>
+                        </label>
+                        <div id="tof-sello-opts" style="display:none;padding:8px 10px 10px;background:#080812;border:1px solid #2a2a50;border-top:none;border-radius:0 0 7px 7px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                    <input type="checkbox" id="wm-pill-toggle" checked style="accent-color:#7c6eff;width:13px;height:13px;" onchange="wmSetPill(this.checked)">
+                                    <span style="font-size:11px;color:#888;">Fondo redondeado</span>
+                                </label>
+                            </div>
+                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px;">Posición</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:10px;">
+                                <button class="wm-corner-btn" data-corner="tl" onclick="wmSetCorner('tl',this)">↖ Arriba izq.</button>
+                                <button class="wm-corner-btn" data-corner="tr" onclick="wmSetCorner('tr',this)">↗ Arriba der.</button>
+                                <button class="wm-corner-btn" data-corner="bl" onclick="wmSetCorner('bl',this)">↙ Abajo izq.</button>
+                                <button class="wm-corner-btn selected" data-corner="br" onclick="wmSetCorner('br',this)">↘ Abajo der.</button>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Tamaño: <span id="wm-size-val">55</span>px</div>
+                                    <input type="range" id="wm-size-range" min="20" max="150" value="55"
+                                        oninput="wmSetSize(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;">Opacidad: <span id="wm-opacity-val">55</span>%</div>
+                                    <input type="range" id="wm-opacity-range" min="10" max="100" value="55"
+                                        oninput="wmSetOpacity(this.value)"
+                                        style="width:100%;accent-color:#7c6eff;cursor:pointer;">
+                                </div>
+                            </div>
+                            <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">Color</div>
+                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                                <button onclick="wmSetColor('#ffffff',this)" class="wm-color-swatch" title="Blanco" style="width:20px;height:20px;border-radius:50%;background:#ffffff;border:2px solid #555;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#cccccc',this)" class="wm-color-swatch" title="Gris" style="width:20px;height:20px;border-radius:50%;background:#cccccc;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#000000',this)" class="wm-color-swatch" title="Negro" style="width:20px;height:20px;border-radius:50%;background:#000000;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#7c6eff',this)" class="wm-color-swatch" title="Morado" style="width:20px;height:20px;border-radius:50%;background:#7c6eff;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#e91e8c',this)" class="wm-color-swatch" title="Rosa" style="width:20px;height:20px;border-radius:50%;background:#e91e8c;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#ffd700',this)" class="wm-color-swatch" title="Dorado" style="width:20px;height:20px;border-radius:50%;background:#ffd700;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <button onclick="wmSetColor('#00e5ff',this)" class="wm-color-swatch" title="Cyan" style="width:20px;height:20px;border-radius:50%;background:#00e5ff;border:2px solid #444;cursor:pointer;padding:0;outline:none;flex-shrink:0;"></button>
+                                <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;margin-left:2px;">
+                                    <span style="font-size:11px;color:#555;font-family:monospace;">#</span>
+                                    <input type="text" id="wm-hex-input" maxlength="6" value="ffffff"
+                                        style="width:62px;padding:3px 5px;background:#0d0d1f;border:1px solid #2a2a50;border-radius:5px;color:#c0b8ff;font-size:11px;font-family:monospace;letter-spacing:.5px;outline:none;"
+                                        oninput="if(this.value.length===6&&/^[0-9a-fA-F]{6}$/.test(this.value)){wmSetColor('#'+this.value,null);}"
+                                        onkeydown="if(event.key==='Enter'){this.blur();}"
+                                        placeholder="ffffff">
+                                    <label title="Abrir selector de color" style="position:relative;width:22px;height:22px;border-radius:4px;border:1px solid #2a2a50;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#1a1a2e;overflow:hidden;">
+                                        <input type="color" id="wm-color-picker" value="#ffffff" data-hex-done="1" oninput="wmSetColor(this.value,null)"
+                                            style="position:absolute;inset:0;width:100%;height:100%;border:none;padding:0;background:none;cursor:pointer;opacity:0;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" style="pointer-events:none;position:relative;z-index:1;"><circle cx="13.5" cy="6.5" r="3.5"/><path d="M2 20l7-7 5 5"/><path d="M13 15l4 4"/></svg>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 <div class="json-section" style="display:none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -2382,7 +2384,7 @@
     </a>
 
     <script src="/static/i18n.js?v=250"></script>
-    <script defer src="/static/app.js?v=295"></script>
+    <script defer src="/static/app.js?v=296"></script>
     <script defer src="/static/artboards.js?v=6"></script>
 
     <!-- ══ FEEDBACK TAB + MODAL ══ -->
