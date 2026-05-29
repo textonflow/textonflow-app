@@ -1224,6 +1224,20 @@
             box-shadow: 0 2px 6px rgba(79,70,229,0.4);
         }
 
+        /* Chip fecha/hora (verde-azulado) — se rellenan solas */
+        .var-chip-date {
+            background: rgba(13,148,136,0.15);
+            color: #5eead4;
+            border-color: rgba(13,148,136,0.35);
+        }
+        .var-chip-date:hover {
+            background: #0d9488;
+            color: #fff;
+            border-color: #0d9488;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(13,148,136,0.4);
+        }
+
         /* Chip usuario (naranja) — dark theme */
         .var-chip-user {
             background: rgba(194,65,12,0.15);
