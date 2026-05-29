@@ -24,14 +24,31 @@
           texts: _copy(st.texts) || [],
           imageOverlays: _copy(st.imageOverlays) || [],
           shapes: _copy(st.shapes) || [],
-          imgUrl: st.imgUrl || null
+          groups: _copy(st.groups) || [],
+          nextGroupId: st.nextGroupId,
+          imgUrl: st.imgUrl || null,
+          view: _copy(st.view) || null
         };
       }
     }catch(e){}
     // Fallback mínimo (no debería ocurrir)
     var imgUrl = null;
     try{ var ui = document.getElementById('image-url-input'); if(ui && ui.value) imgUrl = ui.value.trim(); }catch(e2){}
-    return { texts:[], imageOverlays:[], shapes:[], imgUrl: imgUrl || null };
+    return { texts:[], imageOverlays:[], shapes:[], groups:[], imgUrl: imgUrl || null, view:null };
+  }
+
+  // Espera a que la imagen NUEVA termine de cargar antes de aplicar formato/zoom.
+  // Usa un token de generación para abortar si el usuario cambia de pestaña entretanto.
+  var _restoreGen = 0;
+  var _restoring = false; // true mientras una restauración (carga async) está en curso
+  function _whenImageReady(myGen, cb){
+    var tries = 0;
+    (function loop(){
+      if(myGen !== _restoreGen) return;            // se inició otra restauración: abortar
+      if(typeof window.tofImageReady === 'function' && window.tofImageReady()){ cb(); return; }
+      if(++tries > 140){ if(myGen === _restoreGen) _restoring = false; return; } // ~8s: rendirse
+      setTimeout(loop, 60);
+    })();
   }
 
   // ── Limpia el lienzo (estado sin imagen) ─────────────────────────────────────
@@ -61,37 +78,56 @@
 
   // ── Restaura un diseño en el editor (mismo patrón que openProject) ───────────
   function restoreDesign(d){
-    if(!d) d = { texts:[], imageOverlays:[], shapes:[], imgUrl:null };
-    // Setear los arrays ANTES de cargar la imagen, para que updatePreview los pinte.
+    if(!d) d = { texts:[], imageOverlays:[], shapes:[], groups:[], imgUrl:null, view:null };
+    var myGen = ++_restoreGen; // invalida cualquier restauración previa en curso
+    _restoring = true;         // bloquea snapLive en persist() hasta terminar
+    var view = _copy(d.view) || null;
+
+    // Setear los arrays + grupos ANTES de cargar la imagen, para que updatePreview los pinte.
     // Usa el puente oficial (estado léxico real de app.js).
     if(typeof window.tofApplyEditorArrays === 'function'){
       window.tofApplyEditorArrays({
         texts: _copy(d.texts) || [],
         imageOverlays: _copy(d.imageOverlays) || [],
-        shapes: _copy(d.shapes) || []
+        shapes: _copy(d.shapes) || [],
+        groups: _copy(d.groups) || [],
+        nextGroupId: d.nextGroupId
       });
     }
 
     var imgUrl = d.imgUrl || null;
     if(imgUrl){
+      // Forzar reset de "imagen lista" para esperar a la carga NUEVA (no la de la pestaña previa)
+      if(typeof window.tofResetImageState === 'function') window.tofResetImageState();
       var urlInput = document.getElementById('image-url-input');
       if(urlInput) urlInput.value = imgUrl;
       if(typeof loadImageFromURL === 'function'){
-        loadImageFromURL(); // async: applyImageToCanvas pinta textos/overlays/shapes + updateJSON
+        loadImageFromURL(); // async: applyImageToCanvas pinta y RESETEA formato/zoom
+        // Cuando la imagen nueva esté lista, restaurar formato/zoom/filtros de ESTA pestaña.
+        _whenImageReady(myGen, function(){
+          if(typeof window.tofApplyViewState === 'function') window.tofApplyViewState(view);
+          if(myGen === _restoreGen) _restoring = false; // restauración completada
+        });
       } else {
         if(window.imageData) window.imageData.filename = imgUrl;
+        if(typeof window.tofApplyViewState === 'function') window.tofApplyViewState(view);
         _refreshPanels();
+        _restoring = false;
       }
     } else {
       clearCanvas();
+      if(typeof window.tofApplyViewState === 'function') window.tofApplyViewState(view); // resetea formato/zoom
       _refreshPanels();
+      _restoring = false;
     }
   }
 
   // ── Persistencia local (sobrevive recargas) ──────────────────────────────────
   function persist(){
     try{
-      if(window._tofBoards[window._tofActiveBoard]){
+      // Durante una restauración async (carga de imagen en curso) NO recapturar:
+      // snapLive devolvería estado transitorio/reseteado y corrompería board.data.
+      if(!_restoring && window._tofBoards[window._tofActiveBoard]){
         window._tofBoards[window._tofActiveBoard].data = snapLive();
       }
       localStorage.setItem(LS_KEY, JSON.stringify({
@@ -418,13 +454,16 @@
         return { id:b.id || _uid(), name:b.name || 'Diseño', data:b.data || { texts:[], imageOverlays:[], shapes:[], imgUrl:null } };
       });
       window._tofActiveBoard = (typeof stored.active === 'number' && stored.active < window._tofBoards.length) ? stored.active : 0;
-      restoreDesign(window._tofBoards[window._tofActiveBoard].data);
+      // Render del bar PRIMERO: la barra de pestañas debe verse aunque la restauración
+      // del diseño (carga de imagen async) falle por cualquier motivo.
+      renderTabs();
+      try{ restoreDesign(window._tofBoards[window._tofActiveBoard].data); }catch(e){}
     } else {
       // Envolver el diseño actual (lo que app.js ya restauró) como primera pestaña
       window._tofBoards = [{ id:_uid(), name:'Diseño 1', data:snapLive() }];
       window._tofActiveBoard = 0;
+      renderTabs();
     }
-    renderTabs();
 
     // Autoguardado periódico (sobrevive recargas/cierres)
     setInterval(persist, 4000);
