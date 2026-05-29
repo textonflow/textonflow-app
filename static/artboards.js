@@ -166,7 +166,14 @@
       return;
     }
     var name = (window._tofBoards[i] && window._tofBoards[i].name) || 'esta pestaña';
-    if(!confirm('¿Eliminar "' + name + '"? No se puede deshacer.')) return;
+    _confirm({
+      title: 'Eliminar pestaña',
+      message: '¿Eliminar "' + name + '"? Esta acción no se puede deshacer.',
+      okText: 'Eliminar', cancelText: 'Cancelar', danger: true
+    }).then(function(ok){ if(ok) _doDeleteBoard(i); });
+  }
+
+  function _doDeleteBoard(i){
     window._tofBoards.splice(i, 1);
     if(window._tofActiveBoard >= window._tofBoards.length){
       window._tofActiveBoard = window._tofBoards.length - 1;
@@ -183,13 +190,19 @@
   function renameBoard(i){
     var b = window._tofBoards[i];
     if(!b) return;
-    var nuevo = prompt('Nombre de la pestaña:', b.name || '');
-    if(nuevo === null) return;
-    nuevo = nuevo.trim();
-    if(!nuevo) return;
-    b.name = nuevo.slice(0, 40);
-    renderTabs();
-    persist();
+    _prompt({
+      title: 'Renombrar pestaña',
+      message: 'Escribe un nombre para esta pestaña:',
+      inputValue: b.name || '', placeholder: 'Ej. Lunes',
+      okText: 'Guardar', cancelText: 'Cancelar'
+    }).then(function(nuevo){
+      if(nuevo === null) return;
+      nuevo = nuevo.trim();
+      if(!nuevo) return;
+      b.name = nuevo.slice(0, 40);
+      renderTabs();
+      persist();
+    });
   }
 
   // ── Guardar / Abrir como archivo ─────────────────────────────────────────────
@@ -225,22 +238,26 @@
         if(!obj || !Array.isArray(obj.boards) || !obj.boards.length){
           throw new Error('formato');
         }
-        if(!confirm('Abrir este archivo reemplazará las pestañas actuales (' + window._tofBoards.length + '). ¿Continuar?')){
+        _confirm({
+          title: 'Abrir archivo',
+          message: 'Abrir este archivo reemplazará las pestañas actuales (' + window._tofBoards.length + '). ¿Continuar?',
+          okText: 'Abrir', cancelText: 'Cancelar', danger: true
+        }).then(function(ok){
           ev.target.value = '';
-          return;
-        }
-        window._tofBoards = obj.boards.map(function(b){
-          return { id:b.id || _uid(), name:b.name || 'Diseño', data:b.data || { texts:[], imageOverlays:[], shapes:[], imgUrl:null } };
+          if(!ok) return;
+          window._tofBoards = obj.boards.map(function(b){
+            return { id:b.id || _uid(), name:b.name || 'Diseño', data:b.data || { texts:[], imageOverlays:[], shapes:[], imgUrl:null } };
+          });
+          window._tofActiveBoard = (typeof obj.active === 'number' && obj.active < window._tofBoards.length) ? obj.active : 0;
+          restoreDesign(window._tofBoards[window._tofActiveBoard].data);
+          renderTabs();
+          persist();
+          _toast('📂 Archivo abierto (' + window._tofBoards.length + ' pestañas)');
         });
-        window._tofActiveBoard = (typeof obj.active === 'number' && obj.active < window._tofBoards.length) ? obj.active : 0;
-        restoreDesign(window._tofBoards[window._tofActiveBoard].data);
-        renderTabs();
-        persist();
-        _toast('📂 Archivo abierto (' + window._tofBoards.length + ' pestañas)');
       }catch(err){
+        ev.target.value = '';
         _toast('❌ Archivo no válido', 'error');
       }
-      ev.target.value = '';
     };
     reader.readAsText(file);
   }
@@ -249,6 +266,54 @@
     try{ if(typeof showToast === 'function'){ showToast(msg, type || 'success'); return; } }catch(e){}
     try{ if(typeof showNotif === 'function'){ showNotif(msg, type || 'success'); return; } }catch(e){}
   }
+
+  // ── Modales propios (reemplazan confirm()/prompt() nativos del navegador) ─────
+  function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // Modal genérico. opts: {title, message, okText, cancelText, danger, withInput, inputValue, placeholder}
+  // Resuelve a: false (cancelar), true (aceptar sin input), o el string del input.
+  function _modal(opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      var ov = document.createElement('div');
+      ov.className = 'tof-modal-ov';
+      var inputHtml = opts.withInput
+        ? '<input id="tof-modal-input" class="tof-modal-input" type="text" maxlength="40" value="' + _esc(opts.inputValue||'') + '" placeholder="' + _esc(opts.placeholder||'') + '">'
+        : '';
+      ov.innerHTML =
+        '<div class="tof-modal" role="dialog" aria-modal="true">' +
+          '<div class="tof-modal-title">' + _esc(opts.title||'') + '</div>' +
+          (opts.message ? '<div class="tof-modal-msg">' + _esc(opts.message) + '</div>' : '') +
+          inputHtml +
+          '<div class="tof-modal-actions">' +
+            '<button class="tof-modal-btn tof-modal-cancel" type="button">' + _esc(opts.cancelText||'Cancelar') + '</button>' +
+            '<button class="tof-modal-btn ' + (opts.danger?'tof-modal-danger':'tof-modal-ok') + '" type="button">' + _esc(opts.okText||'Aceptar') + '</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var inp = ov.querySelector('#tof-modal-input');
+      var btnCancel = ov.querySelector('.tof-modal-cancel');
+      var btnOk = ov.querySelector('.tof-modal-cancel') && ov.querySelector('.tof-modal-actions').lastElementChild;
+      function cleanup(){ document.removeEventListener('keydown', onKey, true); if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      function done(val){ cleanup(); resolve(val); }
+      function accept(){ if(opts.withInput){ var v=(inp.value||'').trim(); done(v); } else { done(true); } }
+      function cancel(){ done(false); }
+      function onKey(e){
+        if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); cancel(); }
+        else if(e.key==='Enter' && (opts.withInput || document.activeElement!==btnCancel)){ e.preventDefault(); e.stopPropagation(); accept(); }
+      }
+      btnCancel.addEventListener('click', cancel);
+      btnOk.addEventListener('click', accept);
+      ov.addEventListener('mousedown', function(e){ if(e.target===ov) cancel(); });
+      document.addEventListener('keydown', onKey, true);
+      requestAnimationFrame(function(){
+        ov.classList.add('tof-modal-show');
+        if(inp){ inp.focus(); inp.select(); } else { btnOk.focus(); }
+      });
+    });
+  }
+  function _confirm(opts){ opts = opts||{}; opts.withInput=false; return _modal(opts).then(function(r){ return r===true; }); }
+  function _prompt(opts){ opts = opts||{}; opts.withInput=true; return _modal(opts).then(function(r){ return (r===false)?null:r; }); }
 
   // ── Render de la barra de pestañas ───────────────────────────────────────────
   function renderTabs(){
@@ -304,7 +369,30 @@
         'transition:background .15s;}' +
       '.tof-tab-btn:hover{background:rgba(124,110,255,.25);color:#fff;}' +
       '.tof-tab-sep{width:1px;height:18px;background:rgba(255,255,255,.12);margin:0 2px;}' +
-      '@media(max-width:768px){.tof-tab-btn{font-size:10px;padding:5px 7px;}.tof-tab{max-width:120px;}}';
+      '@media(max-width:768px){.tof-tab-btn{font-size:10px;padding:5px 7px;}.tof-tab{max-width:120px;}}' +
+      // ── Modales propios ──
+      '.tof-modal-ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;' +
+        'background:rgba(8,12,24,.62);backdrop-filter:blur(3px);opacity:0;transition:opacity .15s;padding:20px;}' +
+      '.tof-modal-ov.tof-modal-show{opacity:1;}' +
+      '.tof-modal{width:100%;max-width:380px;box-sizing:border-box;background:#1a2235;color:#e2e8f0;' +
+        'border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:22px 22px 18px;' +
+        'box-shadow:0 24px 60px rgba(0,0,0,.5);transform:translateY(8px) scale(.98);transition:transform .15s;' +
+        'font-family:inherit;}' +
+      '.tof-modal-ov.tof-modal-show .tof-modal{transform:none;}' +
+      '.tof-modal-title{font-size:16px;font-weight:800;margin-bottom:8px;color:#fff;}' +
+      '.tof-modal-msg{font-size:13px;line-height:1.5;color:#94a3b8;margin-bottom:16px;}' +
+      '.tof-modal-input{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:18px;font-size:14px;' +
+        'background:rgba(255,255,255,.05);border:1px solid rgba(124,110,255,.4);border-radius:9px;color:#fff;outline:none;}' +
+      '.tof-modal-input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(124,110,255,.2);}' +
+      '.tof-modal-actions{display:flex;justify-content:flex-end;gap:10px;}' +
+      '.tof-modal-btn{cursor:pointer;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:700;' +
+        'border:1px solid transparent;transition:background .15s,opacity .15s;}' +
+      '.tof-modal-cancel{background:rgba(255,255,255,.06);color:#cbd5e1;border-color:rgba(255,255,255,.12);}' +
+      '.tof-modal-cancel:hover{background:rgba(255,255,255,.12);color:#fff;}' +
+      '.tof-modal-ok{background:linear-gradient(135deg,#7c6eff,#a78bfa);color:#fff;}' +
+      '.tof-modal-ok:hover{opacity:.9;}' +
+      '.tof-modal-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}' +
+      '.tof-modal-danger:hover{opacity:.9;}';
     var st = document.createElement('style');
     st.id = 'tof-artboard-styles';
     st.textContent = css;
