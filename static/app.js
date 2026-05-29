@@ -775,12 +775,16 @@ function _renderBorderSection(index,text){return`<!-- ════════�
                                         <span style="font-size:9px;color:#888;white-space:nowrap;">${t('line_lbl')}</span>
                                         ${(()=>{
                                             const cur = text.bg_stroke_dash || 'solid';
-                                            const tips = {solid:'Línea continua',dashed:'Línea discontinua',dotted:'Línea de puntos'};
-                                            return [['solid','▬'],['dashed','╌'],['dotted','···']].map(([val,lbl])=>{
+                                            const opts = [
+                                                ['solid','Línea continua','<line x1="2" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'],
+                                                ['dashed','Línea discontinua','<line x1="2" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="5 3.5"/>'],
+                                                ['dotted','Línea de puntos','<line x1="2.6" y1="6" x2="21.4" y2="6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.1 4.2"/>'],
+                                            ];
+                                            return opts.map(([val,tip,path])=>{
                                                 const active = cur===val;
                                                 return `<button onclick="updateTextProp(${index},'bg_stroke_dash','${val}');updateControls();peekBBox();"
-title="${tips[val]}"
-style="font-size:11px;min-width:28px;height:24px;padding:0 2px;border-radius:5px;cursor:pointer;border:1.5px solid #222;background:${active?'#222':'transparent'};color:${active?'#fff':'#222'};font-weight:700;white-space:nowrap;text-align:center;box-sizing:border-box;">${lbl}</button>`;
+title="${tip}"
+style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:24px;padding:0;border-radius:5px;cursor:pointer;border:1.5px solid #222;background:${active?'#222':'transparent'};color:${active?'#fff':'#222'};box-sizing:border-box;"><svg width="24" height="12" viewBox="0 0 24 12" fill="none">${path}</svg></button>`;
                                             }).join('');
                                         })()}
                                     </div>
