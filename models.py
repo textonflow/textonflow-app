@@ -370,6 +370,10 @@ class CopySuggestionsRequest(BaseModel):
 class BrandKitRequest(BaseModel):
     image_url: str
 
+class SmartReframeRequest(BaseModel):
+    image_b64: str
+    mime: Optional[str] = "image/jpeg"
+
 class ABVariantsRequest(BaseModel):
     texts: list
     context: Optional[str] = None
