@@ -1640,3 +1640,16 @@ body.tof-bg-dark .canvas-area {
     }
 
 }
+
+/* ===== Drag & drop de imágenes al lienzo ===== */
+.canvas-area.tof-drop-active { position: relative; }
+.canvas-area.tof-drop-active::after {
+  content: 'Suelta la imagen para añadirla al lienzo';
+  position: absolute; inset: 12px; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 0 24px; box-sizing: border-box;
+  border: 2.5px dashed #7c6eff; border-radius: 16px;
+  background: rgba(124,110,255,0.10);
+  color: #c8c0ff; font-size: 15px; font-weight: 700; letter-spacing: .3px;
+  pointer-events: none; backdrop-filter: blur(1px);
+}
