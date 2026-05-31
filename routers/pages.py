@@ -345,11 +345,11 @@ _DOWNLOAD_FILES = {
     # El despliegue toma los archivos desde el repo de GitHub, no desde este endpoint.
 }
 
-@pages_router.get("/api/download")
+@pages_router.api_route("/api/download", methods=["GET", "HEAD"])
 async def download_index():
     return {"files": list(_DOWNLOAD_FILES.keys()), "status": "ok"}
 
-@pages_router.get("/api/download/{filepath:path}")
+@pages_router.api_route("/api/download/{filepath:path}", methods=["GET", "HEAD"])
 async def download_static(filepath: str):
     """Sirve archivos estáticos para que Railway los descargue en startup."""
     local = _DOWNLOAD_FILES.get(filepath)
