@@ -965,6 +965,26 @@ body:has(#splash-screen.fade-out) #chrome-ext-fab {
     color: #ffaaaa;
     border-color: #ff6060;
 }
+/* Encuadre Inteligente IA */
+.fmt-tab.reframe-tab {
+    border-color: #5a4bd6;
+    color: #b9b0ff;
+}
+.fmt-tab.reframe-tab:hover {
+    color: #d8d2ff;
+    border-color: #7c6eff;
+    box-shadow: 0 2px 10px rgba(124,110,255,.30);
+}
+.fmt-tab.reframe-tab.active {
+    background: linear-gradient(135deg, #1c1640, #261a52);
+    border-color: #7c6eff;
+    color: #cfc7ff;
+    box-shadow: 0 2px 12px rgba(124,110,255,.35);
+}
+.fmt-tab.reframe-tab:disabled {
+    cursor: progress;
+    opacity: .85;
+}
 .fmt-tab-icon {
     line-height: 0;
     display: inline-flex;
