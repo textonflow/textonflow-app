@@ -243,12 +243,6 @@ def proxy_image(url: str):
 _DOWNLOAD_FILES = {
     # ── JS / Frontend ─────────────────────────────────────────────────────────
     "app.js":         "static/app.js",
-    "feedback.js":    "static/feedback.js",
-    "auth.js":        "static/auth.js",
-    "projects.js":    "static/projects.js",
-    "ai-panel.js":    "static/ai-panel.js",
-    "cd-help.js":     "static/cd-help.js",
-    "shortcuts.js":   "static/shortcuts.js",
     # ── HTML ──────────────────────────────────────────────────────────────────
     "index.html":       "index.html",
     "manual.html":      "static/manual.html",
