@@ -32,6 +32,7 @@ from models import (
     TimerStyle, TimerTemplateCreate, TimerTemplateResponse,
     AssistantMessage, AssistantRequest, TranscriptRequest, RatingRequest,
     DesignLayoutRequest, CopySuggestionsRequest, BrandKitRequest, ABVariantsRequest,
+    SmartReframeRequest,
 )
 from renderer import _wrap_words
 from user_limits import (
@@ -1678,6 +1679,83 @@ async def ai_brand_kit(req: BrandKitRequest):
         raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         result = json.loads(raw)
         return result
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="La IA devolvió JSON inválido")
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+# ─── Reframe Inteligente (content-aware) ─────────────────────
+_SMART_REFRAME_SYSTEM = """Eres un experto en composición visual y encuadre fotográfico.
+Analizas una imagen e identificas el SUJETO PRINCIPAL (rostro, persona, producto u objeto central de interés).
+Devuelve ÚNICAMENTE un JSON válido con este formato exacto:
+{
+  "focus_x": 0.5,
+  "focus_y": 0.4,
+  "box": {"x1": 0.2, "y1": 0.1, "x2": 0.8, "y2": 0.9},
+  "subject": "breve descripción del sujeto"
+}
+REGLAS:
+- focus_x / focus_y = centro del sujeto, normalizado entre 0 y 1 (0=izquierda/arriba, 1=derecha/abajo).
+- box = caja delimitadora del sujeto, normalizada entre 0 y 1.
+- Si hay un rostro o persona, el punto focal apunta al rostro (un poco por encima del centro del cuerpo).
+- Si no hay un sujeto claro, usa el centro de interés visual de la composición.
+- Responde SOLO el JSON, sin texto adicional ni markdown."""
+
+@ai_router.post("/api/ai/smart-reframe")
+async def ai_smart_reframe(req: SmartReframeRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada")
+    img_data = (req.image_b64 or "").strip()
+    if img_data.startswith("data:"):
+        img_data = img_data.split(",", 1)[-1]
+    if not img_data:
+        raise HTTPException(status_code=400, detail="Falta la imagen")
+    mime = (req.mime or "image/jpeg").split(";")[0].strip() or "image/jpeg"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [
+            {"text": "Detecta el sujeto principal y su punto focal para reencuadrar este diseño en varios formatos."},
+            {"inlineData": {"mimeType": mime, "data": img_data}}
+        ]}],
+        "systemInstruction": {"parts": [{"text": _SMART_REFRAME_SYSTEM}]},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 300,
+                             "responseMimeType": "application/json"}
+    }
+    def _clamp01(v, default):
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return default
+        if f != f:  # NaN
+            return default
+        return max(0.0, min(1.0, f))
+    try:
+        async with httpx.AsyncClient(timeout=22) as _hc:
+            resp = await _hc.post(url, json=payload, headers=headers)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Error al conectar con la IA")
+        data = resp.json()
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "\n".join(p.get("text", "") for p in parts if "text" in p).strip()
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        result = json.loads(raw)
+        box = result.get("box") or {}
+        return {
+            "focus_x": _clamp01(result.get("focus_x"), 0.5),
+            "focus_y": _clamp01(result.get("focus_y"), 0.5),
+            "box": {
+                "x1": _clamp01(box.get("x1"), 0.0),
+                "y1": _clamp01(box.get("y1"), 0.0),
+                "x2": _clamp01(box.get("x2"), 1.0),
+                "y2": _clamp01(box.get("y2"), 1.0),
+            },
+            "subject": str(result.get("subject", ""))[:120],
+        }
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="La IA devolvió JSON inválido")
     except HTTPException:
