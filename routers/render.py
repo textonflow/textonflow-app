@@ -1218,6 +1218,9 @@ async def generate_gif(req: _GifRequest, http_req: Request):
 
         # Convertir a paleta P para GIF compatible
         gif_frames = [f.convert("P", palette=Image.ADAPTIVE, colors=256) for f in frames]
+        # Liberar los frames full-color: ya no se usan y mantenerlos junto a
+        # gif_frames durante el save duplica el pico de memoria (OOM en GIFs largos).
+        frames.clear()
 
         buf = BytesIO()
         gif_frames[0].save(
