@@ -5,11 +5,13 @@ Toda la lógica de negocio vive en los módulos especializados.
 """
 import logging
 import os
+import posixpath
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import PlainTextResponse
 
 from database import init_db
 from startup import run_startup
@@ -66,6 +68,35 @@ for _dir in [STORAGE_DIR, TIMER_TEMPLATES_DIR, TEMPLATES_API_DIR, TIMER_ACCESS_D
 
 # ─── Tareas de arranque: auto-update estáticos + minificación JS ──────────────
 run_startup()
+
+# ─── Bloqueo de acceso HTTP a almacenamiento privado bajo /static ─────────────
+# Los templates de API se guardan en el volumen persistente, que por defecto
+# cuelga de static/temp y por tanto quedaría servido por el mount /static
+# (filtrando api_key/webhook_secret/user_id de cualquier template sin auth).
+# Calculamos qué prefijos de URL caen dentro de directorios privados y los
+# bloqueamos (404) antes de que StaticFiles los sirva. Si el dir está fuera de
+# `static` (p.ej. un volumen montado en otra ruta) no hay prefijo que bloquear.
+_static_root = os.path.realpath("static")
+_PRIVATE_URL_PREFIXES = []
+for _priv in [TEMPLATES_API_DIR]:
+    _priv_real = os.path.realpath(_priv)
+    if _priv_real == _static_root or _priv_real.startswith(_static_root + os.sep):
+        _rel = os.path.relpath(_priv_real, _static_root).replace(os.sep, "/")
+        _PRIVATE_URL_PREFIXES.append("/static/" + _rel.rstrip("/") + "/")
+logger.info(f"🔒 Prefijos privados bloqueados en /static: {_PRIVATE_URL_PREFIXES}")
+
+
+@app.middleware("http")
+async def _block_private_static(request, call_next):
+    # Normalizamos para neutralizar trucos con '..' antes de comparar el prefijo.
+    norm = posixpath.normpath(request.url.path)
+    if not norm.endswith("/") and request.url.path.endswith("/"):
+        norm += "/"
+    for prefix in _PRIVATE_URL_PREFIXES:
+        if norm == prefix.rstrip("/") or norm.startswith(prefix):
+            return PlainTextResponse("Not Found", status_code=404)
+    return await call_next(request)
+
 
 # ─── Archivos estáticos montados ─────────────────────────────────────────────
 app.mount("/fonts",  StaticFiles(directory="fonts"),  name="fonts")
