@@ -656,8 +656,9 @@ def _read_template_stats(template_id: str) -> dict:
     return {"total": 0, "today": 0, "last_render": None, "by_day": {}}
 
 @render_router.post("/api/templates")
-async def save_api_template(template: ApiTemplateRequest):
+async def save_api_template(template: ApiTemplateRequest, request: Request):
     """Guarda el diseño actual como template de API. Devuelve ID + URL de render."""
+    _require_user(request)
     tid = str(uuid.uuid4())[:8]
     path = os.path.join(TEMPLATES_API_DIR, f"{tid}.json")
     data = template.model_dump()
@@ -693,6 +694,7 @@ async def save_api_template(template: ApiTemplateRequest):
 @render_router.put("/api/templates/{template_id}")
 async def update_api_template(template_id: str, template: "ApiTemplateRequest", request: Request):
     """Actualiza el diseño completo de un template existente (template_name, textos, formas, etc.)."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -726,8 +728,9 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
 
 
 @render_router.get("/api/templates")
-async def list_api_templates():
-    """Lista todos los templates de API guardados."""
+async def list_api_templates(request: Request):
+    """Lista todos los templates de API guardados (requiere autenticación)."""
+    _require_user(request)
     templates = []
     if os.path.exists(TEMPLATES_API_DIR):
         for fname in sorted(os.listdir(TEMPLATES_API_DIR), reverse=True):
@@ -757,8 +760,9 @@ async def list_api_templates():
 
 
 @render_router.delete("/api/templates/{template_id}")
-async def delete_api_template(template_id: str):
+async def delete_api_template(template_id: str, request: Request):
     """Elimina un template de API por su ID."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -774,8 +778,9 @@ async def delete_api_template(template_id: str):
 
 
 @render_router.get("/api/templates/{template_id}/stats")
-async def get_template_stats(template_id: str):
+async def get_template_stats(template_id: str, request: Request):
     """Devuelve estadísticas de uso de un template."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -785,8 +790,9 @@ async def get_template_stats(template_id: str):
 
 
 @render_router.post("/api/templates/{template_id}/rotate-key")
-async def rotate_template_key(template_id: str):
+async def rotate_template_key(template_id: str, request: Request):
     """Genera una nueva API key para el template."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -803,8 +809,9 @@ async def rotate_template_key(template_id: str):
 
 
 @render_router.patch("/api/templates/{template_id}/settings")
-async def update_template_settings(template_id: str, body: dict):
+async def update_template_settings(template_id: str, body: dict, request: Request):
     """Actualiza require_api_key y rate_limit_per_hour del template."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -1017,8 +1024,9 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
 
 
 @render_router.post("/api/templates/{template_id}/secret")
-async def set_template_secret(template_id: str, body: dict):
+async def set_template_secret(template_id: str, body: dict, request: Request):
     """Establece o actualiza el webhook_secret de un template."""
+    _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
