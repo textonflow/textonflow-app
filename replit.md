@@ -59,23 +59,20 @@ Todos los CSS y JS comparten la **misma versión** (`?v=NNN`). Hay un comentario
 ⚠️ Al modificar **cualquier** CSS o JS, subir ese único número en los 7 links/scripts
 de index.html (los 4 CSS + i18n.js + app.js + artboards.js). Versión actual: **v303**.
 
-### Bloques `<style>` inline en index.html (9 total — son intencionales):
-- **CSS Bloque 1:** @font-face fuentes MYKOZ propias
-- **CSS Bloque 2:** `#tof-rotate-overlay` + landscape override
-- **CSS Bloque 3:** `#mobile-block-screen`
-- **CSS Bloque 4:** `@keyframes tofModalIn` + `.tof-modal-overlay.active`
-- **CSS Bloque 5:** `.tof-sk-row` (shortcuts overlay)
+### Bloques `<style>` inline en index.html (5 total, 183 líneas — son intencionales):
+- **CSS Bloque 1 (94 líneas):** `@font-face` de las fuentes MYKOZ propias (34 familias) **+ layout crítico above-the-fold** (`.container`, `.main-content`, `.canvas-area`, `.controls-panel`, `.panel-resizer`) — inline a propósito para evitar parpadeo (FOUC) al cargar.
+- **CSS Bloque 2 (62 líneas):** `#tof-rotate-overlay` + landscape override + splash tabs
+- **CSS Bloque 3 (19 líneas):** `#mobile-block-screen`
+- **CSS Bloque 4 (3 líneas):** `.tof-modal-overlay.active`
+- **CSS Bloque 5 (5 líneas):** `.tof-sk-row` (shortcuts overlay)
 
-### Bloques `<script>` inline en index.html (⚠️ deuda técnica):
-Hay 1043 líneas de JS en 9 bloques `<script>` inline — funciones que NO están en app.js:
-- **Block 4 (91 líneas):** `launchConfetti()`
-- **Block 5 (207 líneas):** Auth modal completo (`openAuthModal`, `closeAuthModal`, `authForgotSubmit`, etc.)
-- **Block 6 (160 líneas):** Proyectos (`openProjectsModal`, `openProject`, `saveCurrentProject`, etc.)
-- **Block 7 (532 líneas):** IA CORE (`iacSetTab`, `iacApplyBrandKit`, `iacGenerateDesign`, etc.)
-- **Block 8 (13 líneas):** `cdHelpModal`, `cdHelpTab`
-- **Block 9 (9 líneas):** `toggleShortcuts`, `closeShortcuts`
-
-Estas funciones son accesibles globalmente (scripts non-module), pero su mantenimiento es difícil al estar fuera de app.js. Migración pendiente.
+### Bloques `<script>` inline en index.html (✅ mínimos, no es deuda):
+Solo quedan **3 bloques inline minúsculos (~34 líneas en total)**: un par de
+inicializadores y `fixIOSZoom`. **TODA la lógica grande (auth modal, proyectos,
+IA core, confetti, shortcuts, cd-help) vive en `static/app.js`** — fue migrada en
+una sesión anterior. Los 6 archivos `.js` sueltos viejos (auth.js, projects.js,
+ai-panel.js, feedback.js, shortcuts.js, cd-help.js) eran copias muertas y se
+eliminaron. No hay JS de negocio inline pendiente de migrar.
 
 ### `styles.css` ELIMINADO (era el monolito viejo):
 Antes existía `static/styles.css` (4712 líneas) que se cargaba **primero** y los 4
@@ -151,7 +148,7 @@ No eliminar sin verificar el contexto (la herramienta de análisis está en el h
 | @font-face duplicados entre index.html y base.css | 0 duplicados (conjuntos distintos) | — ✅ |
 | CSS duplicado entre archivos | 130 pares detectados | Revisados: todos son overrides móviles ✅ |
 | Conflictos CSS base.css vs editor.css | 28 "conflictos" | Intencionales (editor.css overrides móvil) ✅ |
-| Scripts inline en index.html | 1043 líneas en 9 bloques `<script>` | Documentados como deuda técnica ⚠️ |
+| Scripts inline en index.html | ~34 líneas en 3 bloques `<script>` | Lógica grande ya en app.js; sin deuda ✅ |
 
 ### Falsos positivos descartados:
 - **CSS "duplicados" entre archivos** → son overrides `!important` móviles en editor.css. Intencionales.
@@ -161,8 +158,8 @@ No eliminar sin verificar el contexto (la herramienta de análisis está en el h
 - **100 funciones onclick "sin window.*"** → la mayoría son: (a) `async function` top-level (globales automáticamente), (b) definidas en bloques `<script>` inline de index.html, (c) en i18n.js. Ninguna es realmente inaccesible.
 
 ### Deuda técnica documentada (sin riesgo inmediato):
-- **1043 líneas de JS en `<script>` inline en index.html** — Auth modal (207 líneas), Proyectos (160), IA CORE (532), etc. Funcionan correctamente pero dificultan el mantenimiento. Migrar a archivos `.js` separados en el futuro.
-- **`?v=` de caché no centralizado** — `i18n.js?v=250` y `app.js?v=284` son hardcoded. Bajo riesgo; actualizar manualmente al modificar cada archivo.
+- **`app.js` es un monolito (1910 líneas / ~580 KB)** — concentra auth, proyectos, IA core, canvas/warp y render en un solo archivo. Funciona bien; dividir en módulos por dominio es opcional y de riesgo medio-alto (scripts non-module → cuidar orden de carga y dependencias). Hacerlo solo si el mantenimiento lo exige.
+- **183 líneas de CSS inline en index.html (5 bloques)** — parte (Bloque 1 layout) es intencional para evitar FOUC; el resto se podría mover a los split files (riesgo bajo).
 
 ### Sesión anterior (Mayo 2026):
 | Item | Antes | Después |
