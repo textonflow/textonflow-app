@@ -1388,7 +1388,7 @@ const eraserSep=document.createElement('span');eraserSep.className='fmt-tab-sep'
                             fill="${_eraserMode ? 'currentColor' : 'none'}" fill-opacity="${_eraserMode ? '.2' : '0'}"/>
                         <path d="M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     </svg>
-                </span>${_eraserMode ? '✕ Salir Borrador' : '✦ Borrador IA'}`;bar.appendChild(eraserBtn);if(window.innerWidth<=768){const _ubSep=document.createElement('span');_ubSep.style.cssText='color:rgba(255,255,255,0.18);margin:0 1px;align-self:center;font-size:16px;';_ubSep.textContent='|';bar.appendChild(_ubSep);const _ub=document.createElement('button');_ub.className='fmt-tab';_ub.title='Deshacer';_ub.style.cssText='padding:4px 8px;min-width:34px;flex-shrink:0;';_ub.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.25"/></svg>';_ub.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();undo();});bar.appendChild(_ub);}}
+                </span>${_eraserMode ? '✕ Salir Borrador' : '✦ Borrador IA'}`;bar.appendChild(eraserBtn);const reframeSep=document.createElement('span');reframeSep.className='fmt-tab-sep';reframeSep.textContent='|';reframeSep.style.marginLeft='6px';bar.appendChild(reframeSep);const reframeBtn=document.createElement('button');reframeBtn.id='smart-reframe-btn';reframeBtn.className='fmt-tab reframe-tab'+(_reframeBusy?' active':'');reframeBtn.disabled=_reframeBusy;reframeBtn.title='Encuadre Inteligente IA — Detecta el sujeto y reencuadra el diseño en todos los formatos con un clic';reframeBtn.onclick=tofSmartReframe;reframeBtn.innerHTML='<span class="fmt-tab-icon">'+(_reframeBusy?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></path></svg>':'✨')+'</span>'+(_reframeBusy?'Analizando…':'Encuadre IA');bar.appendChild(reframeBtn);if(window.innerWidth<=768){const _ubSep=document.createElement('span');_ubSep.style.cssText='color:rgba(255,255,255,0.18);margin:0 1px;align-self:center;font-size:16px;';_ubSep.textContent='|';bar.appendChild(_ubSep);const _ub=document.createElement('button');_ub.className='fmt-tab';_ub.title='Deshacer';_ub.style.cssText='padding:4px 8px;min-width:34px;flex-shrink:0;';_ub.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.25"/></svg>';_ub.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();undo();});bar.appendChild(_ub);}}
 function renderImgLayerControls(){const ctrl=document.getElementById('img-layer-controls');if(!ctrl)return;if(_eraserMode){ctrl.style.display='flex';if(_eraserProcessing){ctrl.innerHTML='';}else{const undoBtn=_eraserDidInpaint?`<span class="fmt-tab-sep">|</span>
                            <button class="img-layer-btn" onclick="_eraserUndo()" style="border-color:#5566aa;color:#8899dd;font-size:11px;padding:3px 8px;">↩ Deshacer</button>`:'';ctrl.innerHTML=`
                         <span style="font-size:11px;color:#ff7070;font-weight:700;white-space:nowrap;margin-right:6px;">✦ Borrador IA:</span>
@@ -1413,6 +1413,49 @@ ctrl.style.display='flex';const pct=Math.round(imgZoom*100);ctrl.innerHTML=`
                 <span class="fmt-tab-sep">|</span>
                 <button class="img-layer-btn" onclick="_imgLayerReset()" title="Centrar y ajustar imagen" style="font-size:10px;padding:2px 6px;">⊙ Ajustar</button>
             `;}
+var _reframeBusy=false;
+async function tofSmartReframe(){
+if(_reframeBusy)return;
+if(!loadedImg||!imageData||!loadedImg.naturalWidth){showNotif('Primero carga una imagen de fondo','error');return;}
+_reframeBusy=true;renderFormatTabs();
+try{
+var natW=loadedImg.naturalWidth,natH=loadedImg.naturalHeight;
+var maxS=768;var sc=Math.min(1,maxS/Math.max(natW,natH));
+var cw=Math.max(1,Math.round(natW*sc)),ch=Math.max(1,Math.round(natH*sc));
+var cnv=document.createElement('canvas');cnv.width=cw;cnv.height=ch;
+cnv.getContext('2d').drawImage(loadedImg,0,0,cw,ch);
+var b64;
+try{b64=cnv.toDataURL('image/jpeg',0.85).split(',')[1];}
+catch(e){throw new Error('No se pudo leer la imagen (restricción CORS). Sube la imagen o regenérala.');}
+var resp=await fetch('/api/ai/smart-reframe',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tofToken()},body:JSON.stringify({image_b64:b64,mime:'image/jpeg'})});
+if(!resp.ok){var er=await resp.json().catch(function(){return{detail:resp.statusText};});throw new Error(er.detail||'No se pudo analizar la imagen');}
+var r=await resp.json();
+var fx=parseFloat(r.focus_x),fy=parseFloat(r.focus_y);
+if(!isFinite(fx))fx=0.5;if(!isFinite(fy))fy=0.5;
+fx=Math.max(0,Math.min(1,fx));fy=Math.max(0,Math.min(1,fy));
+_tofApplyReframeAllFormats(fx,fy);
+showNotif('✨ Diseño reencuadrado en '+FORMAT_ORDER.length+' formatos — el sujeto quedó centrado','success');
+}catch(err){showNotif('Encuadre IA: '+((err&&err.message)?err.message:'error'),'error');}
+finally{_reframeBusy=false;renderFormatTabs();}
+}
+function _tofApplyReframeAllFormats(fx,fy){
+if(!loadedImg)return;
+var natW=loadedImg.naturalWidth,natH=loadedImg.naturalHeight;
+FORMAT_ORDER.forEach(function(fmt){
+var fd=FORMAT_DEFS[fmt];if(!fd)return;
+var zoom=Math.max(fd.w/natW,fd.h/natH);
+var iw=natW*zoom,ih=natH*zoom;
+var panX=fd.w/2-fx*iw;var panY=fd.h/2-fy*ih;
+panX=Math.min(0,Math.max(panX,fd.w-iw));panY=Math.min(0,Math.max(panY,fd.h-ih));
+var st=formatStates[fmt]||{currentFilter:currentFilter,filterOpacity:filterOpacity,filterVisible:filterVisible,imgBrightness:imgBrightness,imgContrast:imgContrast,imgSaturation:imgSaturation};
+st.imgZoom=zoom;st.imgPanX=panX;st.imgPanY=panY;
+formatStates[fmt]=st;
+});
+var target=activeFormat||FORMAT_ORDER[0]||'1:1';
+activeFormat=null;
+activateFormat(target);
+if(typeof saveHistory==='function')saveHistory();
+}
 function _clampImgLayer(){if(!activeFormat||!loadedImg)return;const fd=FORMAT_DEFS[activeFormat];const minZ=_fmtCoverZoom(activeFormat);if(imgZoom<minZ)imgZoom=minZ;const iw=loadedImg.naturalWidth*imgZoom;const ih=loadedImg.naturalHeight*imgZoom;imgPanX=Math.min(0,Math.max(imgPanX,fd.w-iw));imgPanY=Math.min(0,Math.max(imgPanY,fd.h-ih));}
 function _imgLayerPan(dx,dy){if(!activeFormat)return;imgPanX+=dx;imgPanY+=dy;_clampImgLayer();_redrawFormatCanvas();_saveFormatState(activeFormat);}
 function _imgLayerZoom(delta){if(!activeFormat)return;imgZoom=Math.min(6,imgZoom+delta);_clampImgLayer();_redrawFormatCanvas();renderImgLayerControls();_saveFormatState(activeFormat);}
