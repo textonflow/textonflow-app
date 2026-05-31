@@ -187,6 +187,37 @@ async def favicon():
 
 # ─── Proxy de imágenes (evita restricciones CORS del navegador) ───────────────
 
+_PROXY_MAX_BYTES = 25 * 1024 * 1024  # 25 MB — evita OOM por archivos enormes
+
+def _is_safe_public_url(target: str) -> bool:
+    """True solo si target es http(s) y resuelve a una IP pública.
+    Bloquea loopback/privadas/link-local/reservadas para evitar SSRF."""
+    import ipaddress as _ip
+    import socket as _socket
+    from urllib.parse import urlparse as _urlparse
+    try:
+        p = _urlparse(target)
+    except Exception:
+        return False
+    if p.scheme not in ("http", "https") or not p.hostname:
+        return False
+    try:
+        infos = _socket.getaddrinfo(p.hostname, p.port or (443 if p.scheme == "https" else 80))
+    except Exception:
+        return False
+    if not infos:
+        return False
+    for info in infos:
+        ip_str = info[4][0]
+        try:
+            addr = _ip.ip_address(ip_str)
+        except ValueError:
+            return False
+        if (addr.is_private or addr.is_loopback or addr.is_link_local
+                or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
+            return False
+    return True
+
 @pages_router.get("/proxy-image")
 def proxy_image(url: str):
     import re as _re
@@ -199,11 +230,16 @@ def proxy_image(url: str):
     m = _self_pat.match(url) or _temp_pat.match(url)
     if m:
         fname = m.group(1).lstrip("/")
-        # Primero busca en STORAGE_DIR, luego en static/temp
-        candidates = [
-            os.path.join(_STORAGE_DIR, fname),
-            os.path.join("static", "temp", fname),
-        ]
+        # Primero busca en STORAGE_DIR, luego en static/temp.
+        # IMPORTANTE: resolvemos la ruta real y exigimos que quede DENTRO del
+        # directorio base — si no, un payload con "../" permitiría leer archivos
+        # arbitrarios del servidor (path traversal / file disclosure).
+        candidates = []
+        for base in (_STORAGE_DIR, os.path.join("static", "temp")):
+            base_real = os.path.realpath(base)
+            fpath = os.path.realpath(os.path.join(base, fname))
+            if fpath == base_real or fpath.startswith(base_real + os.sep):
+                candidates.append(fpath)
         for fpath in candidates:
             if os.path.exists(fpath):
                 ext = fname.rsplit(".", 1)[-1].lower()
@@ -219,21 +255,51 @@ def proxy_image(url: str):
                    "Por favor re-sube la imagen base en el editor."
         )
 
-    # ── URL externa: descarga normal ─────────────────────────────────────────
+    # ── URL externa: descarga con protección SSRF + límite de tamaño ──────────
+    from urllib.parse import urljoin as _urljoin
     try:
-        resp = requests.get(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; TextOnFlow/1.0)"},
-            timeout=15,
-            allow_redirects=True,
-        )
+        cur_url = url
+        resp = None
+        # Seguimos redirects manualmente, validando cada salto (un redirect a una
+        # IP interna podría saltarse la validación si dejáramos requests seguirlos)
+        for _ in range(5):
+            if not _is_safe_public_url(cur_url):
+                raise HTTPException(status_code=400, detail="URL no permitida.")
+            resp = requests.get(
+                cur_url,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; TextOnFlow/1.0)"},
+                timeout=15,
+                allow_redirects=False,
+                stream=True,
+            )
+            if resp.status_code in (301, 302, 303, 307, 308) and resp.headers.get("Location"):
+                nxt = _urljoin(cur_url, resp.headers["Location"])
+                resp.close()
+                cur_url = nxt
+                continue
+            break
+        else:
+            raise HTTPException(status_code=400, detail="Demasiadas redirecciones.")
+
         resp.raise_for_status()
         content_type = resp.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+        chunks, total = [], 0
+        for chunk in resp.iter_content(8192):
+            if not chunk:
+                continue
+            total += len(chunk)
+            if total > _PROXY_MAX_BYTES:
+                resp.close()
+                raise HTTPException(status_code=400, detail="La imagen es demasiado grande (máx. 25 MB).")
+            chunks.append(chunk)
+        resp.close()
         return Response(
-            content=resp.content,
+            content=b"".join(chunks),
             media_type=content_type,
             headers={"Cache-Control": "public, max-age=3600"},
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"No se pudo cargar la imagen: {e}")
 
@@ -265,13 +331,9 @@ _DOWNLOAD_FILES = {
     "logo-blanco-new.png":   "static/logo-blanco-new.png",
     "previews/biblica.jpg":  "static/previews/biblica.jpg",
     "previews/plumilla.jpg": "static/previews/plumilla.jpg",
-    # ── Python routers ────────────────────────────────────────────────────────
-    "users.py":          "routers/users.py",
-    "render.py":         "routers/render.py",
-    "render_helpers.py": "routers/render_helpers.py",
-    "mc.py":             "routers/mc.py",
-    "ai.py":             "routers/ai.py",
-    "batch.py":          "routers/batch.py",
+    # NOTA: los routers Python (users.py, render.py, ai.py, etc.) NO se exponen
+    # aquí — eran descargables sin autenticación, filtrando el código del backend.
+    # El despliegue toma los archivos desde el repo de GitHub, no desde este endpoint.
 }
 
 @pages_router.get("/api/download")
