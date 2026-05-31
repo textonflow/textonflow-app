@@ -230,6 +230,18 @@ def proxy_image(url: str):
     m = _self_pat.match(url) or _temp_pat.match(url)
     if m:
         fname = m.group(1).lstrip("/")
+        # Solo se permiten imágenes por esta vía. Esto evita que alguien lea
+        # archivos sensibles de almacenamiento (p.ej. los JSON de api_templates,
+        # que contienen api_key/webhook_secret) que también viven bajo static/temp.
+        _IMG_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+                     "webp": "image/webp", "gif": "image/gif"}
+        ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
+        if ext not in _IMG_MIME:
+            raise HTTPException(status_code=400, detail="Tipo de archivo no permitido.")
+        # Bloqueo explícito de subdirectorios privados (defensa en profundidad).
+        _norm_rel = os.path.normpath(fname).replace(os.sep, "/")
+        if _norm_rel.startswith("api_templates/") or "/api_templates/" in _norm_rel:
+            raise HTTPException(status_code=404, detail="No encontrado.")
         # Primero busca en STORAGE_DIR, luego en static/temp.
         # IMPORTANTE: resolvemos la ruta real y exigimos que quede DENTRO del
         # directorio base — si no, un payload con "../" permitiría leer archivos
@@ -242,11 +254,8 @@ def proxy_image(url: str):
                 candidates.append(fpath)
         for fpath in candidates:
             if os.path.exists(fpath):
-                ext = fname.rsplit(".", 1)[-1].lower()
-                mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
-                        "webp": "image/webp", "gif": "image/gif"}.get(ext, "image/png")
                 with open(fpath, "rb") as fh:
-                    return Response(content=fh.read(), media_type=mime,
+                    return Response(content=fh.read(), media_type=_IMG_MIME[ext],
                                     headers={"Cache-Control": "public, max-age=3600"})
         # Archivo ya no existe localmente (redeploy borró el storage efímero)
         raise HTTPException(
