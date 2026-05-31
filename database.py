@@ -22,29 +22,42 @@ JWT_SECRET            = os.environ.get("JWT_SECRET", "textonflow-dev-secret-chan
 JWT_ALGORITHM         = "HS256"
 JWT_EXPIRE_HOURS      = 24 * 7  # 7 días
 
-# ─── Conexión (singleton con reconexión automática) ───────────────────────────
-_db_conn = None
-_db_lock = threading.Lock()
+# ─── Conexión (una por hilo — psycopg2 no es thread-safe para uso concurrente) ──
+# FastAPI ejecuta los endpoints síncronos en un threadpool; compartir una sola
+# conexión global entre hilos provoca corrupción de estado y errores 500
+# intermitentes. Usamos threading.local para que cada hilo tenga la suya.
+_thread_local = threading.local()
+
+def _new_conn():
+    conn = psycopg2.connect(SUPABASE_DATABASE_URL, connect_timeout=10)
+    conn.autocommit = True
+    return conn
 
 def get_db():
-    global _db_conn
-    with _db_lock:
-        if not _PSYCOPG2_OK or not SUPABASE_DATABASE_URL:
-            return None
+    if not _PSYCOPG2_OK or not SUPABASE_DATABASE_URL:
+        return None
+    conn = getattr(_thread_local, "conn", None)
+    try:
+        if conn is None or conn.closed:
+            conn = _new_conn()
+            _thread_local.conn = conn
+        else:
+            conn.poll()  # detecta conexiones muertas
+    except Exception:
+        # Cierra la conexión vieja antes de reconectar (evita fugas/zombies)
         try:
-            if _db_conn is None or _db_conn.closed:
-                _db_conn = psycopg2.connect(SUPABASE_DATABASE_URL, connect_timeout=10)
-                _db_conn.autocommit = True
-            else:
-                _db_conn.poll()
+            if conn is not None and not conn.closed:
+                conn.close()
         except Exception:
-            try:
-                _db_conn = psycopg2.connect(SUPABASE_DATABASE_URL, connect_timeout=10)
-                _db_conn.autocommit = True
-            except Exception as e:
-                logger.error(f"DB connection error: {e}")
-                return None
-        return _db_conn
+            pass
+        try:
+            conn = _new_conn()
+            _thread_local.conn = conn
+        except Exception as e:
+            logger.error(f"DB connection error: {e}")
+            _thread_local.conn = None
+            return None
+    return conn
 
 # ─── Inicialización del esquema ───────────────────────────────────────────────
 def init_db():
