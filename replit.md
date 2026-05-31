@@ -30,14 +30,14 @@ textonflow-api/
 │   ├── admin.py         # /api/admin/* (requiere X-Admin-Token)
 │   └── mc.py            # /api/mc (integración ManyChat)
 ├── static/
-│   ├── app.js           # Frontend principal (~508KB minificado)
+│   ├── app.js           # Frontend principal (1910 líneas / ~580KB) — monolito
 │   ├── base.css         # Variables CSS, tokens, @font-face (fuentes Google+system)
 │   ├── layout.css       # Canvas, paneles, toolbar, form-group, controls
 │   ├── components.css   # AI panel, emoji picker, countdown, botones, inputs
 │   ├── editor.css       # Mobile/responsive overrides, text layers, canvas handles
 │   ├── i18n.js          # Traducciones ES/EN
 │   └── temp/            # Archivos temporales runtime (api_templates/, timers/, tof_stats.json)
-└── index.html           # App SPA principal + 9 bloques <script> inline (ver nota abajo)
+└── index.html           # App SPA principal + 3 bloques <script> inline mínimos (ver nota abajo)
 ```
 
 ## Arquitectura CSS — Single Source of Truth
@@ -59,8 +59,8 @@ Todos los CSS y JS comparten la **misma versión** (`?v=NNN`). Hay un comentario
 ⚠️ Al modificar **cualquier** CSS o JS, subir ese único número en los 7 links/scripts
 de index.html (los 4 CSS + i18n.js + app.js + artboards.js). Versión actual: **v303**.
 
-### Bloques `<style>` inline en index.html (5 total, 183 líneas — son intencionales):
-- **CSS Bloque 1 (94 líneas):** `@font-face` de las fuentes MYKOZ propias (34 familias) **+ layout crítico above-the-fold** (`.container`, `.main-content`, `.canvas-area`, `.controls-panel`, `.panel-resizer`) — inline a propósito para evitar parpadeo (FOUC) al cargar.
+### Bloques `<style>` inline en index.html (5 total, ~183 líneas — son intencionales):
+- **CSS Bloque 1 (94 líneas):** `@font-face` de las fuentes MYKOZ propias (34 entradas `@font-face` / ~24 familias únicas) **+ layout crítico above-the-fold** (`.container`, `.main-content`, `.canvas-area`, `.controls-panel`, `.panel-resizer`) — inline a propósito para evitar parpadeo (FOUC) al cargar.
 - **CSS Bloque 2 (62 líneas):** `#tof-rotate-overlay` + landscape override + splash tabs
 - **CSS Bloque 3 (19 líneas):** `#mobile-block-screen`
 - **CSS Bloque 4 (3 líneas):** `.tof-modal-overlay.active`
