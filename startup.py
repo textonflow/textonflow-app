@@ -28,7 +28,14 @@ def _minify_static_js() -> None:
     try:
         with open(js_path, "r", encoding="utf-8") as f:
             original = f.read()
-        minified  = _rjsmin.jsmin(original, keep_bang_comments=False)
+        minified = _rjsmin.jsmin(original, keep_bang_comments=False)
+        # app.js se versiona ya minificado en el repo: re-minificar apenas recorta
+        # unos bytes (~0%). Evitamos reescribir el archivo en cada arranque cuando el
+        # ahorro es despreciable (ya minificado); solo reescribimos si vale la pena.
+        savings = len(original) - len(minified)
+        if savings < max(1024, int(len(original) * 0.01)):
+            logger.info("ℹ️  app.js ya está minificado — se omite la reescritura")
+            return
         reduction = (1 - len(minified) / max(len(original), 1)) * 100
         with open(js_path, "w", encoding="utf-8") as f:
             f.write(minified)
