@@ -30,7 +30,7 @@ except ImportError:
     _NUMPY_OK = False
 
 from auth import (
-    _is_superadmin, _get_client_ip,
+    _is_superadmin, _get_client_ip, _SUPERADMIN_EMAIL,
     _check_rate_limit, _check_minute_limit, _increment_ip_usage,
 )
 from database import get_db, log_render_event, get_user_render_stats
@@ -655,14 +655,35 @@ def _read_template_stats(template_id: str) -> dict:
             pass
     return {"total": 0, "today": 0, "last_render": None, "by_day": {}}
 
+
+def _is_admin_user(user: dict) -> bool:
+    """True si el usuario es admin/superadmin (ve y gestiona TODOS los templates)."""
+    if not user:
+        return False
+    if user.get("plan") == "admin":
+        return True
+    return (user.get("email") or "").lower() == _SUPERADMIN_EMAIL.lower()
+
+
+def _can_access_template(data: dict, user: dict) -> bool:
+    """True si el usuario es dueño del template o es admin.
+    Los templates legacy (sin user_id) solo son accesibles para el admin
+    (quedan asignados de facto al superadmin)."""
+    if _is_admin_user(user):
+        return True
+    owner = data.get("user_id")
+    return bool(owner) and str(owner) == str(user.get("sub", ""))
+
+
 @render_router.post("/api/templates")
 async def save_api_template(template: ApiTemplateRequest, request: Request):
     """Guarda el diseño actual como template de API. Devuelve ID + URL de render."""
-    _require_user(request)
+    user = _require_user(request)
     tid = str(uuid.uuid4())[:8]
     path = os.path.join(TEMPLATES_API_DIR, f"{tid}.json")
     data = template.model_dump()
     data["id"] = tid
+    data["user_id"] = str(user.get("sub", ""))
     data["created_at"] = datetime.now(timezone.utc).isoformat()
     # Detectar variables {varname} y {{varname}} (ManyChat) en los textos.
     # Se excluyen las reservadas de fecha: se resuelven solas, no se piden.
@@ -694,7 +715,7 @@ async def save_api_template(template: ApiTemplateRequest, request: Request):
 @render_router.put("/api/templates/{template_id}")
 async def update_api_template(template_id: str, template: "ApiTemplateRequest", request: Request):
     """Actualiza el diseño completo de un template existente (template_name, textos, formas, etc.)."""
-    _require_user(request)
+    user = _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -702,9 +723,12 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
         raise HTTPException(status_code=404, detail=f"Template '{template_id}' no encontrado.")
     with open(path) as f:
         existing = json.load(f)
+    if not _can_access_template(existing, user):
+        raise HTTPException(status_code=404, detail=f"Template '{template_id}' no encontrado.")
     data = template.model_dump()
     # Preservar campos de sistema
     data["id"]                  = existing["id"]
+    data["user_id"]             = existing.get("user_id", str(user.get("sub", "")))
     data["created_at"]          = existing.get("created_at", "")
     data["api_key"]             = existing.get("api_key", secrets.token_urlsafe(20))
     data["require_api_key"]     = existing.get("require_api_key", False)
@@ -729,8 +753,8 @@ async def update_api_template(template_id: str, template: "ApiTemplateRequest", 
 
 @render_router.get("/api/templates")
 async def list_api_templates(request: Request):
-    """Lista todos los templates de API guardados (requiere autenticación)."""
-    _require_user(request)
+    """Lista los templates de API del usuario autenticado (admin ve todos)."""
+    user = _require_user(request)
     templates = []
     if os.path.exists(TEMPLATES_API_DIR):
         for fname in sorted(os.listdir(TEMPLATES_API_DIR), reverse=True):
@@ -738,6 +762,8 @@ async def list_api_templates(request: Request):
                 try:
                     with open(os.path.join(TEMPLATES_API_DIR, fname)) as f:
                         d = json.load(f)
+                    if not _can_access_template(d, user):
+                        continue
                     tid = d["id"]
                     raw_key = d.get("api_key", "")
                     masked_key = (raw_key[:6] + "•" * 8 + raw_key[-4:]) if len(raw_key) >= 10 else raw_key
@@ -762,11 +788,15 @@ async def list_api_templates(request: Request):
 @render_router.delete("/api/templates/{template_id}")
 async def delete_api_template(template_id: str, request: Request):
     """Elimina un template de API por su ID."""
-    _require_user(request)
+    user = _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
     if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
+    with open(path) as f:
+        data = json.load(f)
+    if not _can_access_template(data, user):
         raise HTTPException(status_code=404, detail="Template no encontrado")
     os.remove(path)
     # Delete stats file too
@@ -780,19 +810,7 @@ async def delete_api_template(template_id: str, request: Request):
 @render_router.get("/api/templates/{template_id}/stats")
 async def get_template_stats(template_id: str, request: Request):
     """Devuelve estadísticas de uso de un template."""
-    _require_user(request)
-    if not re.match(r'^[a-f0-9\-]+$', template_id):
-        raise HTTPException(status_code=400, detail="ID inválido")
-    path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail="Template no encontrado")
-    return _read_template_stats(template_id)
-
-
-@render_router.post("/api/templates/{template_id}/rotate-key")
-async def rotate_template_key(template_id: str, request: Request):
-    """Genera una nueva API key para el template."""
-    _require_user(request)
+    user = _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -800,6 +818,24 @@ async def rotate_template_key(template_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Template no encontrado")
     with open(path) as f:
         data = json.load(f)
+    if not _can_access_template(data, user):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
+    return _read_template_stats(template_id)
+
+
+@render_router.post("/api/templates/{template_id}/rotate-key")
+async def rotate_template_key(template_id: str, request: Request):
+    """Genera una nueva API key para el template."""
+    user = _require_user(request)
+    if not re.match(r'^[a-f0-9\-]+$', template_id):
+        raise HTTPException(status_code=400, detail="ID inválido")
+    path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
+    with open(path) as f:
+        data = json.load(f)
+    if not _can_access_template(data, user):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
     new_key = secrets.token_urlsafe(20)
     data["api_key"] = new_key
     with open(path, "w") as f:
@@ -811,7 +847,7 @@ async def rotate_template_key(template_id: str, request: Request):
 @render_router.patch("/api/templates/{template_id}/settings")
 async def update_template_settings(template_id: str, body: dict, request: Request):
     """Actualiza require_api_key y rate_limit_per_hour del template."""
-    _require_user(request)
+    user = _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -819,6 +855,8 @@ async def update_template_settings(template_id: str, body: dict, request: Reques
         raise HTTPException(status_code=404, detail="Template no encontrado")
     with open(path) as f:
         data = json.load(f)
+    if not _can_access_template(data, user):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
     if "require_api_key" in body:
         data["require_api_key"] = bool(body["require_api_key"])
     if "rate_limit_per_hour" in body:
@@ -1026,7 +1064,7 @@ async def webhook_render(req: WebhookRenderRequest, request: Request):
 @render_router.post("/api/templates/{template_id}/secret")
 async def set_template_secret(template_id: str, body: dict, request: Request):
     """Establece o actualiza el webhook_secret de un template."""
-    _require_user(request)
+    user = _require_user(request)
     if not re.match(r'^[a-f0-9\-]+$', template_id):
         raise HTTPException(status_code=400, detail="ID inválido")
     path = os.path.join(TEMPLATES_API_DIR, f"{template_id}.json")
@@ -1034,6 +1072,8 @@ async def set_template_secret(template_id: str, body: dict, request: Request):
         raise HTTPException(status_code=404, detail="Template no encontrado")
     with open(path) as f:
         data = json.load(f)
+    if not _can_access_template(data, user):
+        raise HTTPException(status_code=404, detail="Template no encontrado")
     secret = body.get("secret", "")
     if secret:
         data["webhook_secret"] = secret
