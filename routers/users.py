@@ -507,6 +507,7 @@ async def user_forgot_password(body: _ForgotPasswordBody):
     email = body.email.strip().lower()
     conn = get_db()
     if not conn:
+        logger.error("forgot-password: sin conexión a BD; no se pudo generar token de reset.")
         return {"ok": True}
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
