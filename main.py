@@ -111,5 +111,9 @@ from routers.batch  import batch_router;  app.include_router(batch_router)
 from routers.mc     import mc_router;     app.include_router(mc_router)
 from routers.pages  import pages_router;  app.include_router(pages_router)
 
+# ─── Chequeo diario de salud (correo de aviso) ───────────────────────────────
+from monitoring import start_health_scheduler
+start_health_scheduler()
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
