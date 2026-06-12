@@ -24,6 +24,7 @@ from io import BytesIO
 from typing import Dict, Optional
 
 import requests
+import psycopg2.extras
 from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse, Response
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
