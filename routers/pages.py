@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 from auth import _is_superadmin, _get_client_ip, _check_rate_limit
 from database import SUPABASE_DATABASE_URL, get_db, _PSYCOPG2_OK
@@ -78,6 +78,22 @@ async def health():
         "db_url_prefix": SUPABASE_DATABASE_URL[:40] if SUPABASE_DATABASE_URL else "NOT SET",
         "db_err": db_err,
     }
+
+
+@pages_router.get("/health/full")
+def health_full():
+    """Checklist completo: BD, almacenamiento, motor de imágenes y app pública.
+
+    Devuelve HTTP 200 si todo está bien, o 503 si algo falla (ideal para que
+    un monitor externo como UptimeRobot vigile la app y avise al instante).
+    """
+    from monitoring import run_healthcheck
+    results = run_healthcheck()
+    all_ok = all(r["ok"] for r in results)
+    return JSONResponse(
+        {"status": "ok" if all_ok else "fail", "checks": results},
+        status_code=200 if all_ok else 503,
+    )
 
 
 # ─── API pública: stats y usage ───────────────────────────────────────────────
