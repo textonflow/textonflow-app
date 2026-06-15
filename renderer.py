@@ -1187,9 +1187,19 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
         try:
             _src = get_emoji_source()
             with Pilmoji(shadow_src, source=_src) as _p:
-                pilmoji_multiline(_p, _sd, (base_x, base_y), text_to_draw,
-                    font=font2x, fill=(255, 255, 255, 255),
-                    spacing=spacing, text_align=text_align, block_width=text_width, letter_spacing=letter_spacing)
+                if _char_fmts:
+                    # Sombra con runs: misma forma que el texto visible (fuente/tamaño por segmento)
+                    _render_runs_multiline(
+                        _p, _sd, (base_x, base_y),
+                        _char_fmts, font2x, text_field.font_name, _fb_name,
+                        int(font2x.size), (255, 255, 255, 255), spacing, text_align,
+                        text_width, parse_color,
+                        letter_spacing=letter_spacing, render_scale=SCALE
+                    )
+                else:
+                    pilmoji_multiline(_p, _sd, (base_x, base_y), text_to_draw,
+                        font=font2x, fill=(255, 255, 255, 255),
+                        spacing=spacing, text_align=text_align, block_width=text_width, letter_spacing=letter_spacing)
         except Exception:
             _sd.multiline_text(
                 (base_x, base_y), text_to_draw,
