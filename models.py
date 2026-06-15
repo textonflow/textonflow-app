@@ -11,6 +11,8 @@ class TextRun(BaseModel):
     bold_override:   Optional[bool] = None
     italic_override: Optional[bool] = None
     font_color:      Optional[str]  = None
+    font_backend_run:   Optional[str] = None
+    font_size_run:      Optional[int] = None
     letter_spacing_run: Optional[int] = None
 
 
