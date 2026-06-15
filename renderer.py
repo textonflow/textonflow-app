@@ -806,16 +806,16 @@ _RUN_FONT_FAMILIES: dict = {
     'ScholarRegular':      {'r':'ScholarRegular',  'b':'ScholarRegular',       'i':'ScholarItalic',     'bi':'ScholarItalic'},
 }
 
-def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, size: int):
+def _resolve_run_font(base_font_name: str, font_backend_name, run_fmt: dict, size: int, render_scale: int = 2):
     """Devuelve ImageFont para un run con bold/italic/font/size override, o None si no cambia."""
     run_bold      = run_fmt.get('bold_override')
     run_italic    = run_fmt.get('italic_override')
     run_font_key  = run_fmt.get('font_backend_run')   # fuente específica para este run
-    run_size_px   = run_fmt.get('font_size_run')      # tamaño específico para este run (display px)
+    run_size_px   = run_fmt.get('font_size_run')      # tamaño específico para este run (px nativos)
     if run_bold is None and run_italic is None and run_font_key is None and run_size_px is None:
         return None
-    # Tamaño efectivo: si el run tiene tamaño propio, usarlo ×2 (render 2x); si no, el del campo
-    eff_size = int(run_size_px * 2) if run_size_px else size
+    # Tamaño efectivo: el run guarda px nativos; escalar por render_scale igual que la base
+    eff_size = int(run_size_px * max(1, render_scale)) if run_size_px else size
     # Si el run tiene fuente propia, usarla como base; si no, usar la del campo
     fb = run_font_key or font_backend_name or base_font_name
     v  = _RUN_FONT_FAMILIES.get(fb, {})
@@ -877,7 +877,7 @@ def _map_runs_to_wrapped(char_fmts: list, wrapped_text: str) -> list:
 
 def _compute_runs_bbox(char_fmts_wrapped: list, base_font, base_font_name: str,
                         font_backend_name, font_size_2x: int,
-                        draw_obj, spacing: float) -> tuple:
+                        draw_obj, spacing: float, render_scale: int = 2) -> tuple:
     """Calcula (max_line_width, total_height) para texto con runs inline."""
     lines: list = []
     curr:  list = []
@@ -900,7 +900,7 @@ def _compute_runs_bbox(char_fmts_wrapped: list, base_font, base_font_name: str,
             segs.append((ct, cf))
         lw = 0
         for seg_text, seg_fmt in segs:
-            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x) or base_font
+            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x, render_scale) or base_font
             try:
                 lb = draw_obj.textbbox((0, 0), seg_text, font=sf)
                 lw += lb[2] - lb[0]
@@ -916,7 +916,7 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
                             base_font, base_font_name: str, font_backend_name,
                             font_size_2x: int, base_color: tuple, spacing: float,
                             text_align: str, block_w: int, parse_color_fn,
-                            letter_spacing: float = 0) -> None:
+                            letter_spacing: float = 0, render_scale: int = 2) -> None:
     """Renderiza texto multilinea con formato inline por segmentos (runs)."""
     x, y  = xy
     lines: list = []
@@ -939,9 +939,14 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
             segs.append((ct, cf))
         seg_ws: list = []
         seg_fs: list = []
+        seg_asc: list = []
         for seg_text, seg_fmt in segs:
-            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x) or base_font
+            sf = _resolve_run_font(base_font_name, font_backend_name, seg_fmt, font_size_2x, render_scale) or base_font
             seg_fs.append(sf)
+            try:
+                seg_asc.append(sf.getmetrics()[0])
+            except Exception:
+                seg_asc.append(sf.size)
             _seg_ls = seg_fmt.get('letter_spacing_run', None)
             _seg_ls = int(_seg_ls) if _seg_ls is not None else int(letter_spacing)
             try:
@@ -950,6 +955,12 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
                 seg_ws.append(_base_w + _seg_ls * max(0, len(seg_text) - 1))
             except Exception:
                 seg_ws.append(sf.size * max(len(seg_text), 1))
+        # Alinear todos los segmentos de la línea por su LÍNEA BASE (no por el borde superior)
+        try:
+            _base_asc = base_font.getmetrics()[0]
+        except Exception:
+            _base_asc = base_font.size
+        max_asc = max(seg_asc) if seg_asc else _base_asc
         lw = sum(seg_ws)
         if text_align == 'center':   sx = x + (block_w - lw) // 2
         elif text_align == 'right':  sx = x + (block_w - lw)
@@ -959,6 +970,7 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
             if not seg_text:
                 continue
             sf    = seg_fs[i]
+            seg_y = curr_y + (max_asc - seg_asc[i])
             color = base_color
             if seg_fmt.get('font_color'):
                 c2 = parse_color_fn(seg_fmt['font_color'])
@@ -969,18 +981,18 @@ def _render_runs_multiline(pilmoji_obj, draw_obj, xy: tuple, char_fmts_wrapped: 
                 _ccx = cx
                 for _ch in seg_text:
                     try:
-                        pilmoji_obj.text((_ccx, curr_y), _ch, font=sf, fill=color)
+                        pilmoji_obj.text((_ccx, seg_y), _ch, font=sf, fill=color)
                         _clb = draw_obj.textbbox((0, 0), _ch, font=sf)
                         _ccx += (_clb[2] - _clb[0]) + _dls
                     except Exception:
-                        draw_obj.text((_ccx, curr_y), _ch, font=sf, fill=color)
+                        draw_obj.text((_ccx, seg_y), _ch, font=sf, fill=color)
                         _ccx += sf.size // 2 + _dls
                 cx = _ccx
             else:
                 try:
-                    pilmoji_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+                    pilmoji_obj.text((cx, seg_y), seg_text, font=sf, fill=color)
                 except Exception:
-                    draw_obj.text((cx, curr_y), seg_text, font=sf, fill=color)
+                    draw_obj.text((cx, seg_y), seg_text, font=sf, fill=color)
                 cx += seg_ws[i]
         curr_y += line_h + int(spacing)
 
@@ -1071,7 +1083,7 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
     if _char_fmts:
         text_width, text_height = _compute_runs_bbox(
             _char_fmts, font2x, text_field.font_name, _fb_name,
-            int(font2x.size), draw, spacing
+            int(font2x.size), draw, spacing, SCALE
         )
     else:
         bbox        = draw.multiline_textbbox((0, 0), text_to_draw, font=font2x, spacing=spacing, align=text_align)
@@ -1227,7 +1239,7 @@ def draw_text_with_effects(image: Image.Image, text_field: TextField, font, rend
                     pilmoji, tl_draw, (base_x, base_y),
                     _char_fmts, font2x, text_field.font_name, _fb_name,
                     int(font2x.size), final_color, spacing, text_align, text_width, parse_color,
-                    letter_spacing=letter_spacing
+                    letter_spacing=letter_spacing, render_scale=SCALE
                 )
             emoji_rendered = True
         except Exception as e:
