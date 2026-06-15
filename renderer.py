@@ -845,6 +845,9 @@ def _expand_runs_to_chars(runs) -> list:
             'bold_override':   getattr(run, 'bold_override',   None),
             'italic_override': getattr(run, 'italic_override', None),
             'font_color':      getattr(run, 'font_color',      None),
+            'font_backend_run':   getattr(run, 'font_backend_run',   None),
+            'font_size_run':      getattr(run, 'font_size_run',      None),
+            'letter_spacing_run': getattr(run, 'letter_spacing_run', None),
         }
         for c in (run.text if hasattr(run, 'text') else run.get('text', '')):
             result.append((c, fmt))
