@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cupones — TextOnFlow</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a12;--surface:#13132a;--surface2:#1a1a2e;--border:#1e1e38;
+  --accent:#7c6eff;--accent2:#a5b4fc;--green:#22c55e;--orange:#f97316;
+  --gold:#f59e0b;--red:#ef4444;--text:#d0d0e8;--text2:#8888aa;--text3:#555577;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+.top-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.top-bar img{height:22px;width:auto;opacity:.9}
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#9090b8;text-decoration:none;padding:6px 13px;font-size:12px;font-weight:600;transition:all .2s;white-space:nowrap}
+.back-btn:hover{background:#252545;color:#fff;border-color:var(--accent)}
+.main{flex:1;max-width:1000px;margin:0 auto;padding:34px 24px;width:100%}
+.dash-header{margin-bottom:24px}
+.dash-header h1{font-size:1.6rem;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.dash-header p{font-size:14px;color:var(--text2);line-height:1.5}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px}
+.card-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+label.fld{display:block;font-size:12px;color:var(--text2);margin:0 0 5px;font-weight:600}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:640px){.row{grid-template-columns:1fr}}
+input[type=text],input[type=number],select,textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  color:#fff;font-size:13px;padding:10px 12px;outline:none;transition:border .2s;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+.btn{background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn.ghost{background:var(--surface2);border:1px solid var(--border);color:#b0b0d0}
+.btn.ghost:hover{border-color:var(--accent);color:#fff;background:#22224a}
+.btn.danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}
+.btn.danger:hover{background:rgba(239,68,68,.22)}
+.alert{border-radius:10px;padding:13px 16px;font-size:13px;margin-bottom:18px;display:none}
+.alert.info{background:rgba(124,110,255,.1);border:1px solid rgba(124,110,255,.2);color:var(--accent2)}
+.alert.success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.alert.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+/* Batch list */
+.batch{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.batch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.batch-name{font-size:15px;font-weight:800;color:#fff}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;border-radius:20px;padding:2px 10px;margin-left:8px}
+.tag.single{background:rgba(124,110,255,.15);color:var(--accent2);border:1px solid rgba(124,110,255,.25)}
+.tag.multi{background:rgba(245,158,11,.12);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+.counts{display:flex;gap:18px;margin:14px 0 6px;flex-wrap:wrap}
+.count{text-align:center}
+.count .n{font-size:1.3rem;font-weight:900;color:#fff;line-height:1.1}
+.count .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.count.green .n{color:var(--green)}
+.count.orange .n{color:var(--orange)}
+.count.gray .n{color:var(--text2)}
+.mc-url{display:flex;gap:8px;align-items:center;margin-top:12px;background:#0c0c1c;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.mc-url code{flex:1;font-size:11px;color:#7dd3fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,monospace}
+.batch-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+/* Codes table */
+.codes{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+.code-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.code-row:last-child{border-bottom:none}
+.code-val{font-family:ui-monospace,monospace;color:#fff;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:10px;font-weight:800;text-transform:uppercase;border-radius:20px;padding:2px 9px}
+.st.available{background:rgba(34,197,94,.12);color:var(--green)}
+.st.assigned{background:rgba(249,115,22,.12);color:var(--orange)}
+.st.redeemed{background:rgba(136,136,170,.12);color:var(--text2)}
+.uses{font-size:11px;color:var(--text2);min-width:54px;text-align:right}
+.muted{color:var(--text3);font-size:12px}
+.loading{display:flex;align-items:center;justify-content:center;min-height:50vh;flex-direction:column;gap:16px}
+.spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.not-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;text-align:center}
+.not-auth h2{font-size:1.4rem;font-weight:800;color:#fff}
+.cta-btn{background:linear-gradient(135deg,#7c6eff,#a5b4fc);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.help{font-size:12px;color:var(--text3);line-height:1.6;margin-top:6px}
+.empty{text-align:center;color:var(--text3);font-size:14px;padding:30px 0}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/"><img src="/static/logo-blanco-new.png" alt="TextOnFlow" onerror="this.src='/static/logo-blanco.webp'"></a>
+  <div class="top-bar-right">
+    <a href="/dashboard" class="back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Mi cuenta</span>
+    </a>
+    <a href="/" class="back-btn">Editor</a>
+  </div>
+</div>
+
+<div style="max-width:1000px;margin:16px auto 0;padding:0 24px;width:100%">
+  <div class="alert" id="alert"></div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div style="color:var(--text2);font-size:14px">Cargando…</div>
+</div>
+
+<!-- Not auth -->
+<div class="not-auth" id="not-auth" style="display:none">
+  <h2>Necesitas iniciar sesión</h2>
+  <p class="muted">Accede a tu cuenta para gestionar tus cupones.</p>
+  <a href="/" class="cta-btn">Ir al editor</a>
+</div>
+
+<!-- Main -->
+<div class="main" id="main" style="display:none">
+
+  <div class="dash-header">
+    <h1>🎟️ Cupones con código de barras</h1>
+    <p>Sube los códigos que genera Odoo (CSV/Excel o pégalos), y deja que ManyChat reparta el siguiente disponible a cada contacto con su imagen de <strong>código de barras</strong> o QR.</p>
+  </div>
+
+  <!-- Crear lote -->
+  <div class="card">
+    <div class="card-label">Nuevo lote</div>
+    <div class="row">
+      <div>
+        <label class="fld">Nombre del lote</label>
+        <input type="text" id="f-name" placeholder="Ej. Promo Verano 2026">
+      </div>
+      <div>
+        <label class="fld">Formato de imagen</label>
+        <select id="f-format">
+          <option value="code128">Código de barras (Code128)</option>
+          <option value="ean13">Código de barras (EAN-13)</option>
+          <option value="qr">Código QR</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label class="fld">Tipo de cupón</label>
+        <select id="f-type" onchange="onTypeChange()">
+          <option value="single">Tipo A — Un solo uso (lote único)</option>
+          <option value="multi">Tipo B — Multiuso (N canjes por código)</option>
+        </select>
+      </div>
+      <div id="uses-wrap" style="display:none">
+        <label class="fld">Usos por código (Tipo B)</label>
+        <input type="number" id="f-uses" value="1" min="1">
+      </div>
+    </div>
+    <div>
+      <label class="fld">Pegar códigos (uno por línea o separados por coma) — opcional</label>
+      <textarea id="f-codes" placeholder="ABC123&#10;DEF456&#10;GHI789"></textarea>
+      <div class="help">También puedes subir un CSV/Excel después de crear el lote. Los duplicados se ignoran automáticamente.</div>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn" id="create-btn" onclick="createBatch()">Crear lote</button>
+    </div>
+  </div>
+
+  <!-- Lotes -->
+  <div class="card">
+    <div class="card-label">Mis lotes</div>
+    <div id="batches"><div class="empty">Cargando lotes…</div></div>
+  </div>
+
+</div>
+
+<script>
+const TOKEN_KEY = 'tof_token';
+function getToken(){ return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || ''; }
+function authHeaders(extra){ return Object.assign({ Authorization: 'Bearer ' + getToken() }, extra || {}); }
+
+function showAlert(msg, type){
+  const el = document.getElementById('alert');
+  el.textContent = msg; el.className = 'alert ' + (type || 'info'); el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(iso){ if(!iso) return '—'; try{ return new Date(iso).toLocaleDateString('es-MX',{year:'numeric',month:'short',day:'numeric'}); }catch{ return iso; } }
+
+function onTypeChange(){
+  document.getElementById('uses-wrap').style.display =
+    document.getElementById('f-type').value === 'multi' ? 'block' : 'none';
+}
+
+async function apiFetch(url, opts){
+  const res = await fetch(url, opts);
+  if (res.status === 401 || res.status === 403){
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('not-auth').style.display = 'flex';
+    throw new Error('auth');
+  }
+  return res;
+}
+
+async function createBatch(){
+  const btn = document.getElementById('create-btn');
+  const name = document.getElementById('f-name').value.trim();
+  const coupon_type = document.getElementById('f-type').value;
+  const barcode_format = document.getElementById('f-format').value;
+  const default_uses = parseInt(document.getElementById('f-uses').value || '1', 10);
+  const codes_text = document.getElementById('f-codes').value;
+  if (!name){ showAlert('Ponle un nombre al lote.', 'error'); return; }
+  btn.disabled = true;
+  try{
+    const res = await apiFetch('/api/coupons/batches', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ name, coupon_type, barcode_format, default_uses, codes_text })
+    });
+    if (!res.ok){ const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+    const b = await res.json();
+    showAlert(`Lote "${b.name}" creado · ${b.added || 0} código(s) agregado(s).`, 'success');
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-codes').value = '';
+    await loadBatches();
+  }catch(err){ if(err.message!=='auth') showAlert(err.message, 'error'); }
+  finally{ btn.disabled = false; }
+}
+
+async function loadBatches(){
+  const wrap = document.getElementById('batches');
+  try{
+    const res = await apiFetch('/api/coupons/batches', { headers: authHeaders() });
+    const data = await res.json();
+    const batches = data.batches || [];
+    if (!batches.length){ wrap.innerHTML = '<div class="empty">Aún no tienes lotes. Crea uno arriba.</div>'; return; }
+    wrap.innerHTML = batches.map(renderBatch).join('');
+  }catch(err){ if(err.message!=='auth') wrap.innerHTML = '<div class="empty">No se pudieron cargar los lotes.</div>'; }
+}
+
+function renderBatch(b){
+  const typeTag = b.coupon_type === 'multi'
+    ? '<span class="tag multi">Multiuso</span>'
+    : '<span class="tag single">Un uso</span>';
+  const fmtLabel = { code128:'Code128', ean13:'EAN-13', qr:'QR' }[b.barcode_format] || b.barcode_format;
+  return `
+  <div class="batch" id="batch-${esc(b.id)}">
+    <div class="batch-head">
+      <div class="batch-name">${esc(b.name)} ${typeTag}</div>
+      <div class="muted">${fmtLabel} · ${fmtDate(b.created_at)}</div>
+    </div>
+    <div class="counts">
+      <div class="count"><div class="n">${b.total}</div><div class="l">Total</div></div>
+      <div class="count green"><div class="n">${b.available}</div><div class="l">Disponibles</div></div>
+      <div class="count orange"><div class="n">${b.assigned}</div><div class="l">Asignados</div></div>
+      <div class="count gray"><div class="n">${b.redeemed}</div><div class="l">Canjeados</div></div>
+    </div>
+    <label class="fld" style="margin-top:8px">URL para ManyChat (External Request · GET)</label>
+    <div class="mc-url">
+      <code title="${esc(b.dispense_url)}">${esc(b.dispense_url)}</code>
+      <button class="btn sm ghost" onclick="copyText('${esc(b.dispense_url)}')">Copiar</button>
+    </div>
+    <div class="help">En ManyChat mapea <code>code</code> a un User Field y envía la imagen desde <code>image_url</code>. Reemplaza <code>{{contact_id}}</code> por el campo de ID de tu suscriptor si es distinto.</div>
+    <div class="batch-actions">
+      <button class="btn sm ghost" onclick="toggleCodes('${esc(b.id)}')">Ver / agregar códigos</button>
+      <label class="btn sm ghost" style="cursor:pointer;margin:0">
+        Subir CSV/Excel
+        <input type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="uploadFile('${esc(b.id)}', this)">
+      </label>
+      <button class="btn sm danger" onclick="deleteBatch('${esc(b.id)}','${esc(b.name)}')">Eliminar</button>
+    </div>
+    <div class="codes" id="codes-${esc(b.id)}" style="display:none"></div>
+  </div>`;
+}
+
+async function toggleCodes(id){
+  const el = document.getElementById('codes-' + id);
+  if (el.style.display === 'block'){ el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = '<div class="muted" style="padding:8px 0">Cargando códigos…</div>';
+  try{
+    const res = await apiFetch('/api/coupons/batches/' + id, { headers: authHeaders() });
+    const b = await res.json();
+    const codes = b.codes || [];
+    if (!codes.length){ el.innerHTML = '<div class="muted" style="padding:8px 0">Sin códigos. Sube un CSV/Excel o crea otro lote pegando códigos.</div>'; return; }
+    el.innerHTML = codes.map(c => renderCode(b, c)).join('');
+  }catch(err){ if(err.message!=='auth') el.innerHTML = '<div class="muted">Error cargando códigos.</div>'; }
+}
+
+function renderCode(b, c){
+  const usesTxt = b.coupon_type === 'multi' ? `${c.remaining_uses}/${c.total_uses} usos` : '';
+  const redeemBtn = (c.status !== 'redeemed')
+    ? `<button class="btn sm ghost" onclick="redeemCode('${esc(b.id)}','${esc(c.id)}')">Registrar canje</button>`
+    : '';
+  return `
+  <div class="code-row">
+    <span class="code-val">${esc(c.code)}</span>
+    <span class="uses">${usesTxt}</span>
+    <span class="st ${esc(c.status)}">${esc(c.status)}</span>
+    <a class="btn sm ghost" href="${esc(c.image_url)}" target="_blank">Imagen</a>
+    ${redeemBtn}
+  </div>`;
+}
+
+async function uploadFile(id, input){
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData(); fd.append('file', file);
+  try{
+    const res = await apiFetch('/api/coupons/batches/' + id + '/upload', {
+      method: 'POST', headers: authHeaders(), body: fd
+    });
+    if (!res.ok){ const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+    const b = await res.json();
+    showAlert(`${b.added || 0} código(s) agregado(s) de ${b.found || 0} encontrado(s).`, 'success');
+    await loadBatches();
+  }catch(err){ if(err.message!=='auth') showAlert(err.message, 'error'); }
+  finally{ input.value = ''; }
+}
+
+async function redeemCode(batchId, codeId){
+  try{
+    const res = await apiFetch('/api/coupons/codes/' + codeId + '/redeem', {
+      method: 'POST', headers: authHeaders({ 'Content-Type':'application/json' }), body: JSON.stringify({ uses: 1 })
+    });
+    if (!res.ok){ const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+    const r = await res.json();
+    showAlert(r.status === 'redeemed' ? 'Cupón canjeado por completo.' : `Canje registrado · quedan ${r.remaining_uses} uso(s).`, 'success');
+    // refrescar lista y códigos abiertos
+    await loadBatches();
+    const el = document.getElementById('codes-' + batchId);
+    if (el) { el.style.display = 'none'; await toggleCodes(batchId); }
+  }catch(err){ if(err.message!=='auth') showAlert(err.message, 'error'); }
+}
+
+async function deleteBatch(id, name){
+  if (!confirm(`¿Eliminar el lote "${name}" y todos sus códigos? Esta acción no se puede deshacer.`)) return;
+  try{
+    const res = await apiFetch('/api/coupons/batches/' + id, { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok){ const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error'); }
+    showAlert('Lote eliminado.', 'success');
+    await loadBatches();
+  }catch(err){ if(err.message!=='auth') showAlert(err.message, 'error'); }
+}
+
+function copyText(t){
+  navigator.clipboard.writeText(t).then(
+    () => showAlert('URL copiada al portapapeles.', 'success'),
+    () => showAlert('No se pudo copiar.', 'error')
+  );
+}
+
+async function init(){
+  const token = getToken();
+  if (!token){
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-auth').style.display = 'flex';
+    return;
+  }
+  try{
+    // valida sesión con un endpoint protegido
+    await apiFetch('/api/coupons/batches', { headers: authHeaders() });
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    await loadBatches();
+  }catch(err){
+    document.getElementById('loading').style.display = 'none';
+    if (err.message !== 'auth'){
+      document.getElementById('main').style.display = 'block';
+      await loadBatches();
+    }
+  }
+}
+init();
+</script>
+</body>
+</html>
