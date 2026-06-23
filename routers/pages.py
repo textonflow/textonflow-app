@@ -40,6 +40,10 @@ async def root():
 async def dashboard():
     return FileResponse("static/dashboard.html", media_type="text/html")
 
+@pages_router.get("/cupones")
+async def cupones():
+    return FileResponse("static/cupones.html", media_type="text/html")
+
 
 # ─── Status y health ─────────────────────────────────────────────────────────
 
@@ -343,6 +347,7 @@ _DOWNLOAD_FILES = {
     "docs.html":        "static/docs.html",
     "precios.html":     "static/precios.html",
     "casos.html":       "static/casos.html",
+    "cupones.html":     "static/cupones.html",
     # ── CSS ───────────────────────────────────────────────────────────────────
     "base.css":         "static/base.css",
     "layout.css":       "static/layout.css",
