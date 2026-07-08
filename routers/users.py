@@ -752,6 +752,9 @@ def _ensure_logos_table(conn):
             );
             CREATE INDEX IF NOT EXISTS user_logos_user_idx ON user_logos(user_id);
         """)
+        # RLS: bloquea la API pública de Supabase (PostgREST). No afecta a la
+        # app, que se conecta directo como dueño de la tabla.
+        cur.execute("ALTER TABLE user_logos ENABLE ROW LEVEL SECURITY")
 
 
 @users_router.get("/user/logos", tags=["logos"], summary="Listar logos del usuario")
