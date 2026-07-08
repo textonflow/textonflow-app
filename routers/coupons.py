@@ -110,6 +110,10 @@ def _ensure_coupon_tables(conn):
                 ON coupon_codes(batch_id, assigned_to)
                 WHERE assigned_to IS NOT NULL
             """)
+            # RLS: bloquea la API pública de Supabase (PostgREST). No afecta a la
+            # app, que se conecta directo como dueño de las tablas.
+            cur.execute("ALTER TABLE coupon_batches ENABLE ROW LEVEL SECURITY")
+            cur.execute("ALTER TABLE coupon_codes   ENABLE ROW LEVEL SECURITY")
     except Exception as e:
         logger.warning(f"_ensure_coupon_tables: {e}")
 
@@ -449,6 +453,106 @@ async def batch_detail(batch_id: str, request: Request, limit: int = 200):
     dto = _batch_dto(conn, batch_id)
     dto["codes"] = codes
     return JSONResponse(dto)
+
+
+_STATUS_LABELS = {
+    "available": "Disponible",
+    "assigned":  "Asignado",
+    "redeemed":  "Canjeado",
+}
+
+
+def _fmt_dt(dt) -> str:
+    """Formatea un timestamp para el reporte (vacío si no hay)."""
+    if not dt:
+        return ""
+    try:
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(dt)
+
+
+@coupons_router.get("/batches/{batch_id}/export")
+async def export_batch(batch_id: str, request: Request):
+    """Exporta el lote como Excel (.xlsx): código, estado, suscriptor,
+    fecha de asignación, usos restantes y fecha de canje. Valida pertenencia."""
+    user = _require_user(request)
+    user_id = str(user.get("sub"))
+    conn = _db_or_503()
+    batch = _owned_batch(conn, batch_id, user_id)
+
+    is_multi = (batch.get("coupon_type") == "multi")
+
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT code, status, assigned_to, assigned_at,
+                   total_uses, remaining_uses, redeemed_at
+            FROM coupon_codes WHERE batch_id=%s
+            ORDER BY created_at, id
+        """, (batch_id,))
+        rows = cur.fetchall()
+
+    try:
+        import openpyxl
+        from openpyxl.styles import Font
+    except Exception as e:
+        logger.error(f"export_batch openpyxl import error: {e}")
+        raise HTTPException(status_code=500, detail="No se pudo generar el archivo")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Cupones"
+
+    headers = ["Código", "Estado", "Suscriptor asignado", "Fecha de asignación"]
+    if is_multi:
+        headers += ["Usos totales", "Usos restantes"]
+    else:
+        headers += ["Usos restantes"]
+    headers += ["Fecha de canje"]
+
+    ws.append(headers)
+    bold = Font(bold=True)
+    for cell in ws[1]:
+        cell.font = bold
+
+    for r in rows:
+        line = [
+            r.get("code") or "",
+            _STATUS_LABELS.get(r.get("status"), r.get("status") or ""),
+            r.get("assigned_to") or "",
+            _fmt_dt(r.get("assigned_at")),
+        ]
+        if is_multi:
+            line += [int(r.get("total_uses") or 0), int(r.get("remaining_uses") or 0)]
+        else:
+            line += [int(r.get("remaining_uses") or 0)]
+        line += [_fmt_dt(r.get("redeemed_at"))]
+        ws.append(line)
+
+    # Ancho de columnas aproximado
+    widths = [22, 14, 26, 18] + ([14, 14] if is_multi else [14]) + [18]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    wb.close()
+    data = buf.getvalue()
+
+    safe_name = "".join(
+        ch if (ch.isalnum() or ch in " -_") else "_"
+        for ch in (batch.get("name") or "lote")
+    ).strip() or "lote"
+    filename = f"cupones_{safe_name}.xlsx"
+
+    return Response(
+        content=data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{quote(filename)}',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @coupons_router.delete("/batches/{batch_id}")
