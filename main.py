@@ -6,6 +6,7 @@ Toda la lógica de negocio vive en los módulos especializados.
 import logging
 import os
 import posixpath
+import sys
 
 import uvicorn
 from fastapi import FastAPI
@@ -17,7 +18,8 @@ from database import init_db
 from startup import run_startup
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s',
+                    stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 # ─── App FastAPI ──────────────────────────────────────────────────────────────
