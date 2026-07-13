@@ -7,7 +7,7 @@ que el plan gratuito de Supabase (1 GB de Storage) no se llene nunca.
 - SOLO borra archivos gen_* (imágenes ya enviadas a ManyChat; se necesitan
   minutos, no semanas). Las imágenes base subidas por el usuario (upload_*)
   NO se tocan: pueden estar referenciadas por templates guardados.
-- Retención configurable con RENDER_RETENTION_DAYS (default: 7 días).
+- Retención configurable con RENDER_RETENTION_DAYS (default: 3 días).
 - Corre en un hilo de fondo una vez al arrancar y luego cada 24 h.
 - Solo activo en producción (RAILWAY_ENVIRONMENT) o con ENABLE_STORAGE_CLEANUP=1.
 """
@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger("textonflow")
 
-RETENTION_DAYS = int(os.getenv("RENDER_RETENTION_DAYS", "7"))
+RETENTION_DAYS = int(os.getenv("RENDER_RETENTION_DAYS", "3"))
 _DELETE_BATCH  = 100
 _LIST_PAGE     = 1000
 _MAX_PAGES     = 50          # tope de seguridad: 50k objetos por corrida
