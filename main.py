@@ -124,5 +124,8 @@ from routers.pages  import pages_router;  app.include_router(pages_router)
 from monitoring import start_health_scheduler
 start_health_scheduler()
 
+from cleanup import start_storage_cleanup_scheduler
+start_storage_cleanup_scheduler()
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
