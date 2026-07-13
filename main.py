@@ -79,12 +79,18 @@ run_startup()
 # bloqueamos (404) antes de que StaticFiles los sirva. Si el dir está fuera de
 # `static` (p.ej. un volumen montado en otra ruta) no hay prefijo que bloquear.
 _static_root = os.path.realpath("static")
-_PRIVATE_URL_PREFIXES = []
+# Bloqueo fijo de defensa: en Railway el volumen (STORAGE_PATH) hace que el
+# cálculo por realpath quede vacío aunque los archivos SÍ se sirvan bajo
+# /static/temp/. Este prefijo se bloquea SIEMPRE, pase lo que pase.
+_PRIVATE_URL_PREFIXES = ["/static/temp/api_templates/"]
 for _priv in [TEMPLATES_API_DIR]:
-    _priv_real = os.path.realpath(_priv)
-    if _priv_real == _static_root or _priv_real.startswith(_static_root + os.sep):
-        _rel = os.path.relpath(_priv_real, _static_root).replace(os.sep, "/")
-        _PRIVATE_URL_PREFIXES.append("/static/" + _rel.rstrip("/") + "/")
+    for _p in {os.path.realpath(_priv), os.path.abspath(_priv)}:
+        for _root in {_static_root, os.path.abspath("static")}:
+            if _p == _root or _p.startswith(_root + os.sep):
+                _rel = os.path.relpath(_p, _root).replace(os.sep, "/")
+                _pref = "/static/" + _rel.rstrip("/") + "/"
+                if _pref not in _PRIVATE_URL_PREFIXES:
+                    _PRIVATE_URL_PREFIXES.append(_pref)
 logger.info(f"🔒 Prefijos privados bloqueados en /static: {_PRIVATE_URL_PREFIXES}")
 
 
