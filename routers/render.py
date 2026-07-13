@@ -321,7 +321,12 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
         # Se inyectan variables de fecha reservadas ({{fecha_actual}}, etc.) que
         # se resuelven solas en cada render; las del usuario tienen prioridad.
         from fecha_utils import build_date_vars
-        merged_vars = {**build_date_vars(), **(request.vars or {})}
+        # Variables con valor vacío (p.ej. suscriptor sin nombre en ManyChat) se
+        # tratan como no-resueltas: _strip_unresolved_vars las quita limpiamente
+        # junto con comas/espacios sobrantes, en vez de dejar ", ¡Hola!".
+        _user_vars = {k: v for k, v in (request.vars or {}).items()
+                      if str(v).strip() != ""}
+        merged_vars = {**build_date_vars(), **_user_vars}
         sorted_keys = sorted(merged_vars.keys(), key=len, reverse=True)
         for text_field in request.texts:
             for key in sorted_keys:
