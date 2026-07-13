@@ -64,6 +64,29 @@ from utils import _get_base_url
 
 logger = logging.getLogger("textonflow")
 
+# ── Variables sin resolver ────────────────────────────────────────────
+# Si una variable {{var}} / {var} no recibió valor (ManyChat no la mandó,
+# o el suscriptor no tiene nombre), se elimina del texto en lugar de
+# renderizarla literal en la imagen.
+_UNRESOLVED_VAR_RE = re.compile(r"\{\{\s*\w+\s*\}\}|(?<![\{\w])\{\s*\w+\s*\}(?!\})")
+
+def _strip_unresolved_vars(text: str) -> str:
+    if "{" not in text:
+        return text
+    found = _UNRESOLVED_VAR_RE.findall(text)
+    if not found:
+        return text
+    logger.warning(f"⚠️ Variables sin valor eliminadas del texto: {found}")
+    text = _UNRESOLVED_VAR_RE.sub("", text)
+    lines = []
+    for line in text.split("\n"):
+        line = re.sub(r"\s{2,}", " ", line)          # dobles espacios
+        line = re.sub(r"\s+([,;:])", r"\1", line)     # espacio antes de coma
+        line = re.sub(r"^[\s,;:]+", "", line)         # coma/espacios sobrantes al inicio
+        line = re.sub(r"[\s,;:]+$", "", line)         # y al final
+        lines.append(line)
+    return "\n".join(lines)
+
 # ── Router ────────────────────────────────────────────────────────────
 render_router = APIRouter()
 
@@ -304,6 +327,7 @@ async def generate_multi_text(request: MultiTextRequest, http_req: Request):
             for key in sorted_keys:
                 text_field.text = text_field.text.replace(f"{{{{{key}}}}}", merged_vars[key])
                 text_field.text = text_field.text.replace(f"{{{key}}}", merged_vars[key])
+            text_field.text = _strip_unresolved_vars(text_field.text)
 
         # Renderizar Formas de canvas (ordenadas por z_index) — ANTES que los textos
         sorted_shapes = sorted(request.shapes or [], key=lambda s: s.z_index)
